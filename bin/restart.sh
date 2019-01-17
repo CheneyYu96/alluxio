@@ -7,7 +7,7 @@ cd $DIR
 
 echo "Copy conf dir"
 
-alluxio copyDir ../conf
+./alluxio copyDir ../conf
 
 echo "Restart alluxio & hdfs"
 
