@@ -26,9 +26,6 @@ public class TimerPolicy implements FileWriteLocationPolicy, BlockLocationPolicy
     private List<BlockWorkerInfo> mWorkerInfoList;
     private int mIndex;
 
-    private long mThreshold;
-    private long mPreviousTime;
-
     private boolean mInitialized = false;
 
     /**
@@ -38,10 +35,10 @@ public class TimerPolicy implements FileWriteLocationPolicy, BlockLocationPolicy
 
         Path path = FileSystems.getDefault().getPath("/home/ec2-user/alluxio/conf/threshold");
         try {
-            String threshold = Files.readAllLines(path).get(0);
-            mThreshold = Long.parseLong(threshold);
+            String index = Files.readAllLines(path).get(0);
+            mIndex = Integer.parseInt(index);
 
-            System.out.println(threshold);
+            System.out.println(index);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -61,16 +58,12 @@ public class TimerPolicy implements FileWriteLocationPolicy, BlockLocationPolicy
     public WorkerNetAddress getWorkerForNextBlock(Iterable<BlockWorkerInfo> workerInfoList,
                                                   long blockSizeBytes) {
         if (!mInitialized) {
-            mPreviousTime = System.currentTimeMillis();
             mWorkerInfoList = Lists.newArrayList(workerInfoList);
-            mIndex = 0;
             mInitialized = true;
         }
 
-        long currentTime = System.currentTimeMillis();
-        if ((currentTime - mPreviousTime) > mThreshold) {
-            mIndex = (mIndex + 1) % mWorkerInfoList.size();
-            mPreviousTime = currentTime;
+        if (mIndex >= mWorkerInfoList.size()) {
+            mIndex = 0;
         }
 
         return mWorkerInfoList.get(mIndex).getNetAddress();
