@@ -2,7 +2,7 @@
 set -euo pipefail
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )"  && pwd )"
-DIR= "$(cd $DIR/../.. && pwd )"
+DIR= "$( cd "$DIR/../.." && pwd )"
 
 echo "dir : $DIR"
 
