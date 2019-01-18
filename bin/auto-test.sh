@@ -2,6 +2,7 @@
 set -euo pipefail
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )"  && pwd )"
+DIR= "$(cd $DIR/../.. && pwd )"
 
 echo "dir : $DIR"
 
@@ -32,7 +33,8 @@ shuffle() {
 
     $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/orders.tbl /tpch/orders.tbl;
 
-    $DIR/spark/bin/spark-submit --class "main.scala.TpchQuery" --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar 4 >  $DIR/logs/shuffle/$SCALE.log
+    $DIR/spark/bin/spark-submit --class "main.scala.TpchQuery" --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
+    $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar 4 >  $DIR/logs/shuffle/$SCALE.log
 
 }
 
