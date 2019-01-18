@@ -15,10 +15,9 @@ import java.util.List;
 
 /**
  *
- * A policy that decides which worker by a timer.
- * -A sequence blocks will be assigned in the same worker.
- * -Blocks whose time gap between arrivals exceeds the
- *  mThreshold will be assigned to different workers.
+ * A policy that decides which worker by custom index
+ * - read index from conf/threshold
+ *
  */
 @NotThreadSafe
 public class TimerPolicy implements FileWriteLocationPolicy, BlockLocationPolicy {
@@ -28,7 +27,7 @@ public class TimerPolicy implements FileWriteLocationPolicy, BlockLocationPolicy
     private boolean mInitialized = false;
 
     /**
-     * Constructs a new {@link RoundRobinPolicy}.
+     * Constructs a new {@link TimerPolicy}.
      */
     public TimerPolicy() {
 
