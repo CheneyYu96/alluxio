@@ -7,10 +7,9 @@ import alluxio.wire.WorkerNetAddress;
 import com.google.common.collect.Lists;
 
 import javax.annotation.concurrent.NotThreadSafe;
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 
 /**
@@ -37,11 +36,12 @@ public class TimerPolicy implements FileWriteLocationPolicy, BlockLocationPolicy
      * Constructs a new {@link RoundRobinPolicy}.
      */
     public TimerPolicy() {
-        mPreviousTime = System.currentTimeMillis();
-        Path path = FileSystems.getDefault().getPath("/home/ec2-user/alluxio/conf/threshold");
         try {
-            String threshold = Files.readAllLines(path).get(0);
+            BufferedReader Buff = new BufferedReader(new FileReader("/home/ec2-user/alluxio/conf/threshold.txt"));
+            String threshold = Buff.readLine();
             mThreshold = Long.parseLong(threshold);
+
+            System.out.println(threshold);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -51,6 +51,7 @@ public class TimerPolicy implements FileWriteLocationPolicy, BlockLocationPolicy
     public WorkerNetAddress getWorkerForNextBlock(Iterable<BlockWorkerInfo> workerInfoList,
                                                   long blockSizeBytes) {
         if (!mInitialized) {
+            mPreviousTime = System.currentTimeMillis();
             mWorkerInfoList = Lists.newArrayList(workerInfoList);
             mIndex = 0;
             mInitialized = true;
