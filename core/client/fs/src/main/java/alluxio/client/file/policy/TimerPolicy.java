@@ -13,18 +13,18 @@ import java.util.List;
  * @author minchen
  *
  * A policy that decides which worker by a timer.
- * A sequence blocks will be assigned in the same worker.
- * Blocks whose time gap between arrivals exceeds the threshold will be assigned to different workers.
+ * -A sequence blocks will be assigned in the same worker.
+ * -Blocks whose time gap between arrivals exceeds the
+ *  mThreshold will be assigned to different workers.
  */
 @NotThreadSafe
 public class TimerPolicy implements FileWriteLocationPolicy, BlockLocationPolicy {
-
     private List<BlockWorkerInfo> mWorkerInfoList;
     private int mIndex;
 
-    // set threshold 3 seconds TODO
-    private int threshold = 3000;
-    private long previousTime;
+    // set mThreshold 3 seconds TODO
+    private int mThreshold = 3000;
+    private long mPreviousTime;
 
     private boolean mInitialized = false;
 //    /** This caches the {@link WorkerNetAddress} for the block IDs.*/
@@ -34,11 +34,12 @@ public class TimerPolicy implements FileWriteLocationPolicy, BlockLocationPolicy
      * Constructs a new {@link RoundRobinPolicy}.
      */
     public TimerPolicy() {
-        this.previousTime = System.currentTimeMillis();
+        mPreviousTime = System.currentTimeMillis();
     }
 
     @Override
-    public WorkerNetAddress getWorkerForNextBlock(Iterable<BlockWorkerInfo> workerInfoList, long blockSizeBytes) {
+    public WorkerNetAddress getWorkerForNextBlock(Iterable<BlockWorkerInfo> workerInfoList,
+                                                  long blockSizeBytes) {
         if (!mInitialized) {
             mWorkerInfoList = Lists.newArrayList(workerInfoList);
             mIndex = 0;
@@ -46,9 +47,9 @@ public class TimerPolicy implements FileWriteLocationPolicy, BlockLocationPolicy
         }
 
         long currentTime = System.currentTimeMillis();
-        if ((currentTime - previousTime) > threshold) {
+        if ((currentTime - mPreviousTime) > mThreshold) {
             mIndex = (mIndex + 1) % mWorkerInfoList.size();
-            previousTime = currentTime;
+            mPreviousTime = currentTime;
         }
 
         return mWorkerInfoList.get(mIndex).getNetAddress();
