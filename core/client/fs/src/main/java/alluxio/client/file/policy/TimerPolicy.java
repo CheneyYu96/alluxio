@@ -60,8 +60,8 @@ public class TimerPolicy implements FileWriteLocationPolicy, BlockLocationPolicy
         long currentTime = System.currentTimeMillis();
         if ((currentTime - mPreviousTime) > mThreshold) {
             mIndex = (mIndex + 1) % mWorkerInfoList.size();
-            mPreviousTime = currentTime;
         }
+        mPreviousTime = currentTime;
 
         return mWorkerInfoList.get(mIndex).getNetAddress();
     }
