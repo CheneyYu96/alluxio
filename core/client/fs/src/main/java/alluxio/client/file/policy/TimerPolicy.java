@@ -7,9 +7,10 @@ import alluxio.wire.WorkerNetAddress;
 import com.google.common.collect.Lists;
 
 import javax.annotation.concurrent.NotThreadSafe;
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 /**
@@ -29,22 +30,31 @@ public class TimerPolicy implements FileWriteLocationPolicy, BlockLocationPolicy
     private long mPreviousTime;
 
     private boolean mInitialized = false;
-//    /** This caches the {@link WorkerNetAddress} for the block IDs.*/
-//    private final HashMap<Long, WorkerNetAddress> mBlockLocationCache = new HashMap<>();
 
     /**
      * Constructs a new {@link RoundRobinPolicy}.
      */
     public TimerPolicy() {
+
+        Path path = FileSystems.getDefault().getPath("/home/ec2-user/alluxio/conf/threshold");
         try {
-            BufferedReader Buff = new BufferedReader(new FileReader("/home/ec2-user/alluxio/conf/threshold.txt"));
-            String threshold = Buff.readLine();
+            String threshold = Files.readAllLines(path).get(0);
             mThreshold = Long.parseLong(threshold);
 
             System.out.println(threshold);
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+//        BufferedReader Buff = new BufferedReader(new FileReader("/home/ec2-user/alluxio/conf/threshold"));
+//        try {
+//            String threshold = Buff.readLine();
+//            mThreshold = Long.parseLong(threshold);
+//
+//            System.out.println(threshold);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
     }
 
     @Override
