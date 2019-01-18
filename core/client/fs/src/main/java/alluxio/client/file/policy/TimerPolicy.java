@@ -26,7 +26,6 @@ public class TimerPolicy implements FileWriteLocationPolicy, BlockLocationPolicy
     private List<BlockWorkerInfo> mWorkerInfoList;
     private int mIndex;
 
-    // set mThreshold 3 seconds TODO
     private long mThreshold;
     private long mPreviousTime;
 
@@ -60,8 +59,8 @@ public class TimerPolicy implements FileWriteLocationPolicy, BlockLocationPolicy
         long currentTime = System.currentTimeMillis();
         if ((currentTime - mPreviousTime) > mThreshold) {
             mIndex = (mIndex + 1) % mWorkerInfoList.size();
+            mPreviousTime = currentTime;
         }
-        mPreviousTime = currentTime;
 
         return mWorkerInfoList.get(mIndex).getNetAddress();
     }
