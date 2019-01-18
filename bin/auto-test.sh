@@ -36,6 +36,8 @@ shuffle() {
     $DIR/spark/bin/spark-submit --class "main.scala.TpchQuery" --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
     $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar 4 >  $DIR/logs/shuffle/$SCALE.log
 
+    echo "$( cat $DIR/logs/shuffle/$SCALE.log | grep 'Finish run query')"
+
 }
 
 noshuffle() {
@@ -54,6 +56,8 @@ noshuffle() {
     # formal experiment
     $DIR/spark/bin/spark-submit --class "main.scala.TpchQuery" --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
     $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar 4 >  $DIR/logs/noshuffle/$SCALE.log
+
+    echo "$( cat $DIR/logs/noshuffle/$SCALE.log | grep 'Finish run query')"
 
 }
 
