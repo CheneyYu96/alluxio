@@ -7,6 +7,10 @@ import alluxio.wire.WorkerNetAddress;
 import com.google.common.collect.Lists;
 
 import javax.annotation.concurrent.NotThreadSafe;
+import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 /**
@@ -23,7 +27,7 @@ public class TimerPolicy implements FileWriteLocationPolicy, BlockLocationPolicy
     private int mIndex;
 
     // set mThreshold 3 seconds TODO
-    private int mThreshold = 3000;
+    private long mThreshold;
     private long mPreviousTime;
 
     private boolean mInitialized = false;
@@ -35,6 +39,13 @@ public class TimerPolicy implements FileWriteLocationPolicy, BlockLocationPolicy
      */
     public TimerPolicy() {
         mPreviousTime = System.currentTimeMillis();
+        Path path = FileSystems.getDefault().getPath("/home/ec2-user/alluxio/conf/threshold");
+        try {
+            String threshold = Files.readAllLines(path).get(0);
+            mThreshold = Long.parseLong(threshold);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
