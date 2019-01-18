@@ -14,7 +14,6 @@ import java.nio.file.Path;
 import java.util.List;
 
 /**
- * @author minchen
  *
  * A policy that decides which worker by a timer.
  * -A sequence blocks will be assigned in the same worker.
@@ -42,16 +41,6 @@ public class TimerPolicy implements FileWriteLocationPolicy, BlockLocationPolicy
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-//        BufferedReader Buff = new BufferedReader(new FileReader("/home/ec2-user/alluxio/conf/threshold"));
-//        try {
-//            String threshold = Buff.readLine();
-//            mThreshold = Long.parseLong(threshold);
-//
-//            System.out.println(threshold);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
     }
 
     @Override
