@@ -8,14 +8,20 @@ echo "dir : $DIR"
 
 pre_data(){
     SCL=$1
-    cd $DIR/tpch-spark/dbgen;
-    ./dbgen -s $SCL;
+    cd $DIR/tpch-spark/dbgen
+    ./dbgen -s $SCL
 
-    cd $DIR;
-    rm -r data/;
-    alluxio/bin/alluxio fs rm -R /tpch;
-    mkdir data;
-    mv tpch-spark/dbgen/*.tbl data/;
+    cd $DIR
+    mkdir -p data
+    mv tpch-spark/dbgen/*.tbl data/
+}
+
+clean_data(){
+    cd $DIR
+    if [[ -d data ]]; then
+        rm -r data/
+    fi
+    alluxio/bin/alluxio fs rm -R /tpch
 }
 
 shuffle() {
@@ -36,6 +42,7 @@ shuffle() {
     $DIR/spark/bin/spark-submit --class "main.scala.TpchQuery" --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
     $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar 4 >  $DIR/logs/shuffle/$SCALE.log
 
+    clean_data
     echo "$( cat $DIR/logs/shuffle/$SCALE.log | grep 'Finish run query')"
 
 }
@@ -57,6 +64,7 @@ noshuffle() {
     $DIR/spark/bin/spark-submit --class "main.scala.TpchQuery" --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
     $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar 4 >  $DIR/logs/noshuffle/$SCALE.log
 
+    clean_data
     echo "$( cat $DIR/logs/noshuffle/$SCALE.log | grep 'Finish run query')"
 
 }
