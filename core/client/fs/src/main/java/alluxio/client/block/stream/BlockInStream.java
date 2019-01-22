@@ -216,7 +216,7 @@ public class BlockInStream extends InputStream implements BoundedStream, Seekabl
     mInStreamSource = blockSource;
     mId = id;
     mLength = length;
-    mLogPath = System.getProperty("user.dir") + "/logs/workerLoads.txt";
+    mLogPath = System.getProperty("user.home") + "/logs/workerLoads.txt";
   }
 
   @Override
@@ -281,11 +281,11 @@ public class BlockInStream extends InputStream implements BoundedStream, Seekabl
         fw.close();
       }
     }
-    catch(Throwable e ) {
-      e.printStackTrace();
-      if(fw != null)
+    catch(IOException e) {
+      LOG.error("IO exception when record data shuffling: " + e.getMessage());
+      if(fw != null) {
         fw.close();
-      close();
+      }
     }
 
     return toRead;
