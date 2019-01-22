@@ -29,15 +29,14 @@ import alluxio.util.network.NettyUtils;
 import alluxio.util.network.NetworkAddressUtils;
 import alluxio.wire.BlockInfo;
 import alluxio.wire.WorkerNetAddress;
-
 import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.concurrent.NotThreadSafe;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-
-import javax.annotation.concurrent.NotThreadSafe;
 
 /**
  * Provides an {@link InputStream} implementation that is based on {@link PacketReader}s to
@@ -72,6 +71,7 @@ public class BlockInStream extends InputStream implements BoundedStream, Seekabl
 
   private boolean mClosed = false;
   private boolean mEOF = false;
+  private final String mLogPath;
 
   /**
    * Creates a {@link BlockInStream}.
@@ -216,6 +216,7 @@ public class BlockInStream extends InputStream implements BoundedStream, Seekabl
     mInStreamSource = blockSource;
     mId = id;
     mLength = length;
+    mLogPath = System.getProperty("user.dir") + "/logs/workerLoads.txt";
   }
 
   @Override
@@ -262,6 +263,31 @@ public class BlockInStream extends InputStream implements BoundedStream, Seekabl
     int toRead = Math.min(len, mCurrentPacket.readableBytes());
     mCurrentPacket.readBytes(b, off, toRead);
     mPos += toRead;
+
+    // record data shuffling
+    FileWriter fw = null;
+    try {
+      LOG.info("Packet reader. class:" + mPacketReader.getClass());
+
+      if (mPacketReader instanceof LocalFilePacketReader) {
+        LOG.info("Read bytes from local. size:" + toRead);
+      }
+      else if (mPacketReader instanceof NettyPacketReader) {
+        String hostName = ((NettyPacketReader) mPacketReader).getWorkerHostName();
+        LOG.info("Read bytes from remote. size:" + toRead + "; hostname:" + hostName);
+
+        fw = new FileWriter(mLogPath, true); //the true will append the new data
+        fw.write(hostName + "\t" + toRead + "\n");
+        fw.close();
+      }
+    }
+    catch(Throwable e ) {
+      e.printStackTrace();
+      if(fw != null)
+        fw.close();
+      close();
+    }
+
     return toRead;
   }
 

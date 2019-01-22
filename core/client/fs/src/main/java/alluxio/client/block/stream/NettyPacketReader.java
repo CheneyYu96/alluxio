@@ -27,7 +27,6 @@ import alluxio.util.CommonUtils;
 import alluxio.util.network.NettyUtils;
 import alluxio.util.proto.ProtoMessage;
 import alluxio.wire.WorkerNetAddress;
-
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import io.netty.buffer.ByteBuf;
@@ -39,12 +38,11 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.concurrent.NotThreadSafe;
 import java.io.IOException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-
-import javax.annotation.concurrent.NotThreadSafe;
 
 /**
  * A netty packet reader that streams a region from a netty data server.
@@ -129,6 +127,10 @@ public final class NettyPacketReader implements PacketReader {
     mChannel.pipeline().addLast(new PacketReadHandler());
     mChannel.writeAndFlush(new RPCProtoMessage(new ProtoMessage(mReadRequest)))
         .addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
+  }
+
+  String getWorkerHostName(){
+    return mAddress.getHost();
   }
 
   @Override
@@ -235,7 +237,9 @@ public final class NettyPacketReader implements PacketReader {
     return mPackets.size() >= MAX_PACKETS_IN_FLIGHT;
   }
 
-  /**
+
+
+    /**
    * The netty handler that reads packets from the channel.
    */
   private class PacketReadHandler extends ChannelInboundHandlerAdapter {
