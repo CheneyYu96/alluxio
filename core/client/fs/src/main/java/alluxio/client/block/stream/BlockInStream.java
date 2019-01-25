@@ -277,7 +277,7 @@ public class BlockInStream extends InputStream implements BoundedStream, Seekabl
         LOG.info("Read bytes from remote. size:" + toRead + "; hostname:" + hostName);
 
         fw = new FileWriter(mLogPath, true); //the true will append the new data
-        fw.write(hostName + "\t" + toRead + "\n");
+        fw.write(System.currentTimeMillis() + "\t" + hostName + "\t" + toRead + "\n");
         fw.close();
       }
     }
