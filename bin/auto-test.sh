@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -euxo pipefail
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )"  && pwd )"
 DIR="$( cd "$DIR/../.." && pwd )"
@@ -57,9 +57,11 @@ noshuffle() {
     $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/orders.tbl /tpch/orders.tbl;
 
     # spread data
-    $DIR/spark/bin/spark-submit --class "main.scala.TpchQuery" --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
-    $DIR/tpch-spark/target/scala-2.11/spread-data.jar 4 >  /dev/null 2>&1;
-
+    for ((i=1;i<=3;i++)); do
+        $DIR/spark/bin/spark-submit --class "main.scala.TpchQuery" --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
+    $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar 4 >  /dev/null 2>&1;
+    done
+    
     # formal experiment
     $DIR/spark/bin/spark-submit --class "main.scala.TpchQuery" --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
     $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar 4 >  $DIR/logs/noshuffle/$SCALE.log
