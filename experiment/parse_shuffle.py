@@ -4,7 +4,7 @@ import click
 import math
 
 def extract_info(path):
-    files = glob.glob(f'{path}/workerLoad*')
+    files = glob.glob('{}/workerLoad*'.format(path))
     records = {}
     for f in files:
         with open(logtxt) as f:
