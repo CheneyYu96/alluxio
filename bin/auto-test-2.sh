@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euxo pipefail
+set -x
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )"  && pwd )"
 DIR="$( cd "$DIR/../.." && pwd )"
@@ -29,7 +30,10 @@ shuffle() {
     QUERY=$2
     mkdir -p  $DIR/logs/shuffle
 
-    pre_data $SCALE
+    if [[ ! -d data ]]; then
+        pre_data $SCALE
+    fi
+
     $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/lineitem.tbl /tpch/lineitem.tbl;
 
     if [[ `cat ${DIR}/alluxio/conf/threshold` == "1" ]]; then
@@ -47,7 +51,7 @@ shuffle() {
 #        $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar ${QUERY} > $DIR/logs/shuffle/scale${SCALE}_$i.log
 #    done
 
-    clean_data
+#    clean_data
 
 }
 
@@ -57,7 +61,9 @@ noshuffle() {
 
     mkdir -p  $DIR/logs/noshuffle
 
-    pre_data $SCALE
+    if [[ ! -d data ]]; then
+        pre_data $SCALE
+    fi
 
     $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/lineitem.tbl /tpch/lineitem.tbl;
     $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/orders.tbl /tpch/orders.tbl;
@@ -81,7 +87,7 @@ noshuffle() {
 #        $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar ${QUERY} > $DIR/logs/noshuffle/scale${SCALE}_$i.log
 #    done
 
-    clean_data
+#    clean_data
 #    echo "$( cat $DIR/logs/noshuffle/$SCALE.log | grep 'Finish run query')"
 
 }
@@ -99,6 +105,8 @@ else
         shffl)                  shuffle $2 $3
                                 ;;
         noshffl)                noshuffle $2 $3
+                                ;;
+        pre)                    pre_data $2
                                 ;;
         clean)                  clean_data
                                 ;;
