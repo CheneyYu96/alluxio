@@ -30,7 +30,7 @@ shuffle() {
     QUERY=$2
     mkdir -p  $DIR/logs/shuffle
 
-    if [[ ! -d data ]]; then
+    if [[ ! -d $DIR/data ]]; then
         pre_data $SCALE
     fi
 
@@ -61,7 +61,7 @@ noshuffle() {
 
     mkdir -p  $DIR/logs/noshuffle
 
-    if [[ ! -d data ]]; then
+    if [[ ! -d $DIR/data ]]; then
         pre_data $SCALE
     fi
 
