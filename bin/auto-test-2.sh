@@ -36,11 +36,11 @@ shuffle() {
 
     $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/lineitem.tbl /tpch/lineitem.tbl;
 
-    if [[ `cat ${DIR}/alluxio/conf/threshold` == "1" ]]; then
-        echo "0" > ${DIR}/alluxio/conf/threshold
-    else
-        echo "1" > ${DIR}/alluxio/conf/threshold
-    fi
+#    if [[ `cat ${DIR}/alluxio/conf/threshold` == "1" ]]; then
+#        echo "0" > ${DIR}/alluxio/conf/threshold
+#    else
+#        echo "1" > ${DIR}/alluxio/conf/threshold
+#    fi
 
     $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/orders.tbl /tpch/orders.tbl;
 
@@ -79,7 +79,7 @@ noshuffle() {
     $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/orders.tbl /tpch/orders.tbl;
 
     # spread data
-    echo '2' > $DIR/tpch-spark/times
+    echo '3' > $DIR/tpch-spark/times
     $DIR/spark/bin/spark-submit --class "main.scala.TpchQuery" --executor-memory 2g --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
     $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar ${QUERY} >  $DIR/logs/noshuffle/warnup.log 2>&1
 
