@@ -4,10 +4,10 @@ import click
 import math
 
 def extract_info(path):
-    files = glob.glob('{}/workerLoad*'.format(path))
+    files_path = glob.glob('{}/workerLoad*'.format(path))
     records = {}
-    for f in files:
-        with open(logtxt) as f:
+    for p in files_path:
+        with open(p) as f:
             for line in f:
                 content = line.split('\t')
                 # second
