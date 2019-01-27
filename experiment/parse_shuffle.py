@@ -12,12 +12,12 @@ def extract_info(path):
                 content = line.split('\t')
                 # second
                 timestamp = int(int(content[0])/1000)
-                # KB
-                amount = int(content[2])/(1024 * 1024)
+                # Bytes
+                amount = int(content[2])
                 records[timestamp] = (records[timestamp] + amount) if timestamp in records else amount
 
     if records:
-        amount_list = list(records.values())
+        amount_list = [ v/(1024 * 1024) for v in records.values()]
         max_rate = max(amount_list)
         total_shuffling = sum(amount_list)
         # records.sort(key=lambda e: e[0])
