@@ -44,10 +44,17 @@ shuffle() {
 
     $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/orders.tbl /tpch/orders.tbl;
 
-    $DIR/spark/bin/spark-submit --class "main.scala.TpchQuery" --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
+    $DIR/spark/bin/spark-submit --class "main.scala.TpchQuery" --executor-memory 2g --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
         $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar ${QUERY} > $DIR/logs/shuffle/scale${SCALE}.log
 
     $DIR/alluxio/bin/alluxio fs rm -R /tpch
+    workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
+    ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no "rm -r /home/ec2-user/tpch_out/"
+    ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no "rm -r /home/ec2-user/tpch_out/"
+
+    if [[ ! -d $DIR/tpch_out ]]; then
+        rm -r /home/ec2-user/tpch_out/
+    fi
 
 #    for ((i=1;i<=3;i++)); do
 #        $DIR/spark/bin/spark-submit --class "main.scala.TpchQuery" --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
@@ -72,18 +79,30 @@ noshuffle() {
     $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/orders.tbl /tpch/orders.tbl;
 
     # spread data
-    echo '3' > $DIR/tpch-spark/times
-    $DIR/spark/bin/spark-submit --class "main.scala.TpchQuery" --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
+    echo '2' > $DIR/tpch-spark/times
+    $DIR/spark/bin/spark-submit --class "main.scala.TpchQuery" --executor-memory 2g --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
     $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar ${QUERY} >  $DIR/logs/noshuffle/warnup.log 2>&1
 
     workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
-    ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/workerLoads.txt"
-    ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/workerLoads.txt"
+    ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/workerLoads.txt; rm -r /home/ec2-user/tpch_out/"
+    ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/workerLoads.txt; rm -r /home/ec2-user/tpch_out/"
+
+    if [[ ! -d $DIR/tpch_out ]]; then
+        rm -r /home/ec2-user/tpch_out/
+    fi
 
     # formal experiment
     echo '1' > $DIR/tpch-spark/times
-    $DIR/spark/bin/spark-submit --class "main.scala.TpchQuery" --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
+    $DIR/spark/bin/spark-submit --class "main.scala.TpchQuery" --executor-memory 2g --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
         $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar ${QUERY} > $DIR/logs/noshuffle/scale${SCALE}.log 2>&1
+
+    workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
+    ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no "rm -r /home/ec2-user/tpch_out/"
+    ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no "rm -r /home/ec2-user/tpch_out/"
+
+    if [[ ! -d $DIR/tpch_out ]]; then
+        rm -r /home/ec2-user/tpch_out/
+    fi
 
 #    for ((i=1;i<=3;i++)); do
 #        $DIR/spark/bin/spark-submit --class "main.scala.TpchQuery" --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
