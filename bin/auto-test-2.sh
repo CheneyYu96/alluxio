@@ -46,6 +46,9 @@ shuffle() {
 
     $DIR/spark/bin/spark-submit --class "main.scala.TpchQuery" --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
         $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar ${QUERY} > $DIR/logs/shuffle/scale${SCALE}.log
+
+    $DIR/alluxio/bin/alluxio fs rm -R /tpch
+
 #    for ((i=1;i<=3;i++)); do
 #        $DIR/spark/bin/spark-submit --class "main.scala.TpchQuery" --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
 #        $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar ${QUERY} > $DIR/logs/shuffle/scale${SCALE}_$i.log
@@ -72,8 +75,6 @@ noshuffle() {
     echo '3' > $DIR/tpch-spark/times
     $DIR/spark/bin/spark-submit --class "main.scala.TpchQuery" --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
     $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar ${QUERY} >  /dev/null 2>&1;
-
-    $DIR/alluxio/bin/alluxio fs rm -R /tpch_out
 
     workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
     ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/workerLoads.txt"
