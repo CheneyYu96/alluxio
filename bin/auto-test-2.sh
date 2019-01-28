@@ -65,10 +65,12 @@ shuffle() {
 
 }
 
+# include shuffle !!
 noshuffle() {
     SCALE=$1
     QUERY=$2
 
+    mkdir -p  $DIR/logs/shuffle
     mkdir -p  $DIR/logs/noshuffle
 
     if [[ ! -d $DIR/data ]]; then
@@ -78,8 +80,31 @@ noshuffle() {
     $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/lineitem.tbl /tpch/lineitem.tbl;
     $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/orders.tbl /tpch/orders.tbl;
 
+    #shuffle
+    echo '1' > $DIR/tpch-spark/times
+    $DIR/spark/bin/spark-submit --class "main.scala.TpchQuery" --executor-memory 2g --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
+    $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar ${QUERY} > $DIR/logs/shuffle/scale${SCALE}.log
+
+    workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
+
+    if ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no test -e /home/ec2-user/logs/workerLoads.txt; then
+        scp -o StrictHostKeyChecking=no ec2-user@${workers[0]}:/home/ec2-user/logs/workerLoads.txt /home/ec2-user/logs/shuffle/workerLoads0.txt
+        ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/workerLoads.txt"
+    fi
+
+    if ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no test -e /home/ec2-user/logs/workerLoads.txt; then
+        scp -o StrictHostKeyChecking=no ec2-user@${workers[1]}:/home/ec2-user/logs/workerLoads.txt /home/ec2-user/logs/shuffle/workerLoads1.txt
+        ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/workerLoads.txt"
+    fi
+    ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no "rm -r /home/ec2-user/tpch_out/"
+    ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no "rm -r /home/ec2-user/tpch_out/"
+
+    if [[ ! -d $DIR/tpch_out ]]; then
+        rm -r /home/ec2-user/tpch_out/
+    fi
+
     # spread data
-    echo '3' > $DIR/tpch-spark/times
+    echo '2' > $DIR/tpch-spark/times
     $DIR/spark/bin/spark-submit --class "main.scala.TpchQuery" --executor-memory 2g --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
     $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar ${QUERY} >  $DIR/logs/noshuffle/warnup.log 2>&1
 
@@ -97,6 +122,15 @@ noshuffle() {
         $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar ${QUERY} > $DIR/logs/noshuffle/scale${SCALE}.log 2>&1
 
     workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
+    if ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no test -e /home/ec2-user/logs/workerLoads.txt; then
+        scp -o StrictHostKeyChecking=no ec2-user@${workers[0]}:/home/ec2-user/logs/workerLoads.txt /home/ec2-user/logs/shuffle/workerLoads0.txt
+        ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/workerLoads.txt"
+    fi
+
+    if ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no test -e /home/ec2-user/logs/workerLoads.txt; then
+        scp -o StrictHostKeyChecking=no ec2-user@${workers[1]}:/home/ec2-user/logs/workerLoads.txt /home/ec2-user/logs/shuffle/workerLoads1.txt
+        ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/workerLoads.txt"
+    fi
     ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no "rm -r /home/ec2-user/tpch_out/"
     ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no "rm -r /home/ec2-user/tpch_out/"
 
