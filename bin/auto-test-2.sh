@@ -10,7 +10,8 @@ echo "dir : $DIR"
 pre_data(){
     SCL=$1
     cd $DIR/tpch-spark/dbgen
-    ./dbgen -s $SCL
+    ./dbgen -s $SCL -T O
+    ./dbgen -s $SCL -T L
 
     cd $DIR
     mkdir -p data
