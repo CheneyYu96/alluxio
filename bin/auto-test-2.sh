@@ -26,36 +26,10 @@ clean_data(){
     alluxio/bin/alluxio fs rm -R /tpch
 }
 
-shuffle() {
+# include shuffle & non shuffle
+all() {
     SCALE=$1
-    QUERY=$2
-    mkdir -p  $DIR/logs/shuffle
-
-    if [[ ! -d $DIR/data ]]; then
-        pre_data $SCALE
-    fi
-
-    $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/lineitem.tbl /tpch/lineitem.tbl;
-
-#    if [[ `cat ${DIR}/alluxio/conf/threshold` == "1" ]]; then
-#        echo "0" > ${DIR}/alluxio/conf/threshold
-#    else
-#        echo "1" > ${DIR}/alluxio/conf/threshold
-#    fi
-
-    $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/orders.tbl /tpch/orders.tbl;
-
-#    $DIR/spark/bin/spark-submit --class "main.scala.TpchQuery" --executor-memory 2g --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
-#        $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar ${QUERY} > $DIR/logs/shuffle/scale${SCALE}.log
-    $DIR/spark/bin/spark-submit --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/py/join.py > $DIR/logs/shuffle/scale${SCALE}.log
-
-    $DIR/alluxio/bin/alluxio fs rm -R /tpch
-}
-
-# include shuffle !!
-noshuffle() {
-    SCALE=$1
-    QUERY=$2
+    QUERY=$2 # for further use
 
     mkdir -p  $DIR/logs/shuffle
     mkdir -p  $DIR/logs/noshuffle
@@ -68,10 +42,6 @@ noshuffle() {
     $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/orders.tbl /tpch/orders.tbl;
 
     #shuffle
-#    echo '1' > $DIR/tpch-spark/times
-#    $DIR/spark/bin/spark-submit --class "main.scala.TpchQuery" --executor-memory 2g --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
-#    $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar ${QUERY} > $DIR/logs/shuffle/scale${SCALE}.log
-
     $DIR/spark/bin/spark-submit --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/py/join.py > $DIR/logs/shuffle/scale${SCALE}.log
 
     workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
@@ -87,12 +57,10 @@ noshuffle() {
     fi
 
     # spread data
-#    echo '2' > $DIR/tpch-spark/times
-#    $DIR/spark/bin/spark-submit --class "main.scala.TpchQuery" --executor-memory 2g --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
-#    $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar ${QUERY} >  $DIR/logs/noshuffle/warnup.log 2>&1
+    for ((i=1;i<=2;i++)); do
+        $DIR/spark/bin/spark-submit --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/py/join.py > $DIR/logs/noshuffle/warmup_${i}.log
+    done
 
-    $DIR/spark/bin/spark-submit --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/py/join.py >> $DIR/logs/noshuffle/warmup.log
-    $DIR/spark/bin/spark-submit --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/py/join.py >> $DIR/logs/noshuffle/warmup.log
 
     if ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no test -e /home/ec2-user/logs/workerLoads.txt; then
         ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/workerLoads.txt"
@@ -103,9 +71,6 @@ noshuffle() {
     fi
 
     # formal experiment
-#    echo '1' > $DIR/tpch-spark/times
-#    $DIR/spark/bin/spark-submit --class "main.scala.TpchQuery" --executor-memory 2g --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
-#        $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar ${QUERY} > $DIR/logs/noshuffle/scale${SCALE}.log 2>&1
     $DIR/spark/bin/spark-submit --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/py/join.py >> $DIR/logs/noshuffle/scale${SCALE}.log
 
     workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
@@ -121,12 +86,6 @@ noshuffle() {
 
 }
 
-remove_workloads(){
-
-
-}
-
-
 usage() {
     echo "Usage: $0 shffl|noshffl scale #query"
 }
@@ -137,9 +96,7 @@ if [[ "$#" -lt 3 ]]; then
     exit 1
 else
     case $1 in
-        shffl)                  shuffle $2 $3
-                                ;;
-        noshffl)                noshuffle $2 $3
+        all)                    all $2 $3
                                 ;;
         pre)                    pre_data $2
                                 ;;
