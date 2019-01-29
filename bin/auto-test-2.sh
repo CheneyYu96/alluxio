@@ -45,8 +45,9 @@ shuffle() {
 
     $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/orders.tbl /tpch/orders.tbl;
 
-    $DIR/spark/bin/spark-submit --class "main.scala.TpchQuery" --executor-memory 2g --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
-        $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar ${QUERY} > $DIR/logs/shuffle/scale${SCALE}.log
+#    $DIR/spark/bin/spark-submit --class "main.scala.TpchQuery" --executor-memory 2g --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
+#        $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar ${QUERY} > $DIR/logs/shuffle/scale${SCALE}.log
+    $DIRspark/bin/spark-submit --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/py/join.py > $DIR/logs/shuffle/scale${SCALE}.log
 
     $DIR/alluxio/bin/alluxio fs rm -R /tpch
     workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
@@ -56,13 +57,6 @@ shuffle() {
     if [[ ! -d $DIR/tpch_out ]]; then
         rm -r /home/ec2-user/tpch_out/
     fi
-
-#    for ((i=1;i<=3;i++)); do
-#        $DIR/spark/bin/spark-submit --class "main.scala.TpchQuery" --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
-#        $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar ${QUERY} > $DIR/logs/shuffle/scale${SCALE}_$i.log
-#    done
-
-#    clean_data
 
 }
 
@@ -82,9 +76,11 @@ noshuffle() {
     $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/orders.tbl /tpch/orders.tbl;
 
     #shuffle
-    echo '1' > $DIR/tpch-spark/times
-    $DIR/spark/bin/spark-submit --class "main.scala.TpchQuery" --executor-memory 2g --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
-    $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar ${QUERY} > $DIR/logs/shuffle/scale${SCALE}.log
+#    echo '1' > $DIR/tpch-spark/times
+#    $DIR/spark/bin/spark-submit --class "main.scala.TpchQuery" --executor-memory 2g --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
+#    $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar ${QUERY} > $DIR/logs/shuffle/scale${SCALE}.log
+
+    $DIRspark/bin/spark-submit --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/py/join.py > $DIR/logs/shuffle/scale${SCALE}.log
 
     workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
 
@@ -105,9 +101,12 @@ noshuffle() {
     fi
 
     # spread data
-    echo '2' > $DIR/tpch-spark/times
-    $DIR/spark/bin/spark-submit --class "main.scala.TpchQuery" --executor-memory 2g --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
-    $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar ${QUERY} >  $DIR/logs/noshuffle/warnup.log 2>&1
+#    echo '2' > $DIR/tpch-spark/times
+#    $DIR/spark/bin/spark-submit --class "main.scala.TpchQuery" --executor-memory 2g --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
+#    $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar ${QUERY} >  $DIR/logs/noshuffle/warnup.log 2>&1
+
+    $DIRspark/bin/spark-submit --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/py/join.py >> $DIR/logs/noshuffle/warmup.log
+    $DIRspark/bin/spark-submit --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/py/join.py >> $DIR/logs/noshuffle/warmup.log
 
     workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
     ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/workerLoads.txt; rm -r /home/ec2-user/tpch_out/"
@@ -118,9 +117,10 @@ noshuffle() {
     fi
 
     # formal experiment
-    echo '1' > $DIR/tpch-spark/times
-    $DIR/spark/bin/spark-submit --class "main.scala.TpchQuery" --executor-memory 2g --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
-        $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar ${QUERY} > $DIR/logs/noshuffle/scale${SCALE}.log 2>&1
+#    echo '1' > $DIR/tpch-spark/times
+#    $DIR/spark/bin/spark-submit --class "main.scala.TpchQuery" --executor-memory 2g --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
+#        $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar ${QUERY} > $DIR/logs/noshuffle/scale${SCALE}.log 2>&1
+    $DIRspark/bin/spark-submit --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/py/join.py >> $DIR/logs/noshuffle/scale${SCALE}.log
 
     workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
     if ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no test -e /home/ec2-user/logs/workerLoads.txt; then
