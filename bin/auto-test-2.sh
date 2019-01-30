@@ -71,7 +71,7 @@ all() {
     fi
 
     # formal experiment
-    $DIR/spark/bin/spark-submit --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py "Join nonshuffle scale${SCALE}" >> $DIR/logs/noshuffle/scale${SCALE}.log
+    $DIR/spark/bin/spark-submit --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py --app "Join nonshuffle scale${SCALE}" >> $DIR/logs/noshuffle/scale${SCALE}.log
 
     workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
     if ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no test -e /home/ec2-user/logs/workerLoads.txt; then
