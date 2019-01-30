@@ -42,7 +42,7 @@ all() {
     $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/orders.tbl /tpch/orders.tbl;
 
     #shuffle
-    $DIR/spark/bin/spark-submit --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py > $DIR/logs/shuffle/scale${SCALE}.log
+    $DIR/spark/bin/spark-submit --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py --app "Join shuffle scale${SCALE}" > $DIR/logs/shuffle/scale${SCALE}.log
 
     workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
 
@@ -58,7 +58,7 @@ all() {
 
     # spread data
     for ((i=1;i<=2;i++)); do
-        $DIR/spark/bin/spark-submit --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py > $DIR/logs/noshuffle/warmup_${i}.log
+        $DIR/spark/bin/spark-submit --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py --app "Join warmup${i} scale${SCALE}" > $DIR/logs/noshuffle/warmup_${i}.log
     done
 
 
@@ -71,7 +71,7 @@ all() {
     fi
 
     # formal experiment
-    $DIR/spark/bin/spark-submit --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py >> $DIR/logs/noshuffle/scale${SCALE}.log
+    $DIR/spark/bin/spark-submit --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py "Join nonshuffle scale${SCALE}" >> $DIR/logs/noshuffle/scale${SCALE}.log
 
     workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
     if ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no test -e /home/ec2-user/logs/workerLoads.txt; then
