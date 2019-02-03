@@ -16,6 +16,10 @@ pre_data(){
     cd $DIR
     mkdir -p data
     mv tpch-spark/dbgen/*.tbl data/
+
+    $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/lineitem.tbl /tpch/lineitem.tbl;
+    $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/orders.tbl /tpch/orders.tbl;
+
 }
 
 clean_data(){
@@ -37,9 +41,6 @@ all() {
     if [[ ! -d $DIR/data ]]; then
         pre_data $SCALE
     fi
-
-    $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/lineitem.tbl /tpch/lineitem.tbl;
-    $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/orders.tbl /tpch/orders.tbl;
 
     #shuffle
     $DIR/spark/bin/spark-submit --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py --app "Join shuffle scale${SCALE}" > $DIR/logs/shuffle/scale${SCALE}.log 2>&1
