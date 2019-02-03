@@ -6,10 +6,15 @@ DIR="$( cd "$DIR/../.." && pwd )"
 
 echo "dir : $DIR"
 
+workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
+echo "worker0: ${workers[0]}"
+echo "worker1: ${workers[1]}"
+
 pre_data(){
     SCL=$1
     cd $DIR/tpch-spark/dbgen
-    ./dbgen -s $SCL
+    ./dbgen -s $SCL -T O
+    ./dbgen -s $SCL -T L
 
     cd $DIR
     mkdir -p data
@@ -24,73 +29,66 @@ clean_data(){
     alluxio/bin/alluxio fs rm -R /tpch
 }
 
-shuffle() {
-    SCALE=$1
-    mkdir -p  $DIR/logs/shuffle
-    PARALLEL=$2
+download_data(){
+    item=$1
 
-    pre_data $SCALE
-    $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/lineitem.tbl /tpch/lineitem.tbl;
-
-    if [[ `cat ${DIR}/alluxio/conf/threshold` == "1" ]]; then
-        echo "0" > ${DIR}/alluxio/conf/threshold
-    else
-        echo "1" > ${DIR}/alluxio/conf/threshold
+    if ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no test -e /home/ec2-user/logs/workerLoads.txt; then
+        scp -o StrictHostKeyChecking=no ec2-user@${workers[0]}:/home/ec2-user/logs/workerLoads.txt /home/ec2-user/logs/${item}/workerLoads0.txt
+        ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/workerLoads.txt"
     fi
 
-    $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/orders.tbl /tpch/orders.tbl;
-
-    for i in `seq 1 $PARALLEL`
-    do
-    {
-        $DIR/spark/bin/spark-submit --class "main.scala.TpchQuery" --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar 30 > $DIR/logs/shuffle/shuffle_${SCALE}_p$i.log
-    } &
-    done
-    wait    
-
-    clean_data
-    # echo "$( cat $DIR/logs/shuffle/shuffle_${SCALE}_p$i.log | grep 'Finish run query')"
-
+    if ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no test -e /home/ec2-user/logs/workerLoads.txt; then
+        scp -o StrictHostKeyChecking=no ec2-user@${workers[1]}:/home/ec2-user/logs/workerLoads.txt /home/ec2-user/logs/${item}/workerLoads1.txt
+        ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/workerLoads.txt"
+    fi
 }
 
-noshuffle() {
+all() {
     SCALE=$1
-    mkdir -p  $DIR/logs/noshuffle
-    PARALLEL=$2
+    QUERY=$2 # for further use
 
-    pre_data $SCALE
+    mkdir -p  $DIR/logs/shuffle
+
+    if [[ ! -d $DIR/data ]]; then
+        pre_data $SCALE
+    fi
 
     $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/lineitem.tbl /tpch/lineitem.tbl;
+
     $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/orders.tbl /tpch/orders.tbl;
 
+    # shuffle
+    echo "----------TESTING SHUFFLE----------"
+    $DIR/spark/bin/spark-submit --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py --app "Join shuffle scale${SCALE}" > $DIR/logs/shuffle/scale${SCALE}.log 2>&1
+
+    download_data shuffle
+
+    # noshuffle
+    echo "----------TESTING NO_SHUFFLE----------"
     # spread data
-    for ((i=1;i<=3;i++)); do
-    {
-        $DIR/spark/bin/spark-submit --class "main.scala.TpchQuery" --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar 30 >  /dev/null 2>&1;
-    }
+    for ((i=1;i<=2;i++)); do
+        $DIR/spark/bin/spark-submit --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py --app "Join warmup${i} scale${SCALE}" > $DIR/logs/noshuffle/warmup_${i}.log 2>&1
     done
-    
-    workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
-    ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/workerLoads.txt"
-    ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/workerLoads.txt"
+
+    if ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no test -e /home/ec2-user/logs/workerLoads.txt; then
+        ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/workerLoads.txt"
+    fi
+
+    if ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no test -e /home/ec2-user/logs/workerLoads.txt; then
+        ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/workerLoads.txt"
+    fi
 
     # formal experiment
-    for i in `seq 1 $PARALLEL`
-    do
-    {
-        $DIR/spark/bin/spark-submit --class "main.scala.TpchQuery" --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar 30 > $DIR/logs/noshuffle/noshuffle_${SCALE}_p$i.log
+    $DIR/spark/bin/spark-submit --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py --app "Join nonshuffle scale${SCALE}" > $DIR/logs/noshuffle/scale${SCALE}.log 2>&1
 
-    } &
-    done
-    wait
-    
-    clean_data
-    # echo "$( cat $DIR/logs/noshuffle/noshuffle_${SCALE}_p$i.log | grep 'Finish run query')"
-
+    download_data noshuffle
 }
 
 usage() {
-    echo "Usage: $0 shffl|noshffl scale parallel_degree"
+    echo "Usage: "
+    echo "$0 all SCALE QUERY"
+    echo "$0 pre SCALE"
+    echo "$0 clean"
 }
 
 
@@ -99,9 +97,9 @@ if [[ "$#" -lt 3 ]]; then
     exit 1
 else
     case $1 in
-        shffl)                  shuffle $2 $3
+        all)                    all $2 $3
                                 ;;
-        noshffl)                noshuffle $2 $3
+        pre)                    pre $2
                                 ;;
         clean)                  clean_data
                                 ;;
