@@ -123,7 +123,7 @@ auto_test() {
         limit_bandwidth ${bandwidth}
         test_bandwidth ${lower_dir}
 
-        all $scl 1
+        all ${scl} ${cores}
         mv $DIR/logs/noshuffle ${lower_dir}
         mv $DIR/logs/shuffle ${lower_dir}
 
