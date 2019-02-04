@@ -43,8 +43,9 @@ all() {
     fi
 
     #shuffle
-    $DIR/spark/bin/spark-submit --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py \
-    --executor-cores ${CORES} --app "Join shuffle scale${SCALE}" > $DIR/logs/shuffle/scale${SCALE}.log 2>&1
+    $DIR/spark/bin/spark-submit --num-executors 2 --executor-cores ${CORES} \
+    --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py \
+    --app "Join shuffle scale${SCALE}" > $DIR/logs/shuffle/scale${SCALE}.log 2>&1
 
     workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
 
@@ -60,8 +61,9 @@ all() {
 
     # spread data
     for ((i=1;i<=2;i++)); do
-        $DIR/spark/bin/spark-submit --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py \
-        --executor-cores ${CORES} --app "Join warmup${i} scale${SCALE}" > $DIR/logs/noshuffle/warmup_${i}.log 2>&1
+        $DIR/spark/bin/spark-submit --num-executors 2 --executor-cores ${CORES} \
+        --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py \
+        --app "Join warmup${i} scale${SCALE}" > $DIR/logs/noshuffle/warmup_${i}.log 2>&1
     done
 
 
@@ -74,8 +76,9 @@ all() {
     fi
 
     # formal experiment
-    $DIR/spark/bin/spark-submit --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py \
-    --executor-cores ${CORES} --app "Join nonshuffle scale${SCALE}" > $DIR/logs/noshuffle/scale${SCALE}.log 2>&1
+    $DIR/spark/bin/spark-submit --num-executors 2 --executor-cores ${CORES} \
+    --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py \
+    --app "Join nonshuffle scale${SCALE}" > $DIR/logs/noshuffle/scale${SCALE}.log 2>&1
 
     workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
     if ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no test -e /home/ec2-user/logs/workerLoads.txt; then
