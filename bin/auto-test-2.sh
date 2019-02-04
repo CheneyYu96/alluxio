@@ -100,6 +100,50 @@ limit_bandwidth(){
     ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no "sudo wondershaper -c -a eth0; sudo wondershaper -a eth0 -d $limit -u $limit"
 }
 
+auto_test() {
+    bandwidth=$1
+    cores=$2
+
+    export SPARK_WORKER_CORES=${cores}
+    upper_dir=/home/ec2-user/logs/cpu${cores}_bandwidth${bandwidth}
+    mkdir -p ${upper_dir}
+
+    for((i=1;i<=10;i++)); do
+        scl=$i
+
+        lower_dir=${upper_dir}/scale${scl}
+        mkdir -p ${lower_dir}
+
+        ${DIR}/alluxio/bin/restart.sh
+
+        pre_data $scl
+        limit_bandwidth ${bandwidth}
+        test_bandwidth ${lower_dir}
+
+        all $scl 1
+        mv $DIR/logs/noshuffle ${lower_dir}
+        mv $DIR/logs/shuffle ${lower_dir}
+
+        clean_data
+        free_limit
+
+    done
+
+}
+
+test_bandwidth() {
+    saved_dir=$1
+
+    workers=(`cat /home/ec2-user/hadoop/conf/slaves`);
+
+    echo "Setup iperf3"
+    ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no "iperf3 -s > /dev/null 2>&1 &"
+    ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no "iperf3 -c ${workers[0]} -d" >> ${saved_dir}/bandwith.txt
+
+    echo "kill iperf3 server process"
+    ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no "pkill iperf3"
+}
+
 usage() {
     echo "Usage: $0 shffl|noshffl scale #query"
 }
@@ -119,6 +163,8 @@ else
         free)                   free_limit
                                 ;;
         limit)                  limit_bandwidth $2
+                                ;;
+        auto)                   auto_test $2 $3
                                 ;;
         * )                     usage
     esac
