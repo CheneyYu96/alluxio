@@ -116,8 +116,8 @@ auto_test() {
     upper_dir=/home/ec2-user/logs/cpu${cores}_bandwidth${bandwidth}
     mkdir -p ${upper_dir}
 
-    for((i=1;i<=10;i++)); do
-        scl=$i
+    for((j=1;j<=10;j++)); do
+        scl=$j
 
         lower_dir=${upper_dir}/scale${scl}
         mkdir -p ${lower_dir}
