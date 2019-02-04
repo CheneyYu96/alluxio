@@ -87,6 +87,19 @@ all() {
 
 }
 
+free_limit(){
+    workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
+    ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no "sudo wondershaper -c -a eth0"
+    ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no "sudo wondershaper -c -a eth0"
+}
+
+limit_bandwidth(){
+    workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
+    limit=$1
+    ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no "sudo wondershaper -c -a eth0; sudo wondershaper -a eth0 -d $limit -u $limit"
+    ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no "sudo wondershaper -c -a eth0; sudo wondershaper -a eth0 -d $limit -u $limit"
+}
+
 usage() {
     echo "Usage: $0 shffl|noshffl scale #query"
 }
@@ -102,6 +115,10 @@ else
         pre)                    pre_data $2
                                 ;;
         clean)                  clean_data
+                                ;;
+        free)                   free_limit
+                                ;;
+        limit)                  limit_bandwidth $2
                                 ;;
         * )                     usage
     esac
