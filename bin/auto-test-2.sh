@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euxo pipefail
+#set -euxo pipefail
 set -x
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )"  && pwd )"
