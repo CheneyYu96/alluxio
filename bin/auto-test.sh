@@ -99,7 +99,7 @@ else
     case $1 in
         all)                    all $2 $3
                                 ;;
-        pre)                    pre $2
+        pre)                    pre_data $2
                                 ;;
         clean)                  clean_data
                                 ;;
