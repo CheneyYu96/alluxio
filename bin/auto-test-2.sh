@@ -126,6 +126,7 @@ all_query() {
     upper_dir=/home/ec2-user/logs
     mkdir -p ${upper_dir}
 
+    free_limit
     for((j=0;j<=2;j++)); do
         query=$j
         lower_dir=${upper_dir}/type${query}_scale${scl}
@@ -147,6 +148,7 @@ auto_test() {
     bandwidth=$1
     cores=$2
 
+    free_limit
     export SPARK_WORKER_CORES=${cores}
     upper_dir=/home/ec2-user/logs/cpu${cores}_bandwidth${bandwidth}
     mkdir -p ${upper_dir}
