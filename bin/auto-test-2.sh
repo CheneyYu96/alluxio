@@ -126,7 +126,6 @@ all_query() {
     upper_dir=/home/ec2-user/logs
     mkdir -p ${upper_dir}
 
-    free_limit
     for((j=0;j<=2;j++)); do
         query=$j
         lower_dir=${upper_dir}/type${query}_scale${scl}
