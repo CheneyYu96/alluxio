@@ -34,7 +34,7 @@ clean_data(){
 all() {
     SCALE=$1
     QUERY=$2
-
+    MEM=$3
 #    total_cores=$[$CORES*2]
 
     mkdir -p  $DIR/logs/shuffle
@@ -49,8 +49,9 @@ all() {
 #    --app "Join shuffle scale${SCALE}" > $DIR/logs/shuffle/scale${SCALE}.log 2>&1
 
     #shuffle
-    $DIR/spark/bin/spark-submit --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py \
-    --query ${QUERY} --app "shuffle query type${QUERY} scale${SCALE}" > $DIR/logs/shuffle/scale${SCALE}.log 2>&1
+
+    $DIR/spark/bin/spark-submit --executor-memory ${MEM} --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py \
+    --query ${QUERY} --app "shuffle query type${QUERY} scale${SCALE} mem${MEM}" > $DIR/logs/shuffle/scale${SCALE}.log 2>&1
 
     workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
 
@@ -67,8 +68,8 @@ all() {
     # spread data
     for ((i=1;i<=2;i++)); do
 
-        $DIR/spark/bin/spark-submit --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py \
-        --query ${QUERY} --app "warmup${i} query type${QUERY} scale${SCALE}" > $DIR/logs/noshuffle/warmup_${i}.log 2>&1
+        $DIR/spark/bin/spark-submit --executor-memory ${MEM} --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py \
+        --query ${QUERY} --app "warmup${i} query type${QUERY} scale${SCALE} mem${MEM}" > $DIR/logs/noshuffle/warmup_${i}.log 2>&1
 
         if ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no test -e /home/ec2-user/logs/workerLoads.txt; then
             scp -o StrictHostKeyChecking=no ec2-user@${workers[0]}:/home/ec2-user/logs/workerLoads.txt /home/ec2-user/logs/noshuffle/workerLoads0_warm${i}.txt
@@ -92,8 +93,8 @@ all() {
     fi
 
     # formal experiment
-    $DIR/spark/bin/spark-submit --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py \
-    --query ${QUERY} --app "noshuffle query type${QUERY} scale${SCALE}" > $DIR/logs/noshuffle/scale${SCALE}.log 2>&1
+    $DIR/spark/bin/spark-submit --executor-memory ${MEM} --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py \
+    --query ${QUERY} --app "noshuffle query type${QUERY} scale${SCALE} mem${MEM}" > $DIR/logs/noshuffle/scale${SCALE}.log 2>&1
 
     workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
     if ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no test -e /home/ec2-user/logs/workerLoads.txt; then
@@ -122,25 +123,28 @@ limit_bandwidth(){
 }
 
 all_query() {
-    scl=$1
     upper_dir=/home/ec2-user/logs
     mkdir -p ${upper_dir}
 
-    for((j=0;j<=2;j++)); do
-        query=$j
-        lower_dir=${upper_dir}/type${query}_scale${scl}
-        mkdir -p ${lower_dir}
+    for((scl=6;scl<=18;scl=scl+4)); do #scale
+        for((memory=4;memory<=12;memory=memory+4)); do # mem
+            for((j=0;j<=2;j++)); do #query
+                query=$j
+                lower_dir=${upper_dir}/type${query}_scale${scl}_mem${memory}
+                mkdir -p ${lower_dir}
 
-        ${DIR}/alluxio/bin/restart.sh
-        pre_data $scl
-        test_bandwidth ${lower_dir}
+                ${DIR}/alluxio/bin/restart.sh
+                pre_data $scl
+                test_bandwidth ${lower_dir}
 
-        all ${scl} ${query}
-        mv $DIR/logs/noshuffle ${lower_dir}
-        mv $DIR/logs/shuffle ${lower_dir}
+                all ${scl} ${query} "${memory}g"
+                mv $DIR/logs/noshuffle ${lower_dir}
+                mv $DIR/logs/shuffle ${lower_dir}
 
-        clean_data
-    done
+                clean_data
+            done
+        done
+     done
 }
 
 auto_test() {
