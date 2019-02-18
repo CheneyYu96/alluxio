@@ -134,7 +134,7 @@ limit_bandwidth(){
 
 all_query() {
     scl=$1
-    executors=$2
+    num=$2
     memory=8
     upper_dir=/home/ec2-user/logs
     mkdir -p ${upper_dir}
@@ -144,14 +144,14 @@ all_query() {
 #        for((memory=4;memory<=8;memory=scl+4)); do
     for((j=0;j<=1;j++)); do #query
         query=$j
-        lower_dir=${upper_dir}/type${query}_scale${scl}_mem${memory}_exe${executors}
+        lower_dir=${upper_dir}/type${query}_scale${scl}_mem${memory}_exe${num}
         mkdir -p ${lower_dir}
 
         ${DIR}/alluxio/bin/restart.sh
         move_data $scl
         test_bandwidth ${lower_dir}
 
-        all ${scl} ${query} "${memory}g" ${executors}
+        all ${scl} ${query} "${memory}g" ${num}
         mv $DIR/logs/noshuffle ${lower_dir}
         mv $DIR/logs/shuffle ${lower_dir}
         ${DIR}/alluxio/bin/alluxio fs rm -R /tpch
@@ -227,7 +227,7 @@ else
                                 ;;
         limit)                  limit_bandwidth $2
                                 ;;
-        auto)                   all_query $2
+        auto)                   all_query $2 $3
                                 ;;
         * )                     usage
     esac
