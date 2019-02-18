@@ -134,22 +134,21 @@ all_query() {
 
     for((scl=6;scl<=18;scl=scl+6)); do #scale
         gen_data $scl
-        for((memory=4;memory<=12;memory=memory+4)); do # mem
-            for((j=0;j<=1;j++)); do #query
-                query=$j
-                lower_dir=${upper_dir}/type${query}_scale${scl}_mem${memory}
-                mkdir -p ${lower_dir}
+        memory=4
+        for((j=0;j<=1;j++)); do #query
+            query=$j
+            lower_dir=${upper_dir}/type${query}_scale${scl}_mem${memory}
+            mkdir -p ${lower_dir}
 
-                ${DIR}/alluxio/bin/restart.sh
-                move_data $scl
-                test_bandwidth ${lower_dir}
+            ${DIR}/alluxio/bin/restart.sh
+            move_data $scl
+            test_bandwidth ${lower_dir}
 
-                all ${scl} ${query} "${memory}g"
-                mv $DIR/logs/noshuffle ${lower_dir}
-                mv $DIR/logs/shuffle ${lower_dir}
-                ${DIR}/alluxio/bin/alluxio fs rm -R /tpch
+            all ${scl} ${query} "${memory}g"
+            mv $DIR/logs/noshuffle ${lower_dir}
+            mv $DIR/logs/shuffle ${lower_dir}
+            ${DIR}/alluxio/bin/alluxio fs rm -R /tpch
 
-            done
         done
         clean_data
      done
