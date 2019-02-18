@@ -7,15 +7,22 @@ DIR="$( cd "$DIR/../.." && pwd )"
 
 echo "dir : $DIR"
 
-pre_data(){
+gen_data(){
     SCL=$1
     cd $DIR/tpch-spark/dbgen
     ./dbgen -s $SCL -T O
     ./dbgen -s $SCL -T L
 
     cd $DIR
+    if [[ -d data ]]; then
+        rm -r data/
+    fi
     mkdir -p data
     mv tpch-spark/dbgen/*.tbl data/
+
+}
+
+move_data(){
 
     $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/lineitem.tbl /tpch/lineitem.tbl;
     $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/orders.tbl /tpch/orders.tbl;
@@ -27,7 +34,6 @@ clean_data(){
     if [[ -d data ]]; then
         rm -r data/
     fi
-    alluxio/bin/alluxio fs rm -R /tpch
 }
 
 # include shuffle & non shuffle
@@ -126,24 +132,26 @@ all_query() {
     upper_dir=/home/ec2-user/logs
     mkdir -p ${upper_dir}
 
-    for((scl=6;scl<=18;scl=scl+4)); do #scale
+    for((scl=6;scl<=18;scl=scl+6)); do #scale
+        gen_data $scl
         for((memory=4;memory<=12;memory=memory+4)); do # mem
-            for((j=0;j<=2;j++)); do #query
+            for((j=0;j<=1;j++)); do #query
                 query=$j
                 lower_dir=${upper_dir}/type${query}_scale${scl}_mem${memory}
                 mkdir -p ${lower_dir}
 
                 ${DIR}/alluxio/bin/restart.sh
-                pre_data $scl
+                move_data $scl
                 test_bandwidth ${lower_dir}
 
                 all ${scl} ${query} "${memory}g"
                 mv $DIR/logs/noshuffle ${lower_dir}
                 mv $DIR/logs/shuffle ${lower_dir}
+                ${DIR}/alluxio/bin/alluxio fs rm -R /tpch
 
-                clean_data
             done
         done
+        clean_data
      done
 }
 
