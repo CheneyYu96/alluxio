@@ -41,6 +41,7 @@ all() {
     SCALE=$1
     QUERY=$2
     MEM=$3
+    NUM=$4
 #    total_cores=$[$CORES*2]
 
     mkdir -p  $DIR/logs/shuffle
@@ -56,7 +57,8 @@ all() {
 
     #shuffle
 
-    $DIR/spark/bin/spark-submit --driver-memory ${MEM} --executor-memory ${MEM} --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py \
+    $DIR/spark/bin/spark-submit --num-executors ${NUM} --driver-memory ${MEM} --executor-memory ${MEM} \
+    --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py \
     --query ${QUERY} --app "shuffle query type${QUERY} scale${SCALE} mem${MEM}" > $DIR/logs/shuffle/scale${SCALE}.log 2>&1
 
     workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
@@ -74,7 +76,8 @@ all() {
     # spread data
     for ((i=1;i<=2;i++)); do
 
-        $DIR/spark/bin/spark-submit --driver-memory ${MEM} --executor-memory ${MEM} --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py \
+        $DIR/spark/bin/spark-submit --num-executors ${NUM} --driver-memory ${MEM} --executor-memory ${MEM} \
+        --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py \
         --query ${QUERY} --app "warmup${i} query type${QUERY} scale${SCALE} mem${MEM}" > $DIR/logs/noshuffle/warmup_${i}.log 2>&1
 
         if ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no test -e /home/ec2-user/logs/workerLoads.txt; then
@@ -99,7 +102,8 @@ all() {
     fi
 
     # formal experiment
-    $DIR/spark/bin/spark-submit --driver-memory ${MEM} --executor-memory ${MEM} --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py \
+    $DIR/spark/bin/spark-submit --num-executors ${NUM} --driver-memory ${MEM} --executor-memory ${MEM} \
+    --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py \
     --query ${QUERY} --app "noshuffle query type${QUERY} scale${SCALE} mem${MEM}" > $DIR/logs/noshuffle/scale${SCALE}.log 2>&1
 
     workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
@@ -130,7 +134,8 @@ limit_bandwidth(){
 
 all_query() {
     scl=$1
-    memory=$2
+    executors=$2
+    memory=8
     upper_dir=/home/ec2-user/logs
     mkdir -p ${upper_dir}
 
@@ -139,14 +144,14 @@ all_query() {
 #        for((memory=4;memory<=8;memory=scl+4)); do
     for((j=0;j<=1;j++)); do #query
         query=$j
-        lower_dir=${upper_dir}/type${query}_scale${scl}_mem${memory}
+        lower_dir=${upper_dir}/type${query}_scale${scl}_mem${memory}_exe${executors}
         mkdir -p ${lower_dir}
 
         ${DIR}/alluxio/bin/restart.sh
         move_data $scl
         test_bandwidth ${lower_dir}
 
-        all ${scl} ${query} "${memory}g"
+        all ${scl} ${query} "${memory}g" ${executors}
         mv $DIR/logs/noshuffle ${lower_dir}
         mv $DIR/logs/shuffle ${lower_dir}
         ${DIR}/alluxio/bin/alluxio fs rm -R /tpch
