@@ -129,31 +129,32 @@ limit_bandwidth(){
 }
 
 all_query() {
+    scl=$1
+    memory=$2
     upper_dir=/home/ec2-user/logs
     mkdir -p ${upper_dir}
 
-    for((scl=12;scl<=18;scl=scl+6)); do #scale
-        gen_data $scl
-        memory=8
+    # for((scl=12;scl<=18;scl=scl+6)); do #scale
+    gen_data $scl
 #        for((memory=4;memory<=8;memory=scl+4)); do
-            for((j=0;j<=1;j++)); do #query
-                query=$j
-                lower_dir=${upper_dir}/type${query}_scale${scl}_mem${memory}
-                mkdir -p ${lower_dir}
+    for((j=0;j<=1;j++)); do #query
+        query=$j
+        lower_dir=${upper_dir}/type${query}_scale${scl}_mem${memory}
+        mkdir -p ${lower_dir}
 
-                ${DIR}/alluxio/bin/restart.sh
-                move_data $scl
-                test_bandwidth ${lower_dir}
+        ${DIR}/alluxio/bin/restart.sh
+        move_data $scl
+        test_bandwidth ${lower_dir}
 
-                all ${scl} ${query} "${memory}g"
-                mv $DIR/logs/noshuffle ${lower_dir}
-                mv $DIR/logs/shuffle ${lower_dir}
-                ${DIR}/alluxio/bin/alluxio fs rm -R /tpch
+        all ${scl} ${query} "${memory}g"
+        mv $DIR/logs/noshuffle ${lower_dir}
+        mv $DIR/logs/shuffle ${lower_dir}
+        ${DIR}/alluxio/bin/alluxio fs rm -R /tpch
 
-            done
+    done
 #        done
-        clean_data
-     done
+    clean_data
+#     done
 }
 
 auto_test() {
