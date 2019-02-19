@@ -139,7 +139,7 @@ all_query() {
 
     for((scl=12;scl<=18;scl=scl+6)); do #scale
         gen_data $scl
-        for((memory=4;memory<=8;memory=scl+4)); do
+        for((memory=8;memory<=12;memory=memory+4)); do
             for((j=0;j<=1;j++)); do #query
                 query=$j
                 lower_dir=${upper_dir}/type${query}_scale${scl}_mem${memory}
