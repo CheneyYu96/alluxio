@@ -151,10 +151,10 @@ all_query() {
     scl=$1
     upper_dir=/home/ec2-user/logs
     mkdir -p ${upper_dir}
-
+    memory=4
     for((scl=12;scl<=18;scl=scl+6)); do #scale
         gen_data $scl
-        for((memory=8;memory<=12;memory=memory+4)); do
+#        for((memory=8;memory<=12;memory=memory+4)); do
             for((j=0;j<=1;j++)); do #query
                 query=$j
                 lower_dir=${upper_dir}/type${query}_scale${scl}_mem${memory}
@@ -170,7 +170,7 @@ all_query() {
                 ${DIR}/alluxio/bin/alluxio fs rm -R /tpch
 
             done
-        done
+#        done
         clean_data
      done
 }
