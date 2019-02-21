@@ -37,6 +37,7 @@ import javax.annotation.concurrent.NotThreadSafe;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.management.ManagementFactory;
 
 /**
  * Provides an {@link InputStream} implementation that is based on {@link PacketReader}s to
@@ -276,8 +277,10 @@ public class BlockInStream extends InputStream implements BoundedStream, Seekabl
         String hostName = ((NettyPacketReader) mPacketReader).getWorkerHostName();
         LOG.info("Read bytes from remote. size:" + toRead + "; hostname:" + hostName);
 
+        String vmName = ManagementFactory.getRuntimeMXBean().getName();
+
         fw = new FileWriter(mLogPath, true); //the true will append the new data
-        fw.write(System.currentTimeMillis() + "\t" + hostName + "\t" + toRead + "\n");
+        fw.write(System.currentTimeMillis() + "\t" + hostName + "\t" + toRead + "\t" + vmName + "\n");
         fw.close();
       }
     }

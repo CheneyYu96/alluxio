@@ -132,6 +132,21 @@ limit_bandwidth(){
     ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no "sudo wondershaper -c -a eth0; sudo wondershaper -a eth0 -d $limit -u $limit"
 }
 
+mice_test() {
+    scl=2
+    dir=/home/ec2-user/logs/mice_test
+    mkdir -p ${dir}
+    gen_data $scl
+
+    move_data $scl
+    all ${scl} 0 "4g" 2
+
+    mv $DIR/logs/noshuffle ${dir}
+    mv $DIR/logs/shuffle ${dir}
+    ${DIR}/alluxio/bin/alluxio fs rm -R /tpch
+    clean_data
+}
+
 all_query() {
     scl=$1
     upper_dir=/home/ec2-user/logs
@@ -226,6 +241,8 @@ else
         limit)                  limit_bandwidth $2
                                 ;;
         auto)                   all_query $2 $3
+                                ;;
+        mice)                   mice_test
                                 ;;
         * )                     usage
     esac
