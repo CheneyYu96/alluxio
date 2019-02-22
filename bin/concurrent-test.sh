@@ -1,25 +1,9 @@
 #!/usr/bin/env bash
 set -euxo pipefail
 
-source auto-test-2.sh
+LOCAL_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )"  && pwd )"
 
-collect_workerloads(){
-    worker_log_dir=$1
-    name=$2
-
-    workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
-
-    if ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no test -e /home/ec2-user/logs/workerLoads.txt; then
-        scp -o StrictHostKeyChecking=no ec2-user@${workers[0]}:/home/ec2-user/logs/workerLoads.txt /home/ec2-user/logs/${worker_log_dir}/workerLoads0_${name}.txt
-        ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/workerLoads.txt"
-    fi
-
-    if ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no test -e /home/ec2-user/logs/workerLoads.txt; then
-        scp -o StrictHostKeyChecking=no ec2-user@${workers[1]}:/home/ec2-user/logs/workerLoads.txt /home/ec2-user/logs/${worker_log_dir}/workerLoads1_${name}.txt
-        ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/workerLoads.txt"
-    fi
-}
-
+source ${LOCAL_DIR}/utils.sh
 
 con_shuffle(){
     scale=$1
@@ -79,7 +63,7 @@ con_nonshuffle(){
 }
 
 concurrent_test(){
-    con_num = $1
+    con_num=$1
     upper_dir=/home/ec2-user/logs
     for((scl=12;scl<=18;scl=scl+6)); do #scale
         gen_data $scl

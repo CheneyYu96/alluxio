@@ -1,40 +1,9 @@
 #!/usr/bin/env bash
 set -euxo pipefail
-#set -x
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )"  && pwd )"
-DIR="$( cd "$DIR/../.." && pwd )"
+LOCAL_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )"  && pwd )"
 
-echo "dir : $DIR"
-
-gen_data(){
-    SCL=$1
-    cd $DIR/tpch-spark/dbgen
-    ./dbgen -s $SCL -T O
-    ./dbgen -s $SCL -T L
-
-    cd $DIR
-    if [[ -d data ]]; then
-        rm -r data/
-    fi
-    mkdir -p data
-    mv tpch-spark/dbgen/*.tbl data/
-
-}
-
-move_data(){
-
-    $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/lineitem.tbl /tpch/lineitem.tbl;
-    $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/orders.tbl /tpch/orders.tbl;
-
-}
-
-clean_data(){
-    cd $DIR
-    if [[ -d data ]]; then
-        rm -r data/
-    fi
-}
+source ${LOCAL_DIR}/utils.sh
 
 # include shuffle & non shuffle
 all() {
@@ -119,19 +88,6 @@ all() {
 
 }
 
-free_limit(){
-    workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
-    ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no "sudo wondershaper -c -a eth0; echo test"
-    ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no "sudo wondershaper -c -a eth0; echo test"
-}
-
-limit_bandwidth(){
-    workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
-    limit=$1
-    ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no "sudo wondershaper -c -a eth0; sudo wondershaper -a eth0 -d $limit -u $limit"
-    ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no "sudo wondershaper -c -a eth0; sudo wondershaper -a eth0 -d $limit -u $limit"
-}
-
 mice_test() {
     scl=2
     dir=/home/ec2-user/logs/mice_test
@@ -207,18 +163,6 @@ auto_test() {
 
 }
 
-test_bandwidth() {
-    saved_dir=$1
-
-    workers=(`cat /home/ec2-user/hadoop/conf/slaves`);
-
-    echo "Setup iperf3"
-    ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no "iperf3 -s > /dev/null 2>&1 &"
-    ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no "iperf3 -c ${workers[0]} -d" >> ${saved_dir}/bandwith.txt
-
-    echo "kill iperf3 server process"
-    ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no "pkill iperf3"
-}
 
 usage() {
     echo "Usage: $0 shffl|noshffl scale #query"
