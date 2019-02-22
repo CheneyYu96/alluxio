@@ -8,7 +8,7 @@ source ${LOCAL_DIR}/utils.sh
 con_shuffle(){
     scale=$1
     query=$2
-    concurrent = $3
+    concurrent=$3
 
     sed -i "/alluxio.user.file.passive.cache.enabled=true/c\alluxio.user.file.passive.cache.enabled=false" \
     $DIR/alluxio/conf/alluxio-site.properties
@@ -31,7 +31,7 @@ con_shuffle(){
 con_nonshuffle(){
     scale=$1
     query=$2
-    concurrent = $3
+    concurrent=$3
 
     sed -i "/alluxio.user.file.passive.cache.enabled=false/c\alluxio.user.file.passive.cache.enabled=true" \
     $DIR/alluxio/conf/alluxio-site.properties
