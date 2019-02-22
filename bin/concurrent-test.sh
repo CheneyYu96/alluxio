@@ -20,7 +20,7 @@ con_shuffle(){
     mkdir -p $DIR/logs/shuffle
 
     for((c=1;c<=${concurrent};c++)); do
-        $DIR/spark/bin/spark-submit --executor-cores ${core} \
+        $DIR/spark/bin/spark-submit --num-executors 2 --executor-cores ${core} \
         --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py \
         --query ${query} --app "shuffle: type${query} scale${scale} concurrency${c}" > $DIR/logs/shuffle/scale${scale}_con${c}.log 2>&1 &
     done
@@ -54,7 +54,7 @@ con_nonshuffle(){
 
     # formal experiment
     for((c=1;c<=${concurrent};c++)); do
-        $DIR/spark/bin/spark-submit --executor-cores ${core} \
+        $DIR/spark/bin/spark-submit --num-executors 2 --executor-cores ${core} \
         --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py \
         --query ${query} --app "noshuffle: type${query} scale${scale} concurrency${c}" > $DIR/logs/noshuffle/scale${scale}_con${c}.log 2>&1 &
     done
