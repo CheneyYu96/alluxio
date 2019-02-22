@@ -46,7 +46,7 @@ con_nonshuffle(){
     mkdir -p  $DIR/logs/noshuffle
 
     # warm up
-    for((w=1;w<=3;w++)); do
+    for((w=1;w<=5;w++)); do
         $DIR/spark/bin/spark-submit \
         --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py \
         --query ${query} --app "warm up ${w}: type${query} scale${scale}" > $DIR/logs/noshuffle/warm_up${w}.log 2>&1
@@ -70,7 +70,7 @@ concurrent_test(){
     con_num=$1
     core_num=$2
     upper_dir=/home/ec2-user/logs
-    for((scl=12;scl<=18;scl=scl+6)); do #scale
+    for((scl=6;scl<=18;scl=scl+6)); do #scale
         gen_data $scl
 
         for((j=0;j<=1;j++)); do #query
