@@ -46,7 +46,7 @@ all() {
     move_data
 
     # spread data
-    for ((i=1;i<=2;i++)); do
+    for ((i=1;i<=4;i++)); do
 
         $DIR/spark/bin/spark-submit --num-executors ${NUM} --driver-memory ${MEM} --executor-memory ${MEM} \
         --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py \
@@ -68,7 +68,7 @@ all() {
 }
 
 mice_test() {
-    scl=2
+    scl=6
     dir=/home/ec2-user/logs/mice_test
     mkdir -p ${dir}
     gen_data $scl
@@ -77,7 +77,6 @@ mice_test() {
 
     mv $DIR/logs/noshuffle ${dir}
     mv $DIR/logs/shuffle ${dir}
-    ${DIR}/alluxio/bin/alluxio fs rm -R /tpch
     clean_data
 }
 
