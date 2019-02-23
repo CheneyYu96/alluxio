@@ -38,6 +38,8 @@ all() {
 
     collect_workerloads shuffle shuffle
 
+    ${DIR}/alluxio/bin/alluxio fs rm -R /tpch
+
     sed -i "/alluxio.user.file.passive.cache.enabled=false/c\alluxio.user.file.passive.cache.enabled=true" \
     $DIR/alluxio/conf/alluxio-site.properties
     ${DIR}/alluxio/bin/restart.sh
@@ -60,6 +62,9 @@ all() {
     --query ${QUERY} --app "noshuffle query type${QUERY} scale${SCALE} mem${MEM}" > $DIR/logs/noshuffle/scale${SCALE}.log 2>&1
 
     collect_workerloads noshuffle noshuffle
+
+    ${DIR}/alluxio/bin/alluxio fs rm -R /tpch
+
 }
 
 mice_test() {
