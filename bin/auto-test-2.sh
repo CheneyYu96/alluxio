@@ -20,24 +20,6 @@ all() {
         pre_data $SCALE
     fi
 
-    echo "alluxio.user.file.passive.cache.enabled=false" >> $DIR/alluxio/conf/alluxio-site.properties
-
-    ${DIR}/alluxio/bin/restart.sh
-    move_data
-
-#    $DIR/spark/bin/spark-submit --total-executor-cores ${total_cores} --executor-cores ${CORES} \
-#    --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py \
-#    --app "Join shuffle scale${SCALE}" > $DIR/logs/shuffle/scale${SCALE}.log 2>&1
-
-    #shuffle
-
-    $DIR/spark/bin/spark-submit --num-executors ${NUM} --driver-memory ${MEM} --executor-memory ${MEM} \
-    --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py \
-    --query ${QUERY} --app "shuffle query type${QUERY} scale${SCALE} mem${MEM}" > $DIR/logs/shuffle/scale${SCALE}.log 2>&1
-
-    collect_workerloads shuffle shuffle
-
-    ${DIR}/alluxio/bin/alluxio fs rm -R /tpch
 
     sed -i "/alluxio.user.file.passive.cache.enabled=false/d" $DIR/alluxio/conf/alluxio-site.properties
     ${DIR}/alluxio/bin/restart.sh
@@ -60,6 +42,25 @@ all() {
     --query ${QUERY} --app "noshuffle query type${QUERY} scale${SCALE} mem${MEM}" > $DIR/logs/noshuffle/scale${SCALE}.log 2>&1
 
     collect_workerloads noshuffle noshuffle
+
+    ${DIR}/alluxio/bin/alluxio fs rm -R /tpch
+
+    echo "alluxio.user.file.passive.cache.enabled=false" >> $DIR/alluxio/conf/alluxio-site.properties
+
+    ${DIR}/alluxio/bin/restart.sh
+    move_data
+
+#    $DIR/spark/bin/spark-submit --total-executor-cores ${total_cores} --executor-cores ${CORES} \
+#    --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py \
+#    --app "Join shuffle scale${SCALE}" > $DIR/logs/shuffle/scale${SCALE}.log 2>&1
+
+    #shuffle
+
+    $DIR/spark/bin/spark-submit --num-executors ${NUM} --driver-memory ${MEM} --executor-memory ${MEM} \
+    --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py \
+    --query ${QUERY} --app "shuffle query type${QUERY} scale${SCALE} mem${MEM}" > $DIR/logs/shuffle/scale${SCALE}.log 2>&1
+
+    collect_workerloads shuffle shuffle
 
     ${DIR}/alluxio/bin/alluxio fs rm -R /tpch
 
