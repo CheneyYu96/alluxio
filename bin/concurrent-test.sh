@@ -18,7 +18,7 @@ con_shuffle(){
 
     ${DIR}/alluxio/bin/restart.sh
     move_data
-
+    clear_workerloads
     mkdir -p $DIR/logs/shuffle
 
     for((c=1;c<=${concurrent};c++)); do
@@ -42,6 +42,7 @@ con_nonshuffle(){
 
     ${DIR}/alluxio/bin/restart.sh
     load_data
+    clear_workerloads
 
     mkdir -p  $DIR/logs/noshuffle
 

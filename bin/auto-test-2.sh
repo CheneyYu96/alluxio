@@ -21,7 +21,7 @@ all() {
     fi
 
 
-    sed -i "/alluxio.user.file.passive.cache.enabled=false/d" $DIR/alluxio/conf/alluxio-site.properties
+#    sed -i "/alluxio.user.file.passive.cache.enabled=false/d" $DIR/alluxio/conf/alluxio-site.properties
     ${DIR}/alluxio/bin/restart.sh
     load_data
     clear_workerloads
@@ -45,7 +45,7 @@ all() {
 
     ${DIR}/alluxio/bin/alluxio fs rm -R /home
 
-    echo "alluxio.user.file.passive.cache.enabled=false" >> $DIR/alluxio/conf/alluxio-site.properties
+#    echo "alluxio.user.file.passive.cache.enabled=false" >> $DIR/alluxio/conf/alluxio-site.properties
 
     ${DIR}/alluxio/bin/restart.sh
     move_data
