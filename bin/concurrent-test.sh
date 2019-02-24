@@ -68,7 +68,7 @@ concurrent_test(){
     con_num=$1
     core_num=$2
     upper_dir=/home/ec2-user/logs
-    for((scl=6;scl<=12;scl=scl+6)); do #scale
+    for((scl=12;scl<=18;scl=scl+6)); do #scale
         gen_data $scl
 
         for((j=0;j<=1;j++)); do #query
