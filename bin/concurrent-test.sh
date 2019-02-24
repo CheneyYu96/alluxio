@@ -122,7 +122,7 @@ else
     case $1 in
         test)                   concurrent_test $2 $3
                                 ;;
-        load)                   load_data $1
+        load)                   load_data $2
                                 ;;
         * )                     usage
     esac
