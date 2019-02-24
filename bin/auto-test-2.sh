@@ -20,23 +20,27 @@ all() {
         pre_data $SCALE
     fi
 
+    sed -i \
+    "/alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.TimerPolicy/c\alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.RoundRobinPolicy" \
+    $DIR/alluxio/conf/alluxio-site.properties
 
-    sed -i "/alluxio.user.file.passive.cache.enabled=false/c\alluxio.user.file.passive.cache.enabled=true" $DIR/alluxio/conf/alluxio-site.properties
+    sed -i "/alluxio.user.file.replication.min=0/c\/alluxio.user.file.replication.min=2" $DIR/alluxio/conf/alluxio-site.properties
+#    sed -i "/alluxio.user.file.passive.cache.enabled=false/c\alluxio.user.file.passive.cache.enabled=true" $DIR/alluxio/conf/alluxio-site.properties
     ${DIR}/alluxio/bin/restart.sh
     move_data
 
 #    load_data
     clear_workerloads
 #    spread data
-    for ((i=1;i<=4;i++)); do
-
-        $DIR/spark/bin/spark-submit --num-executors ${NUM} --driver-memory ${MEM} --executor-memory ${MEM} \
-        --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py \
-        --query ${QUERY} --app "warmup${i} query type${QUERY} scale${SCALE} mem${MEM}" > $DIR/logs/noshuffle/warmup_${i}.log 2>&1
-
-        collect_workerloads noshuffle warmup_${i}
-
-    done
+#    for ((i=1;i<=4;i++)); do
+#
+#        $DIR/spark/bin/spark-submit --num-executors ${NUM} --driver-memory ${MEM} --executor-memory ${MEM} \
+#        --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py \
+#        --query ${QUERY} --app "warmup${i} query type${QUERY} scale${SCALE} mem${MEM}" > $DIR/logs/noshuffle/warmup_${i}.log 2>&1
+#
+#        collect_workerloads noshuffle warmup_${i}
+#
+#    done
 
     # formal experiment
     $DIR/spark/bin/spark-submit --num-executors ${NUM} --driver-memory ${MEM} --executor-memory ${MEM} \
@@ -47,8 +51,12 @@ all() {
 
     ${DIR}/alluxio/bin/alluxio fs rm -R /home
 
-#    echo "alluxio.user.file.passive.cache.enabled=false" >> $DIR/alluxio/conf/alluxio-site.properties
+    sed -i \
+    "/alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.RoundRobinPolicy/c\alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.TimerPolicy" \
+    $DIR/alluxio/conf/alluxio-site.properties
 
+    sed -i "/alluxio.user.file.replication.min=2/c\/alluxio.user.file.replication.min=0" $DIR/alluxio/conf/alluxio-site.properties
+#    sed -i "/alluxio.user.file.passive.cache.enabled=false/c\alluxio.user.file.passive.cache.enabled=true" $DIR/alluxio/conf/alluxio-site.properties
     ${DIR}/alluxio/bin/restart.sh
     move_data
 
