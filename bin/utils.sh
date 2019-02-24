@@ -79,3 +79,18 @@ collect_workerloads(){
         ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/workerLoads.txt"
     fi
 }
+
+load_data(){
+    move_data
+
+    cd $DIR
+
+    workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
+
+    scp -o StrictHostKeyChecking=no -r data/ ec2-user@${workers[0]}:/home/ec2-user/
+    scp -o StrictHostKeyChecking=no -r data/ ec2-user@${workers[1]}:/home/ec2-user/
+
+    ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no "/home/ec2-user/alluxio/bin/alluxio fs load --local /home/ec2-user/data/"
+    ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no "/home/ec2-user/alluxio/bin/alluxio fs load --local /home/ec2-user/data/"
+
+}
