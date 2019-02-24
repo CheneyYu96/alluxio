@@ -17,7 +17,7 @@ con_shuffle(){
     "/alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.RoundRobinPolicy/c\alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.TimerPolicy" \
     $DIR/alluxio/conf/alluxio-site.properties
 
-    sed -i "/alluxio.user.file.replication.min=2/c\/alluxio.user.file.replication.min=0" $DIR/alluxio/conf/alluxio-site.properties
+    sed -i "/alluxio.user.file.replication.min=2/c\alluxio.user.file.replication.min=0" $DIR/alluxio/conf/alluxio-site.properties
 
     ${DIR}/alluxio/bin/restart.sh
     move_data
@@ -44,7 +44,7 @@ con_nonshuffle(){
     sed -i \
     "/alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.TimerPolicy/c\alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.RoundRobinPolicy" \
     $DIR/alluxio/conf/alluxio-site.properties
-    sed -i "/alluxio.user.file.replication.min=0/c\/alluxio.user.file.replication.min=2" $DIR/alluxio/conf/alluxio-site.properties
+    sed -i "/alluxio.user.file.replication.min=0/c\alluxio.user.file.replication.min=2" $DIR/alluxio/conf/alluxio-site.properties
 
     ${DIR}/alluxio/bin/restart.sh
     move_data
