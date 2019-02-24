@@ -21,20 +21,22 @@ all() {
     fi
 
 
-#    sed -i "/alluxio.user.file.passive.cache.enabled=false/d" $DIR/alluxio/conf/alluxio-site.properties
+    sed -i "/alluxio.user.file.passive.cache.enabled=false/c\alluxio.user.file.passive.cache.enabled=true" $DIR/alluxio/conf/alluxio-site.properties
     ${DIR}/alluxio/bin/restart.sh
-    load_data
+    move_data
+
+#    load_data
     clear_workerloads
-    # spread data
-#    for ((i=1;i<=4;i++)); do
-#
-#        $DIR/spark/bin/spark-submit --num-executors ${NUM} --driver-memory ${MEM} --executor-memory ${MEM} \
-#        --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py \
-#        --query ${QUERY} --app "warmup${i} query type${QUERY} scale${SCALE} mem${MEM}" > $DIR/logs/noshuffle/warmup_${i}.log 2>&1
-#
-#        collect_workerloads noshuffle warmup_${i}
-#
-#    done
+#    spread data
+    for ((i=1;i<=4;i++)); do
+
+        $DIR/spark/bin/spark-submit --num-executors ${NUM} --driver-memory ${MEM} --executor-memory ${MEM} \
+        --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py \
+        --query ${QUERY} --app "warmup${i} query type${QUERY} scale${SCALE} mem${MEM}" > $DIR/logs/noshuffle/warmup_${i}.log 2>&1
+
+        collect_workerloads noshuffle warmup_${i}
+
+    done
 
     # formal experiment
     $DIR/spark/bin/spark-submit --num-executors ${NUM} --driver-memory ${MEM} --executor-memory ${MEM} \
