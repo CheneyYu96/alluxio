@@ -90,6 +90,23 @@ concurrent_test(){
     done
 }
 
+mice_test(){
+    scl=$1
+    dir_name=/home/ec2-user/logs/mice-test
+
+    gen_data $scl
+
+    mkdir -p ${dir_name}
+
+    con_shuffle ${scl} 0 4 4
+    mv $DIR/logs/shuffle ${dir_name}
+
+    con_nonshuffle ${scl} 0 4 4
+    mv $DIR/logs/noshuffle ${dir_name}
+
+    clean_data
+}
+
 
 usage() {
     echo "Usage: $0 test # concurrency # cores"
@@ -102,6 +119,8 @@ if [[ "$#" -lt 3 ]]; then
 else
     case $1 in
         test)                   concurrent_test $2 $3
+                                ;;
+        mice)                   mice_test $2
                                 ;;
         * )                     usage
     esac
