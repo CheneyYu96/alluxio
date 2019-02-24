@@ -93,6 +93,21 @@ concurrent_test(){
     done
 }
 
+load_data(){
+    scl=$1
+    gen_data $scl
+
+    cd $DIR
+
+    workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
+
+    scp -o StrictHostKeyChecking=no -r data/ ec2-user@${workers[0]}:/home/ec2-user/
+    scp -o StrictHostKeyChecking=no -r data/ ec2-user@${workers[1]}:/home/ec2-user/
+
+    ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no "/home/ec2-user/alluxio/bin/alluxio fs load --local /home/ec2-user/data/"
+    ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no "/home/ec2-user/alluxio/bin/alluxio fs load --local /home/ec2-user/data/"
+
+}
 
 usage() {
     echo "Usage: $0 test # concurrency # cores"
@@ -105,6 +120,8 @@ if [[ "$#" -lt 3 ]]; then
 else
     case $1 in
         test)                   concurrent_test $2 $3
+                                ;;
+        load)                   load_data $1
                                 ;;
         * )                     usage
     esac
