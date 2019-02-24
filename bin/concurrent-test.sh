@@ -41,18 +41,18 @@ con_nonshuffle(){
     $DIR/alluxio/conf/alluxio-site.properties
 
     ${DIR}/alluxio/bin/restart.sh
-    move_data
+    load_data
 
     mkdir -p  $DIR/logs/noshuffle
 
     # warm up
-    for((w=1;w<=5;w++)); do
-        $DIR/spark/bin/spark-submit \
-        --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py \
-        --query ${query} --app "warm up ${w}: type${query} scale${scale}" > $DIR/logs/noshuffle/warm_up${w}.log 2>&1
-
-        collect_workerloads noshuffle warmup_${w}
-    done
+#    for((w=1;w<=5;w++)); do
+#        $DIR/spark/bin/spark-submit \
+#        --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py \
+#        --query ${query} --app "warm up ${w}: type${query} scale${scale}" > $DIR/logs/noshuffle/warm_up${w}.log 2>&1
+#
+#        collect_workerloads noshuffle warmup_${w}
+#    done
 
     # formal experiment
     for((c=1;c<=${concurrent};c++)); do
@@ -83,7 +83,6 @@ concurrent_test(){
             con_shuffle ${scl} ${query} ${con_num} ${core_num}
             mv $DIR/logs/shuffle ${lower_dir}
 
-            ${DIR}/alluxio/bin/alluxio fs rm -R /home
 
             con_nonshuffle ${scl} ${query} ${con_num} ${core_num}
             mv $DIR/logs/noshuffle ${lower_dir}

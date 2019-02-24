@@ -24,7 +24,7 @@ all() {
     sed -i "/alluxio.user.file.passive.cache.enabled=false/d" $DIR/alluxio/conf/alluxio-site.properties
     ${DIR}/alluxio/bin/restart.sh
     load_data
-
+    clear_workerloads
     # spread data
 #    for ((i=1;i<=4;i++)); do
 #
@@ -55,7 +55,7 @@ all() {
 #    --app "Join shuffle scale${SCALE}" > $DIR/logs/shuffle/scale${SCALE}.log 2>&1
 
     #shuffle
-
+    clear_workerloads
     $DIR/spark/bin/spark-submit --num-executors ${NUM} --driver-memory ${MEM} --executor-memory ${MEM} \
     --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py \
     --query ${QUERY} --app "shuffle query type${QUERY} scale${SCALE} mem${MEM}" > $DIR/logs/shuffle/scale${SCALE}.log 2>&1

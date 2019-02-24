@@ -80,6 +80,18 @@ collect_workerloads(){
     fi
 }
 
+clear_workerloads(){
+    workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
+
+    if ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no test -e /home/ec2-user/logs/workerLoads.txt; then
+        ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/workerLoads.txt"
+    fi
+
+    if ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no test -e /home/ec2-user/logs/workerLoads.txt; then
+        ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/workerLoads.txt"
+    fi
+}
+
 load_data(){
     move_data
 
