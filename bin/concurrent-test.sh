@@ -83,7 +83,7 @@ concurrent_test(){
             con_shuffle ${scl} ${query} ${con_num} ${core_num}
             mv $DIR/logs/shuffle ${lower_dir}
 
-            ${DIR}/alluxio/bin/alluxio fs rm -R /tpch
+            ${DIR}/alluxio/bin/alluxio fs rm -R /home
 
             con_nonshuffle ${scl} ${query} ${con_num} ${core_num}
             mv $DIR/logs/noshuffle ${lower_dir}
@@ -96,6 +96,7 @@ concurrent_test(){
 load_data(){
     scl=$1
     gen_data $scl
+    move_data
 
     cd $DIR
 
