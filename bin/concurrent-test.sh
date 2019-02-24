@@ -13,12 +13,16 @@ con_shuffle(){
 
     total_cores=$[$core*2]
 
-    sed -i "/alluxio.user.file.passive.cache.enabled=true/c\alluxio.user.file.passive.cache.enabled=false" \
+    sed -i \
+    "/alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.RoundRobinPolicy/c\alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.TimerPolicy" \
     $DIR/alluxio/conf/alluxio-site.properties
+
+    sed -i "/alluxio.user.file.replication.min=2/c\/alluxio.user.file.replication.min=0" $DIR/alluxio/conf/alluxio-site.properties
 
     ${DIR}/alluxio/bin/restart.sh
     move_data
     clear_workerloads
+
     mkdir -p $DIR/logs/shuffle
 
     for((c=1;c<=${concurrent};c++)); do
@@ -37,23 +41,16 @@ con_nonshuffle(){
     concurrent=$3
     core=$4
 
-    sed -i "/alluxio.user.file.passive.cache.enabled=false/c\alluxio.user.file.passive.cache.enabled=true" \
+    sed -i \
+    "/alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.TimerPolicy/c\alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.RoundRobinPolicy" \
     $DIR/alluxio/conf/alluxio-site.properties
+    sed -i "/alluxio.user.file.replication.min=0/c\/alluxio.user.file.replication.min=2" $DIR/alluxio/conf/alluxio-site.properties
 
     ${DIR}/alluxio/bin/restart.sh
-    load_data
+    move_data
     clear_workerloads
 
-    mkdir -p  $DIR/logs/noshuffle
-
-    # warm up
-#    for((w=1;w<=5;w++)); do
-#        $DIR/spark/bin/spark-submit \
-#        --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py \
-#        --query ${query} --app "warm up ${w}: type${query} scale${scale}" > $DIR/logs/noshuffle/warm_up${w}.log 2>&1
-#
-#        collect_workerloads noshuffle warmup_${w}
-#    done
+    mkdir -p $DIR/logs/noshuffle
 
     # formal experiment
     for((c=1;c<=${concurrent};c++)); do
@@ -71,7 +68,7 @@ concurrent_test(){
     con_num=$1
     core_num=$2
     upper_dir=/home/ec2-user/logs
-    for((scl=6;scl<=18;scl=scl+6)); do #scale
+    for((scl=6;scl<=12;scl=scl+6)); do #scale
         gen_data $scl
 
         for((j=0;j<=1;j++)); do #query
@@ -105,8 +102,6 @@ if [[ "$#" -lt 3 ]]; then
 else
     case $1 in
         test)                   concurrent_test $2 $3
-                                ;;
-        load)                   load_data $2
                                 ;;
         * )                     usage
     esac
