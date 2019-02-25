@@ -90,6 +90,13 @@ concurrent_test(){
     done
 }
 
+auto_test(){
+    for((con=1;con<=16;con=con*2)); do
+        cores=$[16/$con]
+        concurrent_test ${con} ${cores}
+    done
+}
+
 mice_test(){
     scl=$1
     dir_name=/home/ec2-user/logs/mice-test
@@ -119,6 +126,8 @@ if [[ "$#" -lt 3 ]]; then
 else
     case $1 in
         test)                   concurrent_test $2 $3
+                                ;;
+        auto)                   auto_test
                                 ;;
         mice)                   mice_test $2
                                 ;;
