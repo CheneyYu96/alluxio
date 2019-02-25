@@ -23,7 +23,8 @@ gen_data(){
 
 move_data(){
     $DIR/alluxio/bin/alluxio fs mkdir $DIR/data
-    $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/ $DIR/data/
+    $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/lineitem.tbl $DIR/data/lineitem.tbl
+    $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/orders.tbl $DIR/data/orders.tbl
 
 #    $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/lineitem.tbl /tpch/lineitem.tbl;
 #    $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/orders.tbl /tpch/orders.tbl;
