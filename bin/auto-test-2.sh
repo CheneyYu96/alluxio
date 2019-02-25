@@ -149,6 +149,61 @@ auto_test() {
 
 }
 
+cache_test(){
+    scl=$1
+    cache_dir_name=/home/ec2-user/logs/cache_enable_scl${scl}
+    nocache_dir_name=/home/ec2-user/logs/cache_disable_scl${scl}
+
+    mkdir -p ${cache_dir_name}
+    mkdir -p ${nocache_dir_name}
+
+    gen_data $scl
+    all $scl 0 4 2
+    mv $DIR/logs/noshuffle ${nocache_dir_name}
+    mv $DIR/logs/shuffle ${nocache_dir_name}
+
+    old_all $scl 0
+    mv $DIR/logs/noshuffle ${cache_dir_name}
+    mv $DIR/logs/shuffle ${cache_dir_name}
+    clean_data
+}
+
+old_all(){
+    SCALE=$1
+    QUERY=$2
+
+    sed -i "/alluxio.user.file.replication.min=2/c\/alluxio.user.file.replication.min=0" $DIR/alluxio/conf/alluxio-site.properties
+    sed -i "/alluxio.user.file.passive.cache.enabled=false/c\alluxio.user.file.passive.cache.enabled=true" $DIR/alluxio/conf/alluxio-site.properties
+    ${DIR}/alluxio/bin/restart.sh
+    move_data
+
+    clear_workerloads
+    $DIR/spark/bin/spark-submit \
+    --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py \
+    --query ${QUERY} --app "cache allowed shuffle: type${QUERY} scale${SCALE}" > $DIR/logs/shuffle/scale${SCALE}.log 2>&1
+
+    collect_workerloads shuffle shuffle
+
+    clear_workerloads
+#    spread data
+    for ((i=1;i<=3;i++)); do
+
+        $DIR/spark/bin/spark-submit \
+        --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py \
+        --query ${QUERY} --app "cache allowed warmup${i}: type${QUERY} scale${SCALE}" > $DIR/logs/noshuffle/warmup_${i}.log 2>&1
+
+        collect_workerloads noshuffle warmup_${i}
+
+    done
+
+    clear_workerloads
+    $DIR/spark/bin/spark-submit \
+    --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py \
+    --query ${QUERY} --app "cache allowed noshuffle: type${QUERY} scale${SCALE}" > $DIR/logs/noshuffle/scale${SCALE}.log 2>&1
+
+    collect_workerloads noshuffle noshuffle
+
+}
 
 usage() {
     echo "Usage: $0 shffl|noshffl scale #query"
@@ -173,6 +228,8 @@ else
         auto)                   all_query $2 $3
                                 ;;
         mice)                   mice_test $2
+                                ;;
+        cache)                  cache_test $2
                                 ;;
         * )                     usage
     esac
