@@ -9,8 +9,10 @@ echo "dir : $DIR"
 gen_data(){
     SCL=$1
     cd $DIR/tpch-spark/dbgen
-    ./dbgen -s $SCL -T O
+    # ./dbgen -s $SCL -T O
     ./dbgen -s $SCL -T L
+
+    awk -v FS='|' -v OFS='|' -v ORS='|\n' '{sub(/.{1}$/,"")}1 {print $5, $6, $7, $8, $9, $10, $11}' lineitem.tbl > lineitem_part.tbl
 
     cd $DIR
     if [[ -d data ]]; then
@@ -24,8 +26,8 @@ gen_data(){
 move_data(){
     $DIR/alluxio/bin/alluxio fs mkdir $DIR/data
     $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/lineitem.tbl $DIR/data/lineitem.tbl
-    $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/orders.tbl $DIR/data/orders.tbl
-
+    # $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/orders.tbl $DIR/data/orders.tbl
+    $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/lineitem_part.tbl $DIR/data/lineitem_part.tbl
 #    $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/lineitem.tbl /tpch/lineitem.tbl;
 #    $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/orders.tbl /tpch/orders.tbl;
 
