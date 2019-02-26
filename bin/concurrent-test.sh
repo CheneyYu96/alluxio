@@ -130,7 +130,7 @@ con_noshuffle_debug() {
     concurrent=$3
     core=$4
 
-    total_cores=$[$core*2]add
+    total_cores=$[$core*2]
 
     sed -i \
     "/alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.TimerPolicy/c\alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.RoundRobinPolicy" \
