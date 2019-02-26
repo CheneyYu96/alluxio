@@ -114,8 +114,8 @@ con_shuffle_debug() {
 
     for((c=1;c<=${concurrent};c++)); do
         $DIR/spark/bin/spark-submit --total-executor-cores ${total_cores} --executor-cores ${core} \
-        --conf spark.driver.extraJavaOptions="-agentpath:/home/ec2-user/async-profiler/build/libasyncProfiler.so=start,threads,interval=99700000,raw,event=cpu,file=/home/ec2-user/shuffle-profile-${c}.traces" \
-        --conf spark.executor.extraJavaOptions="-agentpath:/home/ec2-user/async-profiler/build/libasyncProfiler.so=start,threads,interval=99700000,raw,event=cpu,file=/home/ec2-user/shuffle-profile-${c}.traces" \
+        --conf spark.driver.extraJavaOptions="-agentpath:/home/ec2-user/async-profiler/build/libasyncProfiler.so=start,threads,interval=99700000,raw,event=cpu,file=$DIR/logs/shuffle/shuffle-profile-${c}.traces" \
+        --conf spark.executor.extraJavaOptions="-agentpath:/home/ec2-user/async-profiler/build/libasyncProfiler.so=start,threads,interval=99700000,raw,event=cpu,file=$DIR/logs/shuffle/shuffle-profile-${c}.traces" \
         --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py \
         --query ${query} --app "shuffle: type${query} scale${scale} concurrency${c}" > $DIR/logs/shuffle/scale${scale}_con${c}.log 2>&1 &
     done
@@ -148,8 +148,8 @@ con_noshuffle_debug() {
         $DIR/spark/bin/spark-submit \
             --total-executor-cores ${total_cores} \
             --executor-cores ${core} \
-            --conf spark.driver.extraJavaOptions="-agentpath:/home/ec2-user/async-profiler/build/libasyncProfiler.so=start,threads,interval=99700000,raw,event=cpu,file=/home/ec2-user/noshuffle-profile-${c}.traces" \
-            --conf spark.executor.extraJavaOptions="-agentpath:/home/ec2-user/async-profiler/build/libasyncProfiler.so=start,threads,interval=99700000,raw,event=cpu,file=/home/ec2-user/noshuffle-profile-${c}.traces" \
+            --conf spark.driver.extraJavaOptions="-agentpath:/home/ec2-user/async-profiler/build/libasyncProfiler.so=start,threads,interval=99700000,raw,event=cpu,file=$DIR/logs/noshuffle/noshuffle-profile-${c}.traces" \
+            --conf spark.executor.extraJavaOptions="-agentpath:/home/ec2-user/async-profiler/build/libasyncProfiler.so=start,threads,interval=99700000,raw,event=cpu,file=$DIR/logs/noshuffle/noshuffle-profile-${c}.traces" \
             --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
                 $DIR/tpch-spark/query/join.py \
                     --query ${query} \
@@ -167,8 +167,8 @@ concurrent_test_debug() {
     for((scl=12;scl<=12;scl=scl+6)); do #scale
         gen_data $scl
 
-#        for((j=0;j<=1;j++)); do #query
-            query=1
+        for((j=0;j<=1;j++)); do #query
+            query=$j
             lower_dir=${upper_dir}/debug_type${query}_scale${scl}_con${con_num}_core${core_num}
             mkdir -p ${lower_dir}
 
@@ -180,7 +180,7 @@ concurrent_test_debug() {
 
             con_noshuffle_debug ${scl} ${query} ${con_num} ${core_num}
             mv $DIR/logs/noshuffle ${lower_dir}
-#        done
+        done
 
         clean_data
     done
