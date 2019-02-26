@@ -174,7 +174,7 @@ concurrent_test_debug() {
 #            mv $DIR/logs/shuffle ${lower_dir}
 
 
-            con_nonshuffle_debug ${scl} ${query} ${con_num} ${core_num}
+            con_noshuffle_debug ${scl} ${query} ${con_num} ${core_num}
             mv $DIR/logs/noshuffle ${lower_dir}
 #        done
 
