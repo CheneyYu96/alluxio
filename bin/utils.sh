@@ -13,8 +13,13 @@ gen_data(){
     ./dbgen -s $SCL -T L
 
     # awk -v FS='|' -v OFS='|' -v ORS='|\n' '{sub(/.{1}$/,"")}1 {print $5, $6, $7, $8, $9, $10, $11}' lineitem.tbl > lineitem_part.tbl
+    if $DIR/alluxio/bin/alluxio fs test -e $DIR/data/; then
+        echo "exist"
+    else
+        $DIR/alluxio/bin/alluxio fs mkdir $DIR/data
+    fi
     $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/tpch-spark/dbgen/lineitem.tbl $DIR/data/lineitem.tbl
-    $DIR/spark/bin/spark-submit --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 –executor-memory 4g /home/ec2-user/tpch-spark/query/cut_table.py --app "cut_table"
+    $DIR/spark/bin/spark-submit --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 --executor-memory 4g /home/ec2-user/tpch-spark/query/cut_table.py --app "cut_table"
     $DIR/alluxio/bin/alluxio fs copyToLocal $DIR/data/lineitem_part.tbl $DIR/tpch-spark/dbgen/lineitem_part.tbl
 
     cd $DIR
@@ -41,6 +46,8 @@ clean_data(){
     if [[ -d data ]]; then
         rm -r data/
     fi
+    $DIR/alluxio/bin/alluxio fs rm -R $DIR/data/
+
 }
 
 free_limit(){
