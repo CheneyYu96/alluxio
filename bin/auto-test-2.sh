@@ -9,9 +9,6 @@ source ${LOCAL_DIR}/utils.sh
 all() {
     SCALE=$1
     QUERY=$2
-    MEM=$3
-    NUM=$4
-#    total_cores=$[$CORES*2]
 
     mkdir -p  $DIR/logs/shuffle
     mkdir -p  $DIR/logs/noshuffle
@@ -24,28 +21,17 @@ all() {
     "/alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.TimerPolicy/c\alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.RoundRobinPolicy" \
     $DIR/alluxio/conf/alluxio-site.properties
 
-    sed -i "/alluxio.user.file.replication.min=0/c\/alluxio.user.file.replication.min=2" $DIR/alluxio/conf/alluxio-site.properties
-#    sed -i "/alluxio.user.file.passive.cache.enabled=false/c\alluxio.user.file.passive.cache.enabled=true" $DIR/alluxio/conf/alluxio-site.properties
+    sed -i "/alluxio.user.file.replication.min=0/c\alluxio.user.file.replication.min=2" $DIR/alluxio/conf/alluxio-site.properties
+    sed -i "/alluxio.user.file.passive.cache.enabled=true/c\alluxio.user.file.passive.cache.enabled=false" $DIR/alluxio/conf/alluxio-site.properties
     ${DIR}/alluxio/bin/restart.sh
     move_data
 
-#    load_data
     clear_workerloads
-#    spread data
-#    for ((i=1;i<=4;i++)); do
-#
-#        $DIR/spark/bin/spark-submit --num-executors ${NUM} --driver-memory ${MEM} --executor-memory ${MEM} \
-#        --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py \
-#        --query ${QUERY} --app "warmup${i} query type${QUERY} scale${SCALE} mem${MEM}" > $DIR/logs/noshuffle/warmup_${i}.log 2>&1
-#
-#        collect_workerloads noshuffle warmup_${i}
-#
-#    done
 
-    # formal experiment
-    $DIR/spark/bin/spark-submit --num-executors ${NUM} --driver-memory ${MEM} --executor-memory ${MEM} \
-    --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py \
-    --query ${QUERY} --app "noshuffle query type${QUERY} scale${SCALE} mem${MEM}" > $DIR/logs/noshuffle/scale${SCALE}.log 2>&1
+    # non shuffle
+    $DIR/spark/bin/spark-submit \
+        --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar ${QUERY} \
+            > $DIR/logs/noshuffle/scale${SCALE}.log 2>&1
 
     collect_workerloads noshuffle noshuffle
 
@@ -56,19 +42,14 @@ all() {
     $DIR/alluxio/conf/alluxio-site.properties
 
     sed -i "/alluxio.user.file.replication.min=2/c\/alluxio.user.file.replication.min=0" $DIR/alluxio/conf/alluxio-site.properties
-#    sed -i "/alluxio.user.file.passive.cache.enabled=false/c\alluxio.user.file.passive.cache.enabled=true" $DIR/alluxio/conf/alluxio-site.properties
     ${DIR}/alluxio/bin/restart.sh
     move_data
 
-#    $DIR/spark/bin/spark-submit --total-executor-cores ${total_cores} --executor-cores ${CORES} \
-#    --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py \
-#    --app "Join shuffle scale${SCALE}" > $DIR/logs/shuffle/scale${SCALE}.log 2>&1
-
     #shuffle
     clear_workerloads
-    $DIR/spark/bin/spark-submit --num-executors ${NUM} --driver-memory ${MEM} --executor-memory ${MEM} \
-    --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/join.py \
-    --query ${QUERY} --app "shuffle query type${QUERY} scale${SCALE} mem${MEM}" > $DIR/logs/shuffle/scale${SCALE}.log 2>&1
+    $DIR/spark/bin/spark-submit \
+        --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar ${QUERY} \
+            > $DIR/logs/shuffle/scale${SCALE}.log 2>&1
 
     collect_workerloads shuffle shuffle
 
@@ -149,22 +130,23 @@ auto_test() {
 
 }
 
-cache_test(){
+jvm_test(){
     scl=$1
-    cache_dir_name=/home/ec2-user/logs/cache_enable_scl${scl}
-    nocache_dir_name=/home/ec2-user/logs/cache_disable_scl${scl}
-
-    mkdir -p ${cache_dir_name}
-    mkdir -p ${nocache_dir_name}
+    upper_dir=/home/ec2-user/logs/
 
     gen_data $scl
-    all $scl 0 4 2
-    mv $DIR/logs/noshuffle ${nocache_dir_name}
-    mv $DIR/logs/shuffle ${nocache_dir_name}
+    for((j=0;j<=1;j++)); do #query
+        query=$j
+        lower_dir=${upper_dir}/jvm_type${query}_scale${scl}
+        mkdir -p ${lower_dir}
 
-    old_all $scl 0
-    mv $DIR/logs/noshuffle ${cache_dir_name}
-    mv $DIR/logs/shuffle ${cache_dir_name}
+        test_bandwidth ${lower_dir}
+
+        all ${scl} ${query}
+        mv $DIR/logs/noshuffle ${lower_dir}
+        mv $DIR/logs/shuffle ${lower_dir}
+
+    done
     clean_data
 }
 
@@ -229,7 +211,7 @@ else
                                 ;;
         mice)                   mice_test $2
                                 ;;
-        cache)                  cache_test $2
+        jvm)                    jvm_test $2
                                 ;;
         * )                     usage
     esac
