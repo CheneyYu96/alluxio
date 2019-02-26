@@ -41,6 +41,8 @@ con_nonshuffle(){
     concurrent=$3
     core=$4
 
+    total_cores=$[$core*2]
+
     sed -i \
     "/alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.TimerPolicy/c\alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.RoundRobinPolicy" \
     $DIR/alluxio/conf/alluxio-site.properties
@@ -127,6 +129,8 @@ con_noshuffle_debug() {
     query=$2
     concurrent=$3
     core=$4
+
+    total_cores=$[$core*2]add
 
     sed -i \
     "/alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.TimerPolicy/c\alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.RoundRobinPolicy" \
