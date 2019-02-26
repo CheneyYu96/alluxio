@@ -163,20 +163,20 @@ concurrent_test_debug() {
     for((scl=12;scl<=12;scl=scl+6)); do #scale
         gen_data $scl
 
-        for((j=0;j<=1;j++)); do #query
+#        for((j=0;j<=1;j++)); do #query
             query=$j
-            lower_dir=${upper_dir}/type${query}_scale${scl}_con${con_num}_core${core_num}
+            lower_dir=${upper_dir}/debug_type${query}_scale${scl}_con${con_num}_core${core_num}
             mkdir -p ${lower_dir}
 
-            test_bandwidth ${lower_dir}
+#            test_bandwidth ${lower_dir}
 
-            con_shuffle_debug ${scl} ${query} ${con_num} ${core_num}
-            mv $DIR/logs/shuffle ${lower_dir}
+#            con_shuffle_debug ${scl} ${query} ${con_num} ${core_num}
+#            mv $DIR/logs/shuffle ${lower_dir}
 
 
             con_nonshuffle_debug ${scl} ${query} ${con_num} ${core_num}
             mv $DIR/logs/noshuffle ${lower_dir}
-        done
+#        done
 
         clean_data
     done
