@@ -164,7 +164,7 @@ concurrent_test_debug() {
         gen_data $scl
 
 #        for((j=0;j<=1;j++)); do #query
-            query=$j
+            query=0
             lower_dir=${upper_dir}/debug_type${query}_scale${scl}_con${con_num}_core${core_num}
             mkdir -p ${lower_dir}
 
