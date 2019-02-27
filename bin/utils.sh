@@ -9,8 +9,7 @@ echo "dir : $DIR"
 gen_data(){
     SCL=$1
     cd $DIR/tpch-spark/dbgen
-    ./dbgen -s $SCL -T O
-    ./dbgen -s $SCL -T L
+    ./dbgen -s $SCL
 
     cd $DIR
     if [[ -d data ]]; then
@@ -23,12 +22,13 @@ gen_data(){
 
 move_data(){
     $DIR/alluxio/bin/alluxio fs mkdir $DIR/data
-    $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/lineitem.tbl $DIR/data/lineitem.tbl
-    $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/orders.tbl $DIR/data/orders.tbl
 
-#    $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/lineitem.tbl /tpch/lineitem.tbl;
-#    $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/orders.tbl /tpch/orders.tbl;
+    for f in $(ls $DIR/data); do
+        $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/$f $DIR/data/$f
+    done
 
+#    $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/lineitem.tbl $DIR/data/lineitem.tbl
+#    $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/orders.tbl $DIR/data/orders.tbl
 }
 
 clean_data(){
@@ -93,17 +93,15 @@ clear_workerloads(){
     fi
 }
 
-load_data(){
-    move_data
+get_dir_index(){
+    NAME=$1
 
-    cd $DIR
+    INDEX=1
+    while [[ -d $DIR/logs/${NAME}${INDEX} ]]
+    do
+        let INDEX++
+    done
 
-    workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
-
-    scp -o StrictHostKeyChecking=no -r data/ ec2-user@${workers[0]}:/home/ec2-user/
-    scp -o StrictHostKeyChecking=no -r data/ ec2-user@${workers[1]}:/home/ec2-user/
-
-    ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no "/home/ec2-user/alluxio/bin/alluxio fs load --local /home/ec2-user/data/"
-    ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no "/home/ec2-user/alluxio/bin/alluxio fs load --local /home/ec2-user/data/"
+    echo $DIR/logs/${NAME}${INDEX}
 
 }
