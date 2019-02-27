@@ -87,7 +87,7 @@ single_test() {
 
 all_query() {
     scl=$1
-    dir_name=$(get_test_index all)
+    dir_name=$(get_dir_index all)
     mkdir -p ${dir_name}
 
     gen_data $scl
@@ -143,8 +143,8 @@ else
         base)                   base $2 $3
                                 ;;
         # not available
-        limit)                  limit_test $2 $3
-                                ;;
+        #limit)                  limit_test $2 $3
+        #                        ;;
         single)                 single_test $2 $3
                                 ;;
         all)                    all_query $2
