@@ -87,7 +87,7 @@ single_test() {
 
 all_query() {
     scl=$1
-    dir_name=$(get_dir_index all)
+    dir_name=$(get_dir_index scale${scl}_all)
     mkdir -p ${dir_name}
 
     gen_data $scl
