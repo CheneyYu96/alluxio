@@ -101,7 +101,7 @@ shuffle_env(){
         "/alluxio.user.file.write.location.policy.class=alluxio.client.file.policy.RoundRobinPolicy/c\alluxio.user.file.write.location.policy.class=alluxio.client.file.policy.TimerPolicy" \
         $DIR/alluxio/conf/alluxio-site.properties
 
-    sed -i "/alluxio.user.file.replication.min=2/c\/alluxio.user.file.replication.min=0" $DIR/alluxio/conf/alluxio-site.properties
+    sed -i "/alluxio.user.file.replication.min=2/c\alluxio.user.file.replication.min=0" $DIR/alluxio/conf/alluxio-site.properties
     sed -i "/alluxio.user.file.passive.cache.enabled=true/c\alluxio.user.file.passive.cache.enabled=false" $DIR/alluxio/conf/alluxio-site.properties
 
     ${DIR}/alluxio/bin/restart.sh
