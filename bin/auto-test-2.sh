@@ -24,22 +24,16 @@ base() {
         to=22
     fi
 
-    sed -i \
-    "/alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.TimerPolicy/c\alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.RoundRobinPolicy" \
-    $DIR/alluxio/conf/alluxio-site.properties
-
-    sed -i "/alluxio.user.file.replication.min=0/c\alluxio.user.file.replication.min=2" $DIR/alluxio/conf/alluxio-site.properties
-    sed -i "/alluxio.user.file.passive.cache.enabled=true/c\alluxio.user.file.passive.cache.enabled=false" $DIR/alluxio/conf/alluxio-site.properties
-    ${DIR}/alluxio/bin/restart.sh
+    nonshuffle_env
     move_data
-
     clear_workerloads
 
     # non shuffle
     for((q=${from};q<=${to};q++)); do
         $DIR/spark/bin/spark-submit \
-            --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
-                $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar ${q} "TPCH: scale${SCALE} query${q}" \
+            --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar \
+                --query ${q} \
+                --app-name "TPCH: scale${SCALE} query${q}" \
                 > $DIR/logs/noshuffle/scale${SCALE}_query${q}.log 2>&1
 
         collect_workerloads noshuffle query${q}
@@ -48,20 +42,17 @@ base() {
     ${DIR}/alluxio/bin/alluxio fs rm -R /home
 
     # ----------------------------------------------- #
-    sed -i \
-    "/alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.RoundRobinPolicy/c\alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.TimerPolicy" \
-    $DIR/alluxio/conf/alluxio-site.properties
 
-    sed -i "/alluxio.user.file.replication.min=2/c\/alluxio.user.file.replication.min=0" $DIR/alluxio/conf/alluxio-site.properties
-    ${DIR}/alluxio/bin/restart.sh
+    shuffle_env
     move_data
     clear_workerloads
 
     #shuffle
     for((q=${from};q<=${to};q++)); do
         $DIR/spark/bin/spark-submit \
-            --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
-                $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar ${q} "TPCH: scale${SCALE} query${q}" \
+            --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar \
+                --query ${q} \
+                --app-name "TPCH: scale${SCALE} query${q}" \
                 > $DIR/logs/shuffle/scale${SCALE}_query${q}.log 2>&1
 
         collect_workerloads shuffle query${q}
@@ -96,6 +87,20 @@ all_query() {
     mv $DIR/logs/noshuffle ${dir_name}
     mv $DIR/logs/shuffle ${dir_name}
     clean_data
+}
+
+convert(){
+    scl=$1
+    gen_data $scl
+
+    nonshuffle_env
+    move_data
+
+    $DIR/spark/bin/spark-submit \
+        --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
+        $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar \
+            --convert-table
+
 }
 
 limit_test() {
@@ -148,6 +153,8 @@ else
         single)                 single_test $2 $3
                                 ;;
         all)                    all_query $2
+                                ;;
+        convert)                convert $2
                                 ;;
         * )                     usage
     esac
