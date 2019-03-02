@@ -131,7 +131,18 @@ par_single_test(){
 }
 
 par_all_test(){
+    scl=$1
+    dir_name=$(get_dir_index scale${scl}_all)
+    mkdir -p ${dir_name}
 
+    gen_data $scl
+    USE_USE_PARQUER=1
+
+    base ${scl} 0
+
+    mv $DIR/logs/noshuffle ${dir_name}
+    mv $DIR/logs/shuffle ${dir_name}
+    clean_data
 }
 
 limit_test() {
