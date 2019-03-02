@@ -32,29 +32,7 @@ base() {
         to=22
     fi
 
-    nonshuffle_env
-    move_data
-    clear_workerloads
-
-    if [[ "${USE_PARQUER}" -eq "1" ]]; then
-        convert
-    fi
-
-    # non shuffle
-    for((q=${from};q<=${to};q++)); do
-        $DIR/spark/bin/spark-submit \
-            --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar \
-                --query ${q} \
-                $(check_parquet) \
-                --app-name "TPCH: scale${SCALE} query${q}" \
-                > $DIR/logs/noshuffle/scale${SCALE}_query${q}.log 2>&1
-
-        collect_workerloads noshuffle query${q}
-    done
-
-    ${DIR}/alluxio/bin/alluxio fs rm -R /home
-
-    # ----------------------------------------------- #
+    # --------------------shuffle--------------------------- #
 
     shuffle_env
     move_data
@@ -70,10 +48,33 @@ base() {
             --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar \
                 --query ${q} \
                 $(check_parquet) \
-                --app-name "TPCH: scale${SCALE} query${q}" \
+                --app-name "TPCH shuffle: scale${SCALE} query${q}" \
                 > $DIR/logs/shuffle/scale${SCALE}_query${q}.log 2>&1
 
         collect_workerloads shuffle query${q}
+    done
+
+    ${DIR}/alluxio/bin/alluxio fs rm -R /home
+
+    # --------------------nonshuffle--------------------------- #
+
+    nonshuffle_env
+    move_data
+    clear_workerloads
+
+    if [[ "${USE_PARQUER}" -eq "1" ]]; then
+        convert
+    fi
+
+    for((q=${from};q<=${to};q++)); do
+        $DIR/spark/bin/spark-submit \
+            --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar \
+                --query ${q} \
+                $(check_parquet) \
+                --app-name "TPCH noshuffle: scale${SCALE} query${q}" \
+                > $DIR/logs/noshuffle/scale${SCALE}_query${q}.log 2>&1
+
+        collect_workerloads noshuffle query${q}
     done
 
     ${DIR}/alluxio/bin/alluxio fs rm -R /home
