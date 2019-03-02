@@ -110,6 +110,8 @@ all_query() {
 
 convert(){
     $DIR/spark/bin/spark-submit \
+        --executor-memory 4g \
+        --driver-memory 4g \
         --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
         $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar \
             --convert-table
