@@ -5,6 +5,14 @@ LOCAL_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )"  && pwd )"
 
 source ${LOCAL_DIR}/utils.sh
 
+USE_PARQUER=0
+
+check_parquet(){
+    if [[ "${USE_PARQUER}" -eq "1" ]]; then
+        echo --run-parquet
+    fi
+}
+
 # shuffle & non shuffle for TPCH
 base() {
     SCALE=$1
@@ -28,11 +36,16 @@ base() {
     move_data
     clear_workerloads
 
+    if [[ "${USE_PARQUER}" -eq "1" ]]; then
+        convert
+    fi
+
     # non shuffle
     for((q=${from};q<=${to};q++)); do
         $DIR/spark/bin/spark-submit \
             --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar \
                 --query ${q} \
+                $(check_parquet) \
                 --app-name "TPCH: scale${SCALE} query${q}" \
                 > $DIR/logs/noshuffle/scale${SCALE}_query${q}.log 2>&1
 
@@ -47,11 +60,16 @@ base() {
     move_data
     clear_workerloads
 
+    if [[ "${USE_PARQUER}" -eq "1" ]]; then
+        convert
+    fi
+
     #shuffle
     for((q=${from};q<=${to};q++)); do
         $DIR/spark/bin/spark-submit \
             --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar \
                 --query ${q} \
+                $(check_parquet) \
                 --app-name "TPCH: scale${SCALE} query${q}" \
                 > $DIR/logs/shuffle/scale${SCALE}_query${q}.log 2>&1
 
@@ -89,17 +107,30 @@ all_query() {
     clean_data
 }
 
+
 convert(){
-    scl=$1
-    gen_data $scl
-
-    nonshuffle_env
-    move_data
-
     $DIR/spark/bin/spark-submit \
         --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
         $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar \
             --convert-table
+}
+
+par_single_test(){
+    scl=$1
+    query=$2
+    dir_name=$DIR/logs/par_single_query${query}_scale${scl}
+    mkdir -p ${dir_name}
+    gen_data $scl
+
+    USE_USE_PARQUER=1
+    base ${scl} ${query}
+
+    mv $DIR/logs/noshuffle ${dir_name}
+    mv $DIR/logs/shuffle ${dir_name}
+    clean_data
+}
+
+par_all_test(){
 
 }
 
@@ -154,7 +185,9 @@ else
                                 ;;
         all)                    all_query $2
                                 ;;
-        convert)                convert $2
+        par-single)             par_single_test $2 $3
+                                ;;
+        par-all)                par_all_test $2
                                 ;;
         * )                     usage
     esac
