@@ -17,7 +17,7 @@ check_parquet(){
 base() {
     SCALE=$1
     QUERY=$2
-    MEM=4
+    MEM='4g'
 
     mkdir -p  $DIR/logs/shuffle
     mkdir -p  $DIR/logs/noshuffle
