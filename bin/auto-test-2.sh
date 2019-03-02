@@ -122,7 +122,7 @@ par_single_test(){
     mkdir -p ${dir_name}
     gen_data $scl
 
-    USE_USE_PARQUER=1
+    USE_PARQUER=1
     base ${scl} ${query}
 
     mv $DIR/logs/noshuffle ${dir_name}
@@ -132,11 +132,11 @@ par_single_test(){
 
 par_all_test(){
     scl=$1
-    dir_name=$(get_dir_index scale${scl}_all)
+    dir_name=$(get_dir_index par_scale${scl}_all)
     mkdir -p ${dir_name}
 
     gen_data $scl
-    USE_USE_PARQUER=1
+    USE_PARQUER=1
 
     base ${scl} 0
 
