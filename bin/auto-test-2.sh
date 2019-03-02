@@ -17,6 +17,7 @@ check_parquet(){
 base() {
     SCALE=$1
     QUERY=$2
+    MEM = 4
 
     mkdir -p  $DIR/logs/shuffle
     mkdir -p  $DIR/logs/noshuffle
@@ -46,6 +47,8 @@ base() {
         $DIR/spark/bin/spark-submit \
             --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar \
                 --query ${q} \
+                --driver-memory ${MEM} \
+                 --executor-memory ${MEM} \
                 $(check_parquet) \
                 --app-name "TPCH shuffle: scale${SCALE} query${q}" \
                 > $DIR/logs/shuffle/scale${SCALE}_query${q}.log 2>&1
