@@ -1,122 +1,221 @@
 #!/usr/bin/env bash
 set -euxo pipefail
 
+# This file originates from auto-test-4.sh
+# Correct some mistakes in auto-test-4.sh
+
 LOCAL_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )"  && pwd )"
 
 source ${LOCAL_DIR}/utils.sh
 
-con_shuffle(){
-    scale=$1
-    query=$2
-    concurrent=$3
-    core=$4
+USE_PARQUER=0
 
-    total_cores=$[$core*2]
+check_parquet(){
+    if [[ "${USE_PARQUER}" -eq "1" ]]; then
+        echo --run-parquet
+    fi
+}
+check_from_hdfs(){
+    FROM_HDFS=$1
+    if [[ "${FROM_HDFS}" -eq "1" ]]; then
+        echo --from-hdfs
+    fi
+}
+move_data_hdfs(){
+    $DIR/hadoop/bin/hadoop fs -mkdir -p $DIR/data
 
-    sed -i \
-    "/alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.RoundRobinPolicy/c\alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.TimerPolicy" \
-    $DIR/alluxio/conf/alluxio-site.properties
+    for f in $(ls $DIR/data); do
+        $DIR/hadoop/bin/hadoop fs -copyFromLocal $DIR/data/$f $DIR/data/$f
+    done
 
-    sed -i "/alluxio.user.file.replication.min=2/c\alluxio.user.file.replication.min=0" $DIR/alluxio/conf/alluxio-site.properties
+#    $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/lineitem.tbl $DIR/data/lineitem.tbl
+#    $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/orders.tbl $DIR/data/orders.tbl
+}
 
-    ${DIR}/alluxio/bin/restart.sh
-    move_data
+# shuffle & non shuffle for TPCH
+base() {
+    SCALE=$1
+    QUERY=$2
+    FROM_HDFS=$3
+    MEM='4g'
+
+    mkdir -p  $DIR/logs/shuffle
+    mkdir -p  $DIR/logs/noshuffle
+
+    if [[ ! -d $DIR/data ]]; then
+        gen_data $SCALE
+    fi
+
+    from=$QUERY
+    to=$QUERY
+    if [[ "${QUERY}" -eq "0" ]]; then
+        from=1
+        to=22
+    fi
+
+    # --------------------shuffle--------------------------- #
+
+    shuffle_env
+    if [[ "${FROM_HDFS}" -eq "0" ]]; then
+        move_data
+    else
+        move_data_hdfs
+    fi
     clear_workerloads
 
-    mkdir -p $DIR/logs/shuffle
+    if [[ "${USE_PARQUER}" -eq "1" ]]; then
+        convert
+    fi
 
-    for((c=1;c<=${concurrent};c++)); do
-        $DIR/spark/bin/spark-submit --total-executor-cores ${total_cores} --executor-cores ${core} \
-        --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/partial_table.py \
-        --query ${query} --app "shuffle: type${query} scale${scale} concurrency${c}" > $DIR/logs/shuffle/scale${scale}_con${c}.log 2>&1 &
+    for((q=${from};q<=${to};q++)); do
+        $DIR/spark/bin/spark-submit \
+            --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar \
+                --query ${q} \
+                $(check_parquet) \
+                --app-name "TPCH shuffle: scale${SCALE} query${q}" \
+                > $DIR/logs/shuffle/scale${SCALE}_query${q}.log 2>&1 \
+                $(check_from_hdfs ${FROM_HDFS})
+
+        collect_workerloads shuffle query${q}
     done
-    wait
 
-    collect_workerloads shuffle shuffle
-}
+    if [[ "${FROM_HDFS}" -eq "1" ]]; then
+        ${DIR}/hadoop/bin/hadoop fs -rm -R /home
+    fi
+    ${DIR}/alluxio/bin/alluxio fs rm -R /home
 
-con_nonshuffle(){
-    scale=$1
-    query=$2
-    concurrent=$3
-    core=$4
+    # --------------------nonshuffle--------------------------- #
 
-    sed -i \
-    "/alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.TimerPolicy/c\alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.RoundRobinPolicy" \
-    $DIR/alluxio/conf/alluxio-site.properties
-    sed -i "/alluxio.user.file.replication.min=0/c\alluxio.user.file.replication.min=2" $DIR/alluxio/conf/alluxio-site.properties
-
-    ${DIR}/alluxio/bin/restart.sh
-    move_data
+    nonshuffle_env
+    if [[ "${FROM_HDFS}" -eq "0" ]]; then
+        move_data
+    else
+        move_data_hdfs
+    fi
     clear_workerloads
 
-    mkdir -p $DIR/logs/noshuffle
+    if [[ "${USE_PARQUER}" -eq "1" ]]; then
+        convert
+    fi
 
-    # formal experiment
-    for((c=1;c<=${concurrent};c++)); do
-        $DIR/spark/bin/spark-submit --total-executor-cores ${total_cores} --executor-cores ${core} \
-        --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/query/partial_table.py \
-        --query ${query} --app "noshuffle: type${query} scale${scale} concurrency${c}" > $DIR/logs/noshuffle/scale${scale}_con${c}.log 2>&1 &
+    for((q=${from};q<=${to};q++)); do
+        $DIR/spark/bin/spark-submit \
+            --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar \
+                --query ${q} \
+                $(check_parquet) \
+                --app-name "TPCH noshuffle: scale${SCALE} query${q}" \
+                > $DIR/logs/noshuffle/scale${SCALE}_query${q}.log 2>&1 \
+                $(check_from_hdfs ${FROM_HDFS})
+
+        collect_workerloads noshuffle query${q}
     done
-    wait
 
-    collect_workerloads noshuffle noshuffle
+    if [[ "${FROM_HDFS}" -eq "1" ]]; then
+        ${DIR}/hadoop/bin/hadoop fs -rm -R /home
+    fi
+
+    ${DIR}/alluxio/bin/alluxio fs rm -R /home
 
 }
 
-concurrent_test(){
-    con_num=$1
-    core_num=$2
-    upper_dir=/home/ec2-user/logs
-    for((scl=3;scl<=5;scl=scl+2)); do #scale
-        gen_data $scl
-
-        for((j=3;j<=4;j++)); do #query
-            query=$j
-            lower_dir=${upper_dir}/type${query}_scale${scl}_con${con_num}_core${core_num}
-            mkdir -p ${lower_dir}
-
-            test_bandwidth ${lower_dir}
-
-            con_shuffle ${scl} ${query} ${con_num} ${core_num}
-            mv $DIR/logs/shuffle ${lower_dir}
-
-
-            con_nonshuffle ${scl} ${query} ${con_num} ${core_num}
-            mv $DIR/logs/noshuffle ${lower_dir}
-        done
-
-        clean_data
-    done
-}
-
-auto_test(){
-    for((con=1;con<=16;con=con*2)); do
-        cores=$[16/$con]
-        concurrent_test ${con} ${cores}
-    done
-}
-
-mice_test(){
+single_test() {
     scl=$1
-    dir_name=/home/ec2-user/logs/mice-test
-
-    gen_data $scl
-
+    query=$2
+    dir_name=$(get_dir_index query${query}_scale${scl}_single)
     mkdir -p ${dir_name}
 
-    con_shuffle ${scl} 0 4 4
-    mv $DIR/logs/shuffle ${dir_name}
+    gen_data $scl
+    base ${scl} ${query}
 
-    con_nonshuffle ${scl} 0 4 4
     mv $DIR/logs/noshuffle ${dir_name}
+    mv $DIR/logs/shuffle ${dir_name}
+    clean_data
+}
 
+all_query() {
+    scl=$1
+    dir_name=$(get_dir_index scale${scl}_all)
+    mkdir -p ${dir_name}
+
+    gen_data $scl
+    base ${scl} 0 0
+
+    mv $DIR/logs/noshuffle ${dir_name}
+    mv $DIR/logs/shuffle ${dir_name}
     clean_data
 }
 
 
+convert(){
+    $DIR/spark/bin/spark-submit \
+        --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
+        $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar \
+            --convert-table
+}
+
+par_single_test(){
+    scl=$1
+    query=$2
+    dir_name=$(get_dir_index query${query}_scale${scl}_par_single)
+    mkdir -p ${dir_name}
+
+    gen_data $scl
+    USE_PARQUER=1
+    base ${scl} ${query}
+
+    mv $DIR/logs/noshuffle ${dir_name}
+    mv $DIR/logs/shuffle ${dir_name}
+    clean_data
+}
+
+par_all_test(){
+    scl=$1
+    dir_name=$(get_dir_index par_scale${scl}_all)
+    mkdir -p ${dir_name}
+
+    gen_data $scl
+    USE_PARQUER=1
+    base ${scl} 0 1
+
+    mv $DIR/logs/noshuffle ${dir_name}
+    mv $DIR/logs/shuffle ${dir_name}
+    clean_data
+}
+
+limit_test() {
+    bandwidth=$1
+    cores=$2
+
+    free_limit
+    export SPARK_WORKER_CORES=${cores}
+    upper_dir=/home/ec2-user/logs/cpu${cores}_bandwidth${bandwidth}
+    mkdir -p ${upper_dir}
+
+    for((j=1;j<=10;j++)); do
+        scl=$j
+
+        lower_dir=${upper_dir}/scale${scl}
+        mkdir -p ${lower_dir}
+
+        ${DIR}/alluxio/bin/restart.sh
+
+        pre_data $scl
+        limit_bandwidth ${bandwidth}
+        test_bandwidth ${lower_dir}
+
+        all ${scl} ${cores}
+        mv $DIR/logs/noshuffle ${lower_dir}
+        mv $DIR/logs/shuffle ${lower_dir}
+
+        clean_data
+        free_limit
+
+    done
+
+}
+
 usage() {
-    echo "Usage: $0 test # concurrency # cores"
+    echo "Usage: $0 shffl|noshffl scale #query"
 }
 
 
@@ -125,20 +224,22 @@ if [[ "$#" -lt 3 ]]; then
     exit 1
 else
     case $1 in
-        test)                   concurrent_test $2 $3
+        base)                   base $2 $3
                                 ;;
-        auto)                   auto_test
+        # not available
+        #limit)                  limit_test $2 $3
+        #                        ;;
+        single)                 single_test $2 $3
                                 ;;
-        mice)                   mice_test $2
+        all)                    all_query $2
+                                ;;
+        par-single)             par_single_test $2 $3
+                                ;;
+        par-all)                par_all_test $2
                                 ;;
         * )                     usage
     esac
 fi
-
-
-
-
-
 
 # DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )"  && pwd )"
 # DIR="$( cd "$DIR/../.." && pwd )"
