@@ -84,10 +84,10 @@ base() {
 single_test() {
     scl=$1
     query=$2
-    dir_name=/home/ec2-user/logs/single_query${query}_scale${scl}
+    dir_name=$(get_dir_index query${query}_scale${scl}_single)
     mkdir -p ${dir_name}
-    gen_data $scl
 
+    gen_data $scl
     base ${scl} ${query}
 
     mv $DIR/logs/noshuffle ${dir_name}
@@ -119,10 +119,10 @@ convert(){
 par_single_test(){
     scl=$1
     query=$2
-    dir_name=$DIR/logs/par_single_query${query}_scale${scl}
+    dir_name=$(get_dir_index query${query}_scale${scl}_par_single)
     mkdir -p ${dir_name}
-    gen_data $scl
 
+    gen_data $scl
     USE_PARQUER=1
     base ${scl} ${query}
 
@@ -138,7 +138,6 @@ par_all_test(){
 
     gen_data $scl
     USE_PARQUER=1
-
     base ${scl} 0
 
     mv $DIR/logs/noshuffle ${dir_name}
