@@ -29,7 +29,7 @@ public class TimerPolicy implements FileWriteLocationPolicy, BlockLocationPolicy
      */
     public TimerPolicy() {
 
-        Path path = FileSystems.getDefault().getPath("/home/ec2-user/hadoop/conf/slaves");
+        Path path = FileSystems.getDefault().getPath("/home/ec2-user/alluxio/conf/threshold");
         try {
             mWorkerName = Files.readAllLines(path).get(0).trim();
 
