@@ -107,6 +107,15 @@ all_query() {
     clean_data
 }
 
+convert_test(){
+    scl=$1
+    gen_data $scl
+
+    shuffle_env
+    move_data
+
+    convert
+}
 
 convert(){
     $DIR/spark/bin/spark-submit \
@@ -200,6 +209,8 @@ else
         par-single)             par_single_test $2 $3
                                 ;;
         par-all)                par_all_test $2
+                                ;;
+        conv)                   convert_test $2
                                 ;;
         * )                     usage
     esac
