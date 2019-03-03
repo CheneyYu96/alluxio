@@ -65,7 +65,7 @@ base() {
     clear_workerloads
 
     if [[ "${USE_PARQUER}" -eq "1" ]]; then
-        convert
+        convert ${FROM_HDFS}
     fi
 
     for((q=${from};q<=${to};q++)); do
