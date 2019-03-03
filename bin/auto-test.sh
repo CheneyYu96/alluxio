@@ -125,7 +125,7 @@ single_test() {
     mkdir -p ${dir_name}
 
     gen_data $scl
-    base ${scl} ${query}
+    base ${scl} ${query} 0
 
     mv $DIR/logs/noshuffle ${dir_name}
     mv $DIR/logs/shuffle ${dir_name}
@@ -161,7 +161,7 @@ par_single_test(){
 
     gen_data $scl
     USE_PARQUER=1
-    base ${scl} ${query}
+    base ${scl} ${query} 1
 
     mv $DIR/logs/noshuffle ${dir_name}
     mv $DIR/logs/shuffle ${dir_name}
