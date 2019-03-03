@@ -150,7 +150,7 @@ all_query() {
 convert(){
     FROM_HDFS=$1
     $DIR/spark/bin/spark-submit \
-        --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 
+        --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
         --executor-memory 8g \
         $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar \
             --convert-table $(check_from_hdfs ${FROM_HDFS})
