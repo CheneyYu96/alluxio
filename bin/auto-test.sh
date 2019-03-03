@@ -24,7 +24,7 @@ check_from_hdfs(){
 move_data_hdfs(){
     $DIR/hadoop/bin/hadoop fs -mkdir -p $DIR/data
     $DIR/alluxio/bin/alluxio fs mkdir $DIR/data
-    
+
     for f in $(ls $DIR/data); do
         $DIR/hadoop/bin/hadoop fs -copyFromLocal $DIR/data/$f $DIR/data/$f
     done
@@ -96,7 +96,7 @@ base() {
     clear_workerloads
 
     if [[ "${USE_PARQUER}" -eq "1" ]]; then
-        convert
+        convert ${FROM_HDFS}
     fi
 
     for((q=${from};q<=${to};q++)); do
@@ -148,10 +148,11 @@ all_query() {
 
 
 convert(){
+    FROM_HDFS=$1
     $DIR/spark/bin/spark-submit \
         --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
         $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar \
-            --convert-table
+            --convert-table $(check_from_hdfs ${FROM_HDFS})
 }
 
 par_single_test(){
