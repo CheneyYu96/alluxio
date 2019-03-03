@@ -19,10 +19,7 @@ import java.nio.file.Path;
  */
 @NotThreadSafe
 public class TimerPolicy implements FileWriteLocationPolicy, BlockLocationPolicy {
-//    private List<BlockWorkerInfo> mWorkerInfoList;
     private String mWorkerName;
-
-//    private boolean mInitialized = false;
 
     /**
      * Constructs a new {@link TimerPolicy}.
@@ -43,23 +40,11 @@ public class TimerPolicy implements FileWriteLocationPolicy, BlockLocationPolicy
     public WorkerNetAddress getWorkerForNextBlock(Iterable<BlockWorkerInfo> workerInfoList,
                                                   long blockSizeBytes) {
         for (BlockWorkerInfo info : workerInfoList) {
-            System.out.println("address: " + info.getNetAddress().getHost());
             if (info.getNetAddress().getHost().equals(mWorkerName)) {
                 return info.getNetAddress();
             }
         }
         return null;
-
-//        if (!mInitialized) {
-//            mWorkerInfoList = Lists.newArrayList(workerInfoList);
-//            mInitialized = true;
-//        }
-//
-//        if (mIndex >= mWorkerInfoList.size()) {
-//            mIndex = 0;
-//        }
-//
-//        return mWorkerInfoList.get(mIndex).getNetAddress();
     }
 
     @Override
