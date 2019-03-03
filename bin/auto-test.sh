@@ -23,7 +23,8 @@ check_from_hdfs(){
 }
 move_data_hdfs(){
     $DIR/hadoop/bin/hadoop fs -mkdir -p $DIR/data
-
+    $DIR/alluxio/bin/alluxio fs mkdir $DIR/data
+    
     for f in $(ls $DIR/data); do
         $DIR/hadoop/bin/hadoop fs -copyFromLocal $DIR/data/$f $DIR/data/$f
     done
