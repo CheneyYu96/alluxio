@@ -152,7 +152,7 @@ else
                                 ;;
         collect_workerloads)    collect_workerloads
                                 ;;
-        shuffle_env             shuffle_env
+        shuffle_env)            shuffle_env
                                 ;;
         nonshuffle_env)         nonshuffle_env
                                 ;;
