@@ -98,7 +98,7 @@ shuffle_env(){
         "/alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.RoundRobinPolicy/c\alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.TimerPolicy" \
         $DIR/alluxio/conf/alluxio-site.properties
     sed -i \
-        "/alluxio.user.file.write.location.policy.class=alluxio.client.file.policy.RoundRobinPolicy/c\alluxio.user.file.write.location.policy.class=alluxio.client.file.policy.TimerPolicy" \
+        "/alluxio.user.file.write.location.policy.class=alluxio.client.file.policy.LocalFirstPolicy/c\alluxio.user.file.write.location.policy.class=alluxio.client.file.policy.TimerPolicy" \
         $DIR/alluxio/conf/alluxio-site.properties
 
     sed -i "/alluxio.user.file.replication.min=2/c\alluxio.user.file.replication.min=0" $DIR/alluxio/conf/alluxio-site.properties
@@ -112,7 +112,7 @@ nonshuffle_env(){
         "/alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.TimerPolicy/c\alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.RoundRobinPolicy" \
         $DIR/alluxio/conf/alluxio-site.properties
     sed -i \
-        "/alluxio.user.file.write.location.policy.class=alluxio.client.file.policy.TimerPolicy/c\alluxio.user.file.write.location.policy.class=alluxio.client.file.policy.RoundRobinPolicy" \
+        "/alluxio.user.file.write.location.policy.class=alluxio.client.file.policy.TimerPolicy/c\alluxio.user.file.write.location.policy.class=alluxio.client.file.policy.LocalFirstPolicy" \
         $DIR/alluxio/conf/alluxio-site.properties
 
     sed -i "/alluxio.user.file.replication.min=0/c\alluxio.user.file.replication.min=2" $DIR/alluxio/conf/alluxio-site.properties
