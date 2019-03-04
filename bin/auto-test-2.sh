@@ -156,35 +156,26 @@ par_all_test(){
 }
 
 limit_test() {
-    bandwidth=$1
-    cores=$2
+    scl=$1
+    bandwidth=$2
 
     free_limit
-    export SPARK_WORKER_CORES=${cores}
-    upper_dir=/home/ec2-user/logs/cpu${cores}_bandwidth${bandwidth}
-    mkdir -p ${upper_dir}
+    dir_name=$(get_dir_index par_scale${scl}_bandwidth${bandwidth}_all)
+    mkdir -p ${dir_name}
 
-    for((j=1;j<=10;j++)); do
-        scl=$j
+    gen_data $scl
+    USE_PARQUER=1
 
-        lower_dir=${upper_dir}/scale${scl}
-        mkdir -p ${lower_dir}
+    limit_bandwidth ${bandwidth}
+    test_bandwidth ${dir_name}
 
-        ${DIR}/alluxio/bin/restart.sh
+    base ${scl} 0
 
-        pre_data $scl
-        limit_bandwidth ${bandwidth}
-        test_bandwidth ${lower_dir}
+    mv $DIR/logs/noshuffle ${dir_name}
+    mv $DIR/logs/shuffle ${dir_name}
 
-        all ${scl} ${cores}
-        mv $DIR/logs/noshuffle ${lower_dir}
-        mv $DIR/logs/shuffle ${lower_dir}
-
-        clean_data
-        free_limit
-
-    done
-
+    clean_data
+    free_limit
 }
 
 usage() {
@@ -199,9 +190,8 @@ else
     case $1 in
         base)                   base $2 $3
                                 ;;
-        # not available
-        #limit)                  limit_test $2 $3
-        #                        ;;
+        limit)                  limit_test $2 $3
+                                ;;
         single)                 single_test $2 $3
                                 ;;
         all)                    all_query $2
