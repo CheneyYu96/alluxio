@@ -134,6 +134,25 @@ convert(){
     save_par_data
 }
 
+micro(){
+   scl=$1
+   dir_name=$(get_dir_index scale${scl}_micro)
+
+   gen_data $scl
+
+   mkdir -p ${dir_name}/query30
+   base ${scl} 30
+   mv $DIR/logs/noshuffle ${dir_name}/query30
+   mv $DIR/logs/shuffle ${dir_name}/query30
+
+   mkdir -p ${dir_name}/query31
+   base ${scl} 31
+   mv $DIR/logs/noshuffle ${dir_name}/query31
+   mv $DIR/logs/shuffle ${dir_name}/query31
+
+   clean_data
+}
+
 par_micro(){
    scl=$1
    dir_name=$(get_dir_index scale${scl}_par_micro)
@@ -235,6 +254,8 @@ else
         par-all)                par_all_test $2
                                 ;;
         par-micro)              par_micro $2
+                                ;;
+        micro)                  micro $2
                                 ;;
         conv)                   convert_test $2
                                 ;;
