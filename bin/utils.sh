@@ -9,8 +9,7 @@ echo "dir : $DIR"
 gen_data(){
     SCL=$1
     cd $DIR/tpch-spark/dbgen
-    rm *.tbl
-    ./dbgen -s $SCL
+    ./dbgen -f -s $SCL
 
     cd $DIR
     if [[ -d data ]]; then
