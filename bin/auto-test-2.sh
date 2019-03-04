@@ -35,10 +35,13 @@ base() {
     # --------------------shuffle--------------------------- #
 
     shuffle_env
-    move_data
 
     if [[ "${USE_PARQUER}" -eq "1" ]]; then
-        convert
+        move_par_data
+    fi
+
+    if [[ "${USE_PARQUER}" -eq "0" ]]; then
+        move_data
     fi
 
     clear_workerloads
@@ -58,10 +61,13 @@ base() {
     # --------------------nonshuffle--------------------------- #
 
     nonshuffle_env
-    move_data
 
     if [[ "${USE_PARQUER}" -eq "1" ]]; then
-        convert
+        move_par_data
+    fi
+
+    if [[ "${USE_PARQUER}" -eq "0" ]]; then
+        move_data
     fi
 
     clear_workerloads
@@ -111,19 +117,21 @@ convert_test(){
     scl=$1
     gen_data $scl
 
-    shuffle_env
-    move_data
-
     convert
 }
 
 convert(){
+    nonshuffle_env
+    move_data
+
     $DIR/spark/bin/spark-submit \
         --executor-memory 4g \
         --driver-memory 4g \
         --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
         $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar \
             --convert-table
+
+    save_par_data
 }
 
 par_single_test(){
@@ -133,6 +141,8 @@ par_single_test(){
     mkdir -p ${dir_name}
 
     gen_data $scl
+    convert
+
     USE_PARQUER=1
     base ${scl} ${query}
 
@@ -147,6 +157,8 @@ par_all_test(){
     mkdir -p ${dir_name}
 
     gen_data $scl
+    convert
+
     USE_PARQUER=1
     base ${scl} 0
 
@@ -164,6 +176,7 @@ limit_test() {
     mkdir -p ${dir_name}
 
     gen_data $scl
+    convert
     USE_PARQUER=1
 
     limit_bandwidth ${bandwidth}

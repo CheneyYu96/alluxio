@@ -31,6 +31,23 @@ move_data(){
 #    $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/orders.tbl $DIR/data/orders.tbl
 }
 
+
+save_par_data(){
+    mkdir -p $DIR/tpch_parquet
+    $DIR/alluxio/bin/alluxio fs copyToLocal $DIR/tpch_parquet $DIR/tpch_parquet
+}
+
+move_par_data(){
+    $DIR/alluxio/bin/alluxio fs mkdir $DIR/tpch_parquet
+
+    for f in $(ls $DIR/tpch_parquet); do
+        $DIR/alluxio/bin/alluxio fs mkdir $DIR/tpch_parquet/$f
+        for sf in $(ls $f); do
+            $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/tpch_parquet/$f/$sf $DIR/tpch_parquet/$f/$sf
+        done
+    done
+}
+
 clean_data(){
     cd $DIR
     if [[ -d data ]]; then
