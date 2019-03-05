@@ -6,10 +6,17 @@ LOCAL_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )"  && pwd )"
 source ${LOCAL_DIR}/utils.sh
 
 USE_PARQUER=0
+FROM_HDFS=0
 
 check_parquet(){
     if [[ "${USE_PARQUER}" -eq "1" ]]; then
         echo --run-parquet
+    fi
+}
+
+check_from_hdfs(){
+    if [[ "${FROM_HDFS}" -eq "1" ]]; then
+        echo --from-hdfs
     fi
 }
 
@@ -129,7 +136,8 @@ convert(){
         --driver-memory 4g \
         --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
         $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar \
-            --convert-table
+            --convert-table \
+            $(check_from_hdfs ${FROM_HDFS})
 
     save_par_data
 }
@@ -180,10 +188,12 @@ par_single_test(){
     dir_name=$(get_dir_index query${query}_scale${scl}_par_single)
     mkdir -p ${dir_name}
 
+    USE_PARQUER=1
+    FROM_HDFS=1
+
     gen_data $scl
     convert
 
-    USE_PARQUER=1
     base ${scl} ${query}
 
     mv $DIR/logs/noshuffle ${dir_name}
