@@ -34,7 +34,7 @@ move_data(){
 }
 
 move_data_hdfs(){
-    $DIR/hadoop/bin/hadoop fs -mkdir -p $DIR/data
+    $DIR/hadoop/bin/hadoop fs mkdir -p $DIR/data
     $DIR/alluxio/bin/alluxio fs mkdir $DIR/data
 
     for f in $(ls $DIR/data); do

@@ -189,7 +189,7 @@ par_single_test(){
     mkdir -p ${dir_name}
 
     USE_PARQUER=1
-    FROM_HDFS=1
+#    FROM_HDFS=1
 
     gen_data $scl
     convert
@@ -241,6 +241,35 @@ limit_test() {
     free_limit
 }
 
+limit_micro() {
+    scl=$1
+    bandwidth=$2
+
+    free_limit
+    dir_name=$(get_dir_index par_scale${scl}_bandwidth${bandwidth}_micro)
+    mkdir -p ${dir_name}
+
+    gen_data $scl
+    convert
+    USE_PARQUER=1
+
+    limit_bandwidth ${bandwidth}
+    test_bandwidth ${dir_name}
+
+    mkdir -p ${dir_name}/query30
+    base ${scl} 30
+    mv $DIR/logs/noshuffle ${dir_name}/query30
+    mv $DIR/logs/shuffle ${dir_name}/query30
+
+    mkdir -p ${dir_name}/query31
+    base ${scl} 31
+    mv $DIR/logs/noshuffle ${dir_name}/query31
+    mv $DIR/logs/shuffle ${dir_name}/query31
+
+    clean_data
+    free_limit
+}
+
 usage() {
     echo "Usage: $0 shffl|noshffl scale #query"
 }
@@ -254,6 +283,8 @@ else
         base)                   base $2 $3
                                 ;;
         limit)                  limit_test $2 $3
+                                ;;
+        limit-micro)            limit_micro $2 $3
                                 ;;
         single)                 single_test $2 $3
                                 ;;
