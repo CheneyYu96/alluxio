@@ -331,7 +331,7 @@ else
                                 ;;
         conv)                   convert_test $2
                                 ;;
-        trace)                  trace_test $2
+        trace)                  trace_test $2 $3
                                 ;;
         * )                     usage
     esac
