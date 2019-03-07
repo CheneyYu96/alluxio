@@ -5,21 +5,29 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )"  && pwd )"
 DIR="$( cd "$DIR/../.." && pwd )"
 
 echo "dir : $DIR"
+DATA_SCALE=$DIR/data_scale
 
 gen_data(){
     SCL=$1
 
-    clean_data
-    cd $DIR/tpch-spark/dbgen
-    ./dbgen -f -s $SCL
-
-    cd $DIR
-    if [[ -d data ]]; then
-        rm -r data/
+    if [[ ! -f ${DATA_SCALE} ]]; then
+        touch ${DATA_SCALE}
     fi
-    mkdir -p data
-    mv tpch-spark/dbgen/*.tbl data/
 
+    if [[ `cat ${DATA_SCALE}` == "$SCL" && -d ${DIR}/data ]]; then
+        echo "Data exist"
+    else
+        clean_data
+        cd $DIR/tpch-spark/dbgen
+        ./dbgen -f -s ${SCL}
+
+        cd $DIR
+
+        mkdir -p data
+        mv tpch-spark/dbgen/*.tbl data/
+
+        echo "${SCL}" > ${DATA_SCALE}
+    fi
 }
 
 move_data(){
@@ -93,17 +101,6 @@ test_bandwidth() {
 
     echo "kill iperf3 server process"
     ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no "pkill iperf3"
-}
-
-collect_worker_log(){
-    worker_log_dir=$1
-    appid=$2
-
-    workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
-
-    scp -o StrictHostKeyChecking=no -r ec2-user@${workers[0]}:/home/ec2-user/spark/work/${appid}/* /home/ec2-user/logs/${worker_log_dir}/
-
-    scp -o StrictHostKeyChecking=no -r ec2-user@${workers[1]}:/home/ec2-user/spark/work/${appid}/* /home/ec2-user/logs/${worker_log_dir}/
 }
 
 collect_workerloads(){

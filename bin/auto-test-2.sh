@@ -128,18 +128,26 @@ convert_test(){
 }
 
 convert(){
-    nonshuffle_env
-    move_data
+    if [[ ! -f ${DATA_SCALE} ]]; then
+        touch ${DATA_SCALE}
+    fi
 
-    $DIR/spark/bin/spark-submit \
-        --executor-memory 4g \
-        --driver-memory 4g \
-        --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
-        $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar \
-            --convert-table \
-            $(check_from_hdfs ${FROM_HDFS})
+    if [[ `cat ${DATA_SCALE}` == "$SCL" && -d $DIR/tpch_parquet ]]; then
+        echo "Parquet exist"
+    else
+        nonshuffle_env
+        move_data
 
-    save_par_data
+        $DIR/spark/bin/spark-submit \
+            --executor-memory 4g \
+            --driver-memory 4g \
+            --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
+            $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar \
+                --convert-table \
+                $(check_from_hdfs ${FROM_HDFS})
+
+        save_par_data
+    fi
 }
 
 micro(){
@@ -298,11 +306,11 @@ trace_test(){
     for((q=${from};q<=${to};q++)); do
         $DIR/spark/bin/spark-submit \
             --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar \
-                --query ${query} \
+                --query ${q} \
                 --log-trace \
                 $(check_parquet) \
-                --app-name "TPCH shuffle: scale${scl} query${query}" \
-                > ${dir_name}/scale${scl}_query${query}.log 2>&1
+                --app-name "TPCH shuffle: scale${scl} query${q}" \
+                > ${dir_name}/scale${scl}_query${q}.log 2>&1
 
         collect_workerloads shuffle query${q}
     done
