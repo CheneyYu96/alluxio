@@ -288,10 +288,9 @@ trace_test(){
     clear_workerloads
 
     $DIR/spark/bin/spark-submit \
-        --conf "spark.executor.extraJavaOptions=-Dlog4j.configuration=$DIR/spark/conf/trace.properties"\
-        --conf "spark.driver.extraJavaOptions=-Dlog4j.configuration=$DIR/spark/conf/trace.properties"\
         --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar \
             --query ${query} \
+            --log-trace \
             $(check_parquet) \
             --app-name "TPCH shuffle: scale${scl} query${query}" \
             > ${dir_name}/scale${scl}_query${query}.log 2>&1
