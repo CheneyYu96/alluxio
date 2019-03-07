@@ -282,24 +282,31 @@ trace_test(){
 
     USE_PARQUER=1
 
+    from=$query
+    to=$query
+    if [[ "${query}" -eq "0" ]]; then
+        from=1
+        to=22
+    fi
+
     shuffle_env
+    mkdir -p  $DIR/logs/shuffle
 
     move_par_data
     clear_workerloads
 
-    $DIR/spark/bin/spark-submit \
-        --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar \
-            --query ${query} \
-            --log-trace \
-            $(check_parquet) \
-            --app-name "TPCH shuffle: scale${scl} query${query}" \
-            > ${dir_name}/scale${scl}_query${query}.log 2>&1
+    for((q=${from};q<=${to};q++)); do
+        $DIR/spark/bin/spark-submit \
+            --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar \
+                --query ${query} \
+                --log-trace \
+                $(check_parquet) \
+                --app-name "TPCH shuffle: scale${scl} query${query}" \
+                > ${dir_name}/scale${scl}_query${query}.log 2>&1
 
-    collect_workerloads ${dir_name##*logs/} query${query}
-
-#    collect_worker_log ${dir_name} ${appid}
+        collect_workerloads shuffle query${q}
+    done
 }
-
 
 usage() {
     echo "Usage: $0 shffl|noshffl scale #query"
