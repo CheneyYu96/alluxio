@@ -284,15 +284,9 @@ trace_test(){
 
     shuffle_env
 
-    if [[ "${USE_PARQUER}" -eq "1" ]]; then
-        move_par_data
-    fi
-
-    if [[ "${USE_PARQUER}" -eq "0" ]]; then
-        move_data
-    fi
-
+    move_par_data
     clear_workerloads
+
     $DIR/spark/bin/spark-submit \
         --conf "spark.executor.extraJavaOptions=-Dlog4j.configuration=$DIR/spark/conf/trace.properties"\
         --conf "spark.driver.extraJavaOptions=-Dlog4j.configuration=$DIR/spark/conf/trace.properties"\
