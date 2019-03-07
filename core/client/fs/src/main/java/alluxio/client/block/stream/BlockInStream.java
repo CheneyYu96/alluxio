@@ -280,7 +280,7 @@ public class BlockInStream extends InputStream implements BoundedStream, Seekabl
         String vmName = ManagementFactory.getRuntimeMXBean().getName();
 
         fw = new FileWriter(mLogPath, true); //the true will append the new data
-        fw.write(System.currentTimeMillis() + "\t" + hostName + "\t" + toRead + "\t" + vmName + "\n");
+        fw.write(System.currentTimeMillis() + "\t" + hostName + "\t" + toRead + "\t" + vmName + "\t" + mId + "\n");
         fw.close();
       }
     }
