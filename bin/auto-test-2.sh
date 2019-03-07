@@ -270,6 +270,43 @@ limit_micro() {
     free_limit
 }
 
+trace_test(){
+    scl=$1
+    query=$2
+
+    dir_name=$(get_dir_index scale${scl}_query${query}_trace)
+    mkdir -p ${dir_name}
+
+    gen_data $scl
+    convert
+
+    USE_PARQUER=1
+
+    shuffle_env
+
+    if [[ "${USE_PARQUER}" -eq "1" ]]; then
+        move_par_data
+    fi
+
+    if [[ "${USE_PARQUER}" -eq "0" ]]; then
+        move_data
+    fi
+
+    clear_workerloads
+    $DIR/spark/bin/spark-submit \
+        --conf "spark.executor.extraJavaOptions=-Dlog4j.configuration=$DIR/spark/conf/trace.properties"\
+        --conf "spark.driver.extraJavaOptions=-Dlog4j.configuration=$DIR/spark/conf/trace.properties"\
+        --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar \
+            --query ${query} \
+            $(check_parquet) \
+            --app-name "TPCH shuffle: scale${scl} query${query}" \
+            > ${dir_name}/scale${scl}_query${query}.log 2>&1
+
+    collect_workerloads ${dir_name} query${q}
+
+}
+
+
 usage() {
     echo "Usage: $0 shffl|noshffl scale #query"
 }
@@ -299,6 +336,8 @@ else
         micro)                  micro $2
                                 ;;
         conv)                   convert_test $2
+                                ;;
+        trace)                  trace_test $2
                                 ;;
         * )                     usage
     esac
