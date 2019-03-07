@@ -95,6 +95,17 @@ test_bandwidth() {
     ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no "pkill iperf3"
 }
 
+collect_worker_log(){
+    worker_log_dir=$1
+    appid=$2
+
+    workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
+
+    scp -o StrictHostKeyChecking=no -r ec2-user@${workers[0]}:/home/ec2-user/spark/work/${appid}/* /home/ec2-user/logs/${worker_log_dir}/
+
+    scp -o StrictHostKeyChecking=no -r ec2-user@${workers[1]}:/home/ec2-user/spark/work/${appid}/* /home/ec2-user/logs/${worker_log_dir}/
+}
+
 collect_workerloads(){
     worker_log_dir=$1
     name=$2

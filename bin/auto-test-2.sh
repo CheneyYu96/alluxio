@@ -295,8 +295,9 @@ trace_test(){
             --app-name "TPCH shuffle: scale${scl} query${query}" \
             > ${dir_name}/scale${scl}_query${query}.log 2>&1
 
-    collect_workerloads ${dir_name} query${query}
+    collect_workerloads ${dir_name##*logs/} query${query}
 
+#    collect_worker_log ${dir_name} ${appid}
 }
 
 
