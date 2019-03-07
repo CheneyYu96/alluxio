@@ -8,8 +8,10 @@ echo "dir : $DIR"
 
 gen_data(){
     SCL=$1
+
+    clean_data
     cd $DIR/tpch-spark/dbgen
-    ./dbgen -s $SCL
+    ./dbgen -f -s $SCL
 
     cd $DIR
     if [[ -d data ]]; then
@@ -31,10 +33,39 @@ move_data(){
 #    $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/data/orders.tbl $DIR/data/orders.tbl
 }
 
+move_data_hdfs(){
+    $DIR/hadoop/bin/hadoop fs mkdir -p $DIR/data
+    $DIR/alluxio/bin/alluxio fs mkdir $DIR/data
+
+    for f in $(ls $DIR/data); do
+        $DIR/hadoop/bin/hadoop fs -copyFromLocal $DIR/data/$f $DIR/data/$f
+    done
+}
+
+save_par_data(){
+    mkdir -p $DIR/tpch_parquet
+    $DIR/alluxio/bin/alluxio fs copyToLocal $DIR/tpch_parquet $DIR/tpch_parquet
+}
+
+move_par_data(){
+    $DIR/alluxio/bin/alluxio fs mkdir $DIR/tpch_parquet
+
+    for f in $(ls $DIR/tpch_parquet); do
+        $DIR/alluxio/bin/alluxio fs mkdir $DIR/tpch_parquet/$f
+        for sf in $(ls $DIR/tpch_parquet/$f); do
+            $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/tpch_parquet/$f/$sf $DIR/tpch_parquet/$f/$sf
+        done
+    done
+}
+
 clean_data(){
     cd $DIR
     if [[ -d data ]]; then
         rm -r data/
+    fi
+
+    if [[ -d tpch_parquet ]]; then
+        rm -r tpch_parquet/
     fi
 }
 
