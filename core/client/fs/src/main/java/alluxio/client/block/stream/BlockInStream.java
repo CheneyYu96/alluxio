@@ -268,8 +268,6 @@ public class BlockInStream extends InputStream implements BoundedStream, Seekabl
     // record data shuffling
     FileWriter fw = null;
     try {
-      LOG.info("Packet reader. class:" + mPacketReader.getClass());
-
       if (mPacketReader instanceof LocalFilePacketReader) {
         LOG.info("Read bytes from local. size:" + toRead + "; blockID:" + mId);
       }
