@@ -275,7 +275,7 @@ public class BlockInStream extends InputStream implements BoundedStream, Seekabl
       }
       else if (mPacketReader instanceof NettyPacketReader) {
         String hostName = ((NettyPacketReader) mPacketReader).getWorkerHostName();
-        LOG.info("Read bytes from remote. size:" + toRead + "; hostname:" + hostName);
+        LOG.info("Read bytes from remote. size:" + toRead + "; hostname:" + hostName + "; blockID:" + mId);
 
         String vmName = ManagementFactory.getRuntimeMXBean().getName();
 
