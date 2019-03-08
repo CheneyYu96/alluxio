@@ -315,9 +315,17 @@ trace_test(){
                 > $DIR/logs/shuffle/scale${scl}_query${q}.log 2>&1
 
         collect_workerloads shuffle query${q}
+
+        line=$(cat $DIR/logs/shuffle/scale${scl}_query${q}.log | grep 'Got application ID')
+        appid=${line##*ID: }
+        echo "App ID: ${appid}"
+
+        mkdir -p $DIR/logs/shuffle/query${q}
+        collect_worker_logs shuffle/query${q} ${appid}
     done
 
     mv $DIR/logs/shuffle ${dir_name}
+
 }
 
 usage() {
