@@ -305,15 +305,19 @@ trace_test(){
 
     for((q=${from};q<=${to};q++)); do
         $DIR/spark/bin/spark-submit \
+            --conf spark.executor.extraJavaOptions="-Dlog4j.configuration=file://$DIR/tpch-spark/log4j.properties" \
+            --conf spark.driver.extraJavaOptions="-Dlog4j.configuration=file://$DIR/tpch-spark/log4j.properties" \
             --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar \
                 --query ${q} \
                 --log-trace \
                 $(check_parquet) \
                 --app-name "TPCH shuffle: scale${scl} query${q}" \
-                > ${dir_name}/scale${scl}_query${q}.log 2>&1
+                > $DIR/logs/shuffle/scale${scl}_query${q}.log 2>&1
 
         collect_workerloads shuffle query${q}
     done
+
+    mv $DIR/logs/shuffle ${dir_name}
 }
 
 usage() {
