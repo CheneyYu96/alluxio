@@ -269,16 +269,16 @@ public class BlockInStream extends InputStream implements BoundedStream, Seekabl
     FileWriter fw = null;
     try {
       if (mPacketReader instanceof LocalFilePacketReader) {
-        LOG.info("Read bytes from local. size:" + toRead + "; blockID:" + mId);
+        LOG.info("Read bytes from local. size:" + toRead + "; blockID:" + mId + "; offset:" + off);
       }
       else if (mPacketReader instanceof NettyPacketReader) {
         String hostName = ((NettyPacketReader) mPacketReader).getWorkerHostName();
-        LOG.info("Read bytes from remote. size:" + toRead + "; hostname:" + hostName + "; blockID:" + mId);
+        LOG.info("Read bytes from remote. size:" + toRead + "; hostname:" + hostName + "; blockID:" + mId + "; offset:" + off);
 
         String vmName = ManagementFactory.getRuntimeMXBean().getName();
 
         fw = new FileWriter(mLogPath, true); //the true will append the new data
-        fw.write(System.currentTimeMillis() + "\t" + hostName + "\t" + toRead + "\t" + vmName + "\t" + mId + "\n");
+        fw.write(System.currentTimeMillis() + "\t" + hostName + "\t" + toRead + "\t" + vmName + "\t" + mId + "\t" + off + "\n");
         fw.close();
       }
     }
