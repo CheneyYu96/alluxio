@@ -337,7 +337,7 @@ trace_test(){
 }
 
 trace_range_test(){
-    scl=$(cat DATA_SCALE)
+    scl=$(cat $DATA_SCALE)
     start=$1
     end=$2
 
