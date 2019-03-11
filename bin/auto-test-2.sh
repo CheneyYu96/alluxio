@@ -336,6 +336,16 @@ trace_test(){
 
 }
 
+trace_range_test(){
+    scl=$(cat DATA_SCALE)
+    start=$1
+    end=$2
+
+    for((qry=$start;qry<=$end;qry++)); do
+        trace_test $scl $qry
+    done
+}
+
 usage() {
     echo "Usage: $0 shffl|noshffl scale #query"
 }
@@ -367,6 +377,8 @@ else
         conv)                   convert_test $2
                                 ;;
         trace)                  trace_test $2 $3
+                                ;;
+        trace-range)            trace_range_test $2 $3
                                 ;;
         * )                     usage
     esac
