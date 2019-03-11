@@ -299,9 +299,6 @@ trace_test(){
 
     mkdir -p  $DIR/logs/shuffle
 
-    if [[ ! -f ${ALLUXIO_ENV} ]]; then
-        touch ${ALLUXIO_ENV}
-    fi
     if [[ `cat ${ALLUXIO_ENV}` == "1" ]]; then
         echo 'Alluxio env already prepared'
     else

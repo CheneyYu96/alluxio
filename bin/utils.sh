@@ -15,6 +15,10 @@ gen_data(){
         touch ${DATA_SCALE}
     fi
 
+    if [[ ! -f ${ALLUXIO_ENV} ]]; then
+        touch ${ALLUXIO_ENV}
+    fi
+
     if [[ `cat ${DATA_SCALE}` == "$SCL" && -d ${DIR}/data ]]; then
         echo "Data exist"
     else
