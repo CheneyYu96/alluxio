@@ -6,6 +6,7 @@ DIR="$( cd "$DIR/../.." && pwd )"
 
 echo "dir : $DIR"
 DATA_SCALE=$DIR/data_scale
+ALLUXIO_ENV=$DIR/alluxio_env
 
 gen_data(){
     SCL=$1
@@ -27,6 +28,7 @@ gen_data(){
         mv tpch-spark/dbgen/*.tbl data/
 
         echo "${SCL}" > ${DATA_SCALE}
+        echo '0' > ${ALLUXIO_ENV}
     fi
 }
 

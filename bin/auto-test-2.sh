@@ -297,11 +297,19 @@ trace_test(){
         to=22
     fi
 
-    shuffle_env
     mkdir -p  $DIR/logs/shuffle
 
-    move_par_data
-    clear_workerloads
+    if [[ ! -f ${ALLUXIO_ENV} ]]; then
+        touch ${ALLUXIO_ENV}
+    fi
+    if [[ `cat ${ALLUXIO_ENV}` == "1" ]]; then
+        echo 'Alluxio env already prepared'
+    else
+        shuffle_env
+        move_par_data
+        clear_workerloads
+        echo '1' > ${ALLUXIO_ENV}
+    fi
 
     for((q=${from};q<=${to};q++)); do
         $DIR/spark/bin/spark-submit \
