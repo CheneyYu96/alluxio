@@ -108,15 +108,21 @@ collect_worker_logs(){
     appid=$2
 
     workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
-    if ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no test -e /home/ec2-user/spark/work/${appid}/0/stderr; then
-        scp -o StrictHostKeyChecking=no ec2-user@${workers[0]}:/home/ec2-user/spark/work/${appid}/0/stderr /home/ec2-user/logs/${worker_log_dir}/0.log
-    fi
 
-    if ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no test -e /home/ec2-user/spark/work/${appid}/1/stderr; then
-        scp -o StrictHostKeyChecking=no ec2-user@${workers[1]}:/home/ec2-user/spark/work/${appid}/1/stderr /home/ec2-user/logs/${worker_log_dir}/1.log
-    fi
+    worker0_id=$(check_executor_id ${workers[0]} ${appid})
+    scp -o StrictHostKeyChecking=no ec2-user@${workers[0]}:/home/ec2-user/spark/work/${appid}/${worker0_id}/stderr /home/ec2-user/logs/${worker_log_dir}/${worker0_id}.log
+
+    worker1_id=$(check_executor_id ${workers[1]} ${appid})
+    scp -o StrictHostKeyChecking=no ec2-user@${workers[1]}:/home/ec2-user/spark/work/${appid}/${worker1_id}/stderr /home/ec2-user/logs/${worker_log_dir}/${worker1_id}.log
 }
 
+check_executor_id(){
+    address=$1
+    appid=$2
+
+    exe_id=$(ssh ec2-user@${address} -o StrictHostKeyChecking=no ls /home/ec2-user/spark/work/${appid})
+    echo ${exe_id}
+}
 
 collect_workerloads(){
     worker_log_dir=$1
