@@ -170,7 +170,7 @@ micro(){
    mv $DIR/logs/noshuffle ${dir_name}/query31
    mv $DIR/logs/shuffle ${dir_name}/query31
 
-   clean_data
+#   clean_data
 }
 
 par_micro(){
@@ -191,7 +191,7 @@ par_micro(){
    mv $DIR/logs/noshuffle ${dir_name}/query31
    mv $DIR/logs/shuffle ${dir_name}/query31
 
-   clean_data
+#   clean_data
 }
 
 par_single_test(){
@@ -201,7 +201,6 @@ par_single_test(){
     mkdir -p ${dir_name}
 
     USE_PARQUER=1
-#    FROM_HDFS=1
 
     gen_data $scl
     convert
@@ -210,7 +209,7 @@ par_single_test(){
 
     mv $DIR/logs/noshuffle ${dir_name}
     mv $DIR/logs/shuffle ${dir_name}
-    clean_data
+#    clean_data
 }
 
 par_all_test(){
@@ -226,7 +225,7 @@ par_all_test(){
 
     mv $DIR/logs/noshuffle ${dir_name}
     mv $DIR/logs/shuffle ${dir_name}
-    clean_data
+#    clean_data
 }
 
 limit_test() {
@@ -249,7 +248,7 @@ limit_test() {
     mv $DIR/logs/noshuffle ${dir_name}
     mv $DIR/logs/shuffle ${dir_name}
 
-    clean_data
+#    clean_data
     free_limit
 }
 
@@ -278,7 +277,7 @@ limit_micro() {
     mv $DIR/logs/noshuffle ${dir_name}/query31
     mv $DIR/logs/shuffle ${dir_name}/query31
 
-    clean_data
+#    clean_data
     free_limit
 }
 
