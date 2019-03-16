@@ -120,7 +120,7 @@
     <factorypathentry kind="VARJAR" id="M2_REPO/javolution/javolution/5.5.1/javolution-5.5.1.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/org/apache/hbase/hbase-client/1.1.1/hbase-client-1.1.1.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/org/apache/hbase/hbase-annotations/1.1.1/hbase-annotations-1.1.1.jar" enabled="true" runInBatchMode="false"/>
-    <factorypathentry kind="EXTJAR" id="/Library/Java/JavaVirtualMachines/jdk1.8.0_191.jdk/Contents/Home/jre/../lib/tools.jar" enabled="true" runInBatchMode="false"/>
+    <factorypathentry kind="EXTJAR" id="/Library/Java/JavaVirtualMachines/jdk1.8.0_151.jdk/Contents/Home/jre/../lib/tools.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/org/apache/hbase/hbase-protocol/1.1.1/hbase-protocol-1.1.1.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/org/apache/htrace/htrace-core/3.1.0-incubating/htrace-core-3.1.0-incubating.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/org/jruby/jcodings/jcodings/1.0.8/jcodings-1.0.8.jar" enabled="true" runInBatchMode="false"/>
