@@ -1,4 +1,4 @@
-package alluxio.master.stats;
+package alluxio.client.stats;
 
 /**
  * A wrapper for the thrift master to interact with the stats client.

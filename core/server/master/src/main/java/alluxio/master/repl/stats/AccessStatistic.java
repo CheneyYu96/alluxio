@@ -1,4 +1,4 @@
-package alluxio.master.stats;
+package alluxio.master.repl.stats;
 
 /**
  * Popularity statistic for all data segments
