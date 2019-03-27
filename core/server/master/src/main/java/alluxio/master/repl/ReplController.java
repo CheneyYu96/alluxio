@@ -10,4 +10,5 @@ package alluxio.master.repl;
  *
  */
 public class ReplController {
+
 }
