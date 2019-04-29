@@ -4086,9 +4086,9 @@ public final class PropertyKey implements Comparable<PropertyKey> {
     public static final String WORKER_JVM_MONITOR_ENABLED = "alluxio.worker.jvm.monitor.enabled";
 
 
-    // FR
+    // TODO: FR parameters
     public static final String FR_CHECK_INTERVSL = "fr.repl.interval";
-
+    public static final String FR_REPL_POLICY = "fr.repl.policy.class";
 
     private Name() {} // prevent instantiation
   }
@@ -4579,5 +4579,11 @@ public final class PropertyKey implements Comparable<PropertyKey> {
           new Builder(Name.FR_CHECK_INTERVSL)
                   .setDefaultValue(60 /* in seconds */)
                   .build();
+
+    public static final PropertyKey FR_REPL_POLICY =
+            new Builder(Name.FR_REPL_POLICY)
+                    .setDefaultValue("alluxio.master.repl.policy.NaivePolicy")
+                    .setDescription("The default replication policy for replication")
+                    .build();
 
 }

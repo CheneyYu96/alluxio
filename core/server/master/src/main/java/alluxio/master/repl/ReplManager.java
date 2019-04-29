@@ -3,8 +3,8 @@ package alluxio.master.repl;
 import alluxio.AlluxioURI;
 import alluxio.Configuration;
 import alluxio.PropertyKey;
-import alluxio.master.repl.policy.FindHottestPolicy;
 import alluxio.master.repl.policy.ReplPolicy;
+import alluxio.util.CommonUtils;
 import fr.client.utils.ReplUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,10 +34,17 @@ public class ReplManager {
         accessRecords = new ConcurrentHashMap<>();
         fileReplicas = new ConcurrentHashMap<>();
 
-        // TODO: dynamic assign replication policy by property key
-        replPolicy = new FindHottestPolicy();
+        /* TODO: dynamic assign replication policy by property key */
+        replPolicy = CommonUtils.createNewClassInstance(Configuration.getClass(
+                PropertyKey.FR_REPL_POLICY), new Class[] {}, new Object[] {});
 
         checkInterval = Configuration.getInt(PropertyKey.FR_CHECK_INTERVSL);
+
+        LOG.info("Create replication manager. check_interval : {}. policy : {}", checkInterval, replPolicy.getClass().getName());
+    }
+
+    private synchronized void updateReplicas(AlluxioURI originalFile){
+        FileRepInfo repInfo = fileReplicas.get(originalFile);
     }
 
     public void checkStats(){
