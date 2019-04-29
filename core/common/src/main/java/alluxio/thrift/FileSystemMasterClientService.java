@@ -245,6 +245,17 @@ public class FileSystemMasterClientService {
      */
     public UpdateUfsModeTResponse updateUfsMode(String ufsPath, UpdateUfsModeTOptions options) throws alluxio.thrift.AlluxioTException, org.apache.thrift.TException;
 
+    /**
+     * Upload UFSPath, offset and length to master for recording.
+     * 
+     * @param UFSPath the UFSPath of the file
+     * 
+     * @param offset the offset in the file
+     * 
+     * @param len the length of bytes to be read
+     */
+    public UploadFileSegmentsAccessInfoTResponse uploadFileSegmentsAccessInfo(String UFSPath, long offset, long len) throws alluxio.thrift.AlluxioTException, org.apache.thrift.TException;
+
   }
 
   public interface AsyncIface extends alluxio.thrift.AlluxioService .AsyncIface {
@@ -290,6 +301,8 @@ public class FileSystemMasterClientService {
     public void unmount(String alluxioPath, UnmountTOptions options, org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException;
 
     public void updateUfsMode(String ufsPath, UpdateUfsModeTOptions options, org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException;
+
+    public void uploadFileSegmentsAccessInfo(String UFSPath, long offset, long len, org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException;
 
   }
 
@@ -881,6 +894,34 @@ public class FileSystemMasterClientService {
         throw result.e;
       }
       throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "updateUfsMode failed: unknown result");
+    }
+
+    public UploadFileSegmentsAccessInfoTResponse uploadFileSegmentsAccessInfo(String UFSPath, long offset, long len) throws alluxio.thrift.AlluxioTException, org.apache.thrift.TException
+    {
+      send_uploadFileSegmentsAccessInfo(UFSPath, offset, len);
+      return recv_uploadFileSegmentsAccessInfo();
+    }
+
+    public void send_uploadFileSegmentsAccessInfo(String UFSPath, long offset, long len) throws org.apache.thrift.TException
+    {
+      uploadFileSegmentsAccessInfo_args args = new uploadFileSegmentsAccessInfo_args();
+      args.setUFSPath(UFSPath);
+      args.setOffset(offset);
+      args.setLen(len);
+      sendBase("uploadFileSegmentsAccessInfo", args);
+    }
+
+    public UploadFileSegmentsAccessInfoTResponse recv_uploadFileSegmentsAccessInfo() throws alluxio.thrift.AlluxioTException, org.apache.thrift.TException
+    {
+      uploadFileSegmentsAccessInfo_result result = new uploadFileSegmentsAccessInfo_result();
+      receiveBase(result, "uploadFileSegmentsAccessInfo");
+      if (result.isSetSuccess()) {
+        return result.success;
+      }
+      if (result.e != null) {
+        throw result.e;
+      }
+      throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "uploadFileSegmentsAccessInfo failed: unknown result");
     }
 
   }
@@ -1645,6 +1686,44 @@ public class FileSystemMasterClientService {
       }
     }
 
+    public void uploadFileSegmentsAccessInfo(String UFSPath, long offset, long len, org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException {
+      checkReady();
+      uploadFileSegmentsAccessInfo_call method_call = new uploadFileSegmentsAccessInfo_call(UFSPath, offset, len, resultHandler, this, ___protocolFactory, ___transport);
+      this.___currentMethod = method_call;
+      ___manager.call(method_call);
+    }
+
+    public static class uploadFileSegmentsAccessInfo_call extends org.apache.thrift.async.TAsyncMethodCall {
+      private String UFSPath;
+      private long offset;
+      private long len;
+      public uploadFileSegmentsAccessInfo_call(String UFSPath, long offset, long len, org.apache.thrift.async.AsyncMethodCallback resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+        super(client, protocolFactory, transport, resultHandler, false);
+        this.UFSPath = UFSPath;
+        this.offset = offset;
+        this.len = len;
+      }
+
+      public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
+        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("uploadFileSegmentsAccessInfo", org.apache.thrift.protocol.TMessageType.CALL, 0));
+        uploadFileSegmentsAccessInfo_args args = new uploadFileSegmentsAccessInfo_args();
+        args.setUFSPath(UFSPath);
+        args.setOffset(offset);
+        args.setLen(len);
+        args.write(prot);
+        prot.writeMessageEnd();
+      }
+
+      public UploadFileSegmentsAccessInfoTResponse getResult() throws alluxio.thrift.AlluxioTException, org.apache.thrift.TException {
+        if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
+          throw new IllegalStateException("Method call not finished!");
+        }
+        org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(getFrameBuffer().array());
+        org.apache.thrift.protocol.TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
+        return (new Client(prot)).recv_uploadFileSegmentsAccessInfo();
+      }
+    }
+
   }
 
   public static class Processor<I extends Iface> extends alluxio.thrift.AlluxioService.Processor<I> implements org.apache.thrift.TProcessor {
@@ -1679,6 +1758,7 @@ public class FileSystemMasterClientService {
       processMap.put("stopSync", new stopSync());
       processMap.put("unmount", new unmount());
       processMap.put("updateUfsMode", new updateUfsMode());
+      processMap.put("uploadFileSegmentsAccessInfo", new uploadFileSegmentsAccessInfo());
       return processMap;
     }
 
@@ -2186,6 +2266,30 @@ public class FileSystemMasterClientService {
       }
     }
 
+    public static class uploadFileSegmentsAccessInfo<I extends Iface> extends org.apache.thrift.ProcessFunction<I, uploadFileSegmentsAccessInfo_args> {
+      public uploadFileSegmentsAccessInfo() {
+        super("uploadFileSegmentsAccessInfo");
+      }
+
+      public uploadFileSegmentsAccessInfo_args getEmptyArgsInstance() {
+        return new uploadFileSegmentsAccessInfo_args();
+      }
+
+      protected boolean isOneway() {
+        return false;
+      }
+
+      public uploadFileSegmentsAccessInfo_result getResult(I iface, uploadFileSegmentsAccessInfo_args args) throws org.apache.thrift.TException {
+        uploadFileSegmentsAccessInfo_result result = new uploadFileSegmentsAccessInfo_result();
+        try {
+          result.success = iface.uploadFileSegmentsAccessInfo(args.UFSPath, args.offset, args.len);
+        } catch (alluxio.thrift.AlluxioTException e) {
+          result.e = e;
+        }
+        return result;
+      }
+    }
+
   }
 
   public static class AsyncProcessor<I extends AsyncIface> extends alluxio.thrift.AlluxioService.AsyncProcessor<I> {
@@ -2220,6 +2324,7 @@ public class FileSystemMasterClientService {
       processMap.put("stopSync", new stopSync());
       processMap.put("unmount", new unmount());
       processMap.put("updateUfsMode", new updateUfsMode());
+      processMap.put("uploadFileSegmentsAccessInfo", new uploadFileSegmentsAccessInfo());
       return processMap;
     }
 
@@ -3417,6 +3522,63 @@ public class FileSystemMasterClientService {
 
       public void start(I iface, updateUfsMode_args args, org.apache.thrift.async.AsyncMethodCallback<UpdateUfsModeTResponse> resultHandler) throws TException {
         iface.updateUfsMode(args.ufsPath, args.options,resultHandler);
+      }
+    }
+
+    public static class uploadFileSegmentsAccessInfo<I extends AsyncIface> extends org.apache.thrift.AsyncProcessFunction<I, uploadFileSegmentsAccessInfo_args, UploadFileSegmentsAccessInfoTResponse> {
+      public uploadFileSegmentsAccessInfo() {
+        super("uploadFileSegmentsAccessInfo");
+      }
+
+      public uploadFileSegmentsAccessInfo_args getEmptyArgsInstance() {
+        return new uploadFileSegmentsAccessInfo_args();
+      }
+
+      public AsyncMethodCallback<UploadFileSegmentsAccessInfoTResponse> getResultHandler(final AsyncFrameBuffer fb, final int seqid) {
+        final org.apache.thrift.AsyncProcessFunction fcall = this;
+        return new AsyncMethodCallback<UploadFileSegmentsAccessInfoTResponse>() { 
+          public void onComplete(UploadFileSegmentsAccessInfoTResponse o) {
+            uploadFileSegmentsAccessInfo_result result = new uploadFileSegmentsAccessInfo_result();
+            result.success = o;
+            try {
+              fcall.sendResponse(fb,result, org.apache.thrift.protocol.TMessageType.REPLY,seqid);
+              return;
+            } catch (Exception e) {
+              LOGGER.error("Exception writing to internal frame buffer", e);
+            }
+            fb.close();
+          }
+          public void onError(Exception e) {
+            byte msgType = org.apache.thrift.protocol.TMessageType.REPLY;
+            org.apache.thrift.TBase msg;
+            uploadFileSegmentsAccessInfo_result result = new uploadFileSegmentsAccessInfo_result();
+            if (e instanceof alluxio.thrift.AlluxioTException) {
+                        result.e = (alluxio.thrift.AlluxioTException) e;
+                        result.setEIsSet(true);
+                        msg = result;
+            }
+             else 
+            {
+              msgType = org.apache.thrift.protocol.TMessageType.EXCEPTION;
+              msg = (org.apache.thrift.TBase)new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.INTERNAL_ERROR, e.getMessage());
+            }
+            try {
+              fcall.sendResponse(fb,msg,msgType,seqid);
+              return;
+            } catch (Exception ex) {
+              LOGGER.error("Exception writing to internal frame buffer", ex);
+            }
+            fb.close();
+          }
+        };
+      }
+
+      protected boolean isOneway() {
+        return false;
+      }
+
+      public void start(I iface, uploadFileSegmentsAccessInfo_args args, org.apache.thrift.async.AsyncMethodCallback<UploadFileSegmentsAccessInfoTResponse> resultHandler) throws TException {
+        iface.uploadFileSegmentsAccessInfo(args.UFSPath, args.offset, args.len,resultHandler);
       }
     }
 
@@ -23981,6 +24143,1069 @@ public class FileSystemMasterClientService {
         BitSet incoming = iprot.readBitSet(2);
         if (incoming.get(0)) {
           struct.success = new UpdateUfsModeTResponse();
+          struct.success.read(iprot);
+          struct.setSuccessIsSet(true);
+        }
+        if (incoming.get(1)) {
+          struct.e = new alluxio.thrift.AlluxioTException();
+          struct.e.read(iprot);
+          struct.setEIsSet(true);
+        }
+      }
+    }
+
+  }
+
+  public static class uploadFileSegmentsAccessInfo_args implements org.apache.thrift.TBase<uploadFileSegmentsAccessInfo_args, uploadFileSegmentsAccessInfo_args._Fields>, java.io.Serializable, Cloneable, Comparable<uploadFileSegmentsAccessInfo_args>   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("uploadFileSegmentsAccessInfo_args");
+
+    private static final org.apache.thrift.protocol.TField UFSPATH_FIELD_DESC = new org.apache.thrift.protocol.TField("UFSPath", org.apache.thrift.protocol.TType.STRING, (short)1);
+    private static final org.apache.thrift.protocol.TField OFFSET_FIELD_DESC = new org.apache.thrift.protocol.TField("offset", org.apache.thrift.protocol.TType.I64, (short)2);
+    private static final org.apache.thrift.protocol.TField LEN_FIELD_DESC = new org.apache.thrift.protocol.TField("len", org.apache.thrift.protocol.TType.I64, (short)3);
+
+    private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
+    static {
+      schemes.put(StandardScheme.class, new uploadFileSegmentsAccessInfo_argsStandardSchemeFactory());
+      schemes.put(TupleScheme.class, new uploadFileSegmentsAccessInfo_argsTupleSchemeFactory());
+    }
+
+    private String UFSPath; // required
+    private long offset; // required
+    private long len; // required
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+      /**
+       * the UFSPath of the file
+       */
+      UFSPATH((short)1, "UFSPath"),
+      /**
+       * the offset in the file
+       */
+      OFFSET((short)2, "offset"),
+      /**
+       * the length of bytes to be read
+       */
+      LEN((short)3, "len");
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          case 1: // UFSPATH
+            return UFSPATH;
+          case 2: // OFFSET
+            return OFFSET;
+          case 3: // LEN
+            return LEN;
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+
+    // isset id assignments
+    private static final int __OFFSET_ISSET_ID = 0;
+    private static final int __LEN_ISSET_ID = 1;
+    private byte __isset_bitfield = 0;
+    public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.UFSPATH, new org.apache.thrift.meta_data.FieldMetaData("UFSPath", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+      tmpMap.put(_Fields.OFFSET, new org.apache.thrift.meta_data.FieldMetaData("offset", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
+      tmpMap.put(_Fields.LEN, new org.apache.thrift.meta_data.FieldMetaData("len", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(uploadFileSegmentsAccessInfo_args.class, metaDataMap);
+    }
+
+    public uploadFileSegmentsAccessInfo_args() {
+    }
+
+    public uploadFileSegmentsAccessInfo_args(
+      String UFSPath,
+      long offset,
+      long len)
+    {
+      this();
+      this.UFSPath = UFSPath;
+      this.offset = offset;
+      setOffsetIsSet(true);
+      this.len = len;
+      setLenIsSet(true);
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public uploadFileSegmentsAccessInfo_args(uploadFileSegmentsAccessInfo_args other) {
+      __isset_bitfield = other.__isset_bitfield;
+      if (other.isSetUFSPath()) {
+        this.UFSPath = other.UFSPath;
+      }
+      this.offset = other.offset;
+      this.len = other.len;
+    }
+
+    public uploadFileSegmentsAccessInfo_args deepCopy() {
+      return new uploadFileSegmentsAccessInfo_args(this);
+    }
+
+    @Override
+    public void clear() {
+      this.UFSPath = null;
+      setOffsetIsSet(false);
+      this.offset = 0;
+      setLenIsSet(false);
+      this.len = 0;
+    }
+
+    /**
+     * the UFSPath of the file
+     */
+    public String getUFSPath() {
+      return this.UFSPath;
+    }
+
+    /**
+     * the UFSPath of the file
+     */
+    public uploadFileSegmentsAccessInfo_args setUFSPath(String UFSPath) {
+      this.UFSPath = UFSPath;
+      return this;
+    }
+
+    public void unsetUFSPath() {
+      this.UFSPath = null;
+    }
+
+    /** Returns true if field UFSPath is set (has been assigned a value) and false otherwise */
+    public boolean isSetUFSPath() {
+      return this.UFSPath != null;
+    }
+
+    public void setUFSPathIsSet(boolean value) {
+      if (!value) {
+        this.UFSPath = null;
+      }
+    }
+
+    /**
+     * the offset in the file
+     */
+    public long getOffset() {
+      return this.offset;
+    }
+
+    /**
+     * the offset in the file
+     */
+    public uploadFileSegmentsAccessInfo_args setOffset(long offset) {
+      this.offset = offset;
+      setOffsetIsSet(true);
+      return this;
+    }
+
+    public void unsetOffset() {
+      __isset_bitfield = EncodingUtils.clearBit(__isset_bitfield, __OFFSET_ISSET_ID);
+    }
+
+    /** Returns true if field offset is set (has been assigned a value) and false otherwise */
+    public boolean isSetOffset() {
+      return EncodingUtils.testBit(__isset_bitfield, __OFFSET_ISSET_ID);
+    }
+
+    public void setOffsetIsSet(boolean value) {
+      __isset_bitfield = EncodingUtils.setBit(__isset_bitfield, __OFFSET_ISSET_ID, value);
+    }
+
+    /**
+     * the length of bytes to be read
+     */
+    public long getLen() {
+      return this.len;
+    }
+
+    /**
+     * the length of bytes to be read
+     */
+    public uploadFileSegmentsAccessInfo_args setLen(long len) {
+      this.len = len;
+      setLenIsSet(true);
+      return this;
+    }
+
+    public void unsetLen() {
+      __isset_bitfield = EncodingUtils.clearBit(__isset_bitfield, __LEN_ISSET_ID);
+    }
+
+    /** Returns true if field len is set (has been assigned a value) and false otherwise */
+    public boolean isSetLen() {
+      return EncodingUtils.testBit(__isset_bitfield, __LEN_ISSET_ID);
+    }
+
+    public void setLenIsSet(boolean value) {
+      __isset_bitfield = EncodingUtils.setBit(__isset_bitfield, __LEN_ISSET_ID, value);
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      case UFSPATH:
+        if (value == null) {
+          unsetUFSPath();
+        } else {
+          setUFSPath((String)value);
+        }
+        break;
+
+      case OFFSET:
+        if (value == null) {
+          unsetOffset();
+        } else {
+          setOffset((Long)value);
+        }
+        break;
+
+      case LEN:
+        if (value == null) {
+          unsetLen();
+        } else {
+          setLen((Long)value);
+        }
+        break;
+
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      case UFSPATH:
+        return getUFSPath();
+
+      case OFFSET:
+        return getOffset();
+
+      case LEN:
+        return getLen();
+
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      case UFSPATH:
+        return isSetUFSPath();
+      case OFFSET:
+        return isSetOffset();
+      case LEN:
+        return isSetLen();
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof uploadFileSegmentsAccessInfo_args)
+        return this.equals((uploadFileSegmentsAccessInfo_args)that);
+      return false;
+    }
+
+    public boolean equals(uploadFileSegmentsAccessInfo_args that) {
+      if (that == null)
+        return false;
+
+      boolean this_present_UFSPath = true && this.isSetUFSPath();
+      boolean that_present_UFSPath = true && that.isSetUFSPath();
+      if (this_present_UFSPath || that_present_UFSPath) {
+        if (!(this_present_UFSPath && that_present_UFSPath))
+          return false;
+        if (!this.UFSPath.equals(that.UFSPath))
+          return false;
+      }
+
+      boolean this_present_offset = true;
+      boolean that_present_offset = true;
+      if (this_present_offset || that_present_offset) {
+        if (!(this_present_offset && that_present_offset))
+          return false;
+        if (this.offset != that.offset)
+          return false;
+      }
+
+      boolean this_present_len = true;
+      boolean that_present_len = true;
+      if (this_present_len || that_present_len) {
+        if (!(this_present_len && that_present_len))
+          return false;
+        if (this.len != that.len)
+          return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      List<Object> list = new ArrayList<Object>();
+
+      boolean present_UFSPath = true && (isSetUFSPath());
+      list.add(present_UFSPath);
+      if (present_UFSPath)
+        list.add(UFSPath);
+
+      boolean present_offset = true;
+      list.add(present_offset);
+      if (present_offset)
+        list.add(offset);
+
+      boolean present_len = true;
+      list.add(present_len);
+      if (present_len)
+        list.add(len);
+
+      return list.hashCode();
+    }
+
+    @Override
+    public int compareTo(uploadFileSegmentsAccessInfo_args other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+
+      lastComparison = Boolean.valueOf(isSetUFSPath()).compareTo(other.isSetUFSPath());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetUFSPath()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.UFSPath, other.UFSPath);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      lastComparison = Boolean.valueOf(isSetOffset()).compareTo(other.isSetOffset());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetOffset()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.offset, other.offset);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      lastComparison = Boolean.valueOf(isSetLen()).compareTo(other.isSetLen());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetLen()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.len, other.len);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(org.apache.thrift.protocol.TProtocol iprot) throws org.apache.thrift.TException {
+      schemes.get(iprot.getScheme()).getScheme().read(iprot, this);
+    }
+
+    public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
+      schemes.get(oprot.getScheme()).getScheme().write(oprot, this);
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("uploadFileSegmentsAccessInfo_args(");
+      boolean first = true;
+
+      sb.append("UFSPath:");
+      if (this.UFSPath == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.UFSPath);
+      }
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("offset:");
+      sb.append(this.offset);
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("len:");
+      sb.append(this.len);
+      first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws org.apache.thrift.TException {
+      // check for required fields
+      // check for sub-struct validity
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      try {
+        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
+      try {
+        // it doesn't seem like you should have to do this, but java serialization is wacky, and doesn't call the default constructor.
+        __isset_bitfield = 0;
+        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private static class uploadFileSegmentsAccessInfo_argsStandardSchemeFactory implements SchemeFactory {
+      public uploadFileSegmentsAccessInfo_argsStandardScheme getScheme() {
+        return new uploadFileSegmentsAccessInfo_argsStandardScheme();
+      }
+    }
+
+    private static class uploadFileSegmentsAccessInfo_argsStandardScheme extends StandardScheme<uploadFileSegmentsAccessInfo_args> {
+
+      public void read(org.apache.thrift.protocol.TProtocol iprot, uploadFileSegmentsAccessInfo_args struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TField schemeField;
+        iprot.readStructBegin();
+        while (true)
+        {
+          schemeField = iprot.readFieldBegin();
+          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) { 
+            break;
+          }
+          switch (schemeField.id) {
+            case 1: // UFSPATH
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
+                struct.UFSPath = iprot.readString();
+                struct.setUFSPathIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            case 2: // OFFSET
+              if (schemeField.type == org.apache.thrift.protocol.TType.I64) {
+                struct.offset = iprot.readI64();
+                struct.setOffsetIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            case 3: // LEN
+              if (schemeField.type == org.apache.thrift.protocol.TType.I64) {
+                struct.len = iprot.readI64();
+                struct.setLenIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            default:
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+          }
+          iprot.readFieldEnd();
+        }
+        iprot.readStructEnd();
+
+        // check for required fields of primitive type, which can't be checked in the validate method
+        struct.validate();
+      }
+
+      public void write(org.apache.thrift.protocol.TProtocol oprot, uploadFileSegmentsAccessInfo_args struct) throws org.apache.thrift.TException {
+        struct.validate();
+
+        oprot.writeStructBegin(STRUCT_DESC);
+        if (struct.UFSPath != null) {
+          oprot.writeFieldBegin(UFSPATH_FIELD_DESC);
+          oprot.writeString(struct.UFSPath);
+          oprot.writeFieldEnd();
+        }
+        oprot.writeFieldBegin(OFFSET_FIELD_DESC);
+        oprot.writeI64(struct.offset);
+        oprot.writeFieldEnd();
+        oprot.writeFieldBegin(LEN_FIELD_DESC);
+        oprot.writeI64(struct.len);
+        oprot.writeFieldEnd();
+        oprot.writeFieldStop();
+        oprot.writeStructEnd();
+      }
+
+    }
+
+    private static class uploadFileSegmentsAccessInfo_argsTupleSchemeFactory implements SchemeFactory {
+      public uploadFileSegmentsAccessInfo_argsTupleScheme getScheme() {
+        return new uploadFileSegmentsAccessInfo_argsTupleScheme();
+      }
+    }
+
+    private static class uploadFileSegmentsAccessInfo_argsTupleScheme extends TupleScheme<uploadFileSegmentsAccessInfo_args> {
+
+      @Override
+      public void write(org.apache.thrift.protocol.TProtocol prot, uploadFileSegmentsAccessInfo_args struct) throws org.apache.thrift.TException {
+        TTupleProtocol oprot = (TTupleProtocol) prot;
+        BitSet optionals = new BitSet();
+        if (struct.isSetUFSPath()) {
+          optionals.set(0);
+        }
+        if (struct.isSetOffset()) {
+          optionals.set(1);
+        }
+        if (struct.isSetLen()) {
+          optionals.set(2);
+        }
+        oprot.writeBitSet(optionals, 3);
+        if (struct.isSetUFSPath()) {
+          oprot.writeString(struct.UFSPath);
+        }
+        if (struct.isSetOffset()) {
+          oprot.writeI64(struct.offset);
+        }
+        if (struct.isSetLen()) {
+          oprot.writeI64(struct.len);
+        }
+      }
+
+      @Override
+      public void read(org.apache.thrift.protocol.TProtocol prot, uploadFileSegmentsAccessInfo_args struct) throws org.apache.thrift.TException {
+        TTupleProtocol iprot = (TTupleProtocol) prot;
+        BitSet incoming = iprot.readBitSet(3);
+        if (incoming.get(0)) {
+          struct.UFSPath = iprot.readString();
+          struct.setUFSPathIsSet(true);
+        }
+        if (incoming.get(1)) {
+          struct.offset = iprot.readI64();
+          struct.setOffsetIsSet(true);
+        }
+        if (incoming.get(2)) {
+          struct.len = iprot.readI64();
+          struct.setLenIsSet(true);
+        }
+      }
+    }
+
+  }
+
+  public static class uploadFileSegmentsAccessInfo_result implements org.apache.thrift.TBase<uploadFileSegmentsAccessInfo_result, uploadFileSegmentsAccessInfo_result._Fields>, java.io.Serializable, Cloneable, Comparable<uploadFileSegmentsAccessInfo_result>   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("uploadFileSegmentsAccessInfo_result");
+
+    private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.STRUCT, (short)0);
+    private static final org.apache.thrift.protocol.TField E_FIELD_DESC = new org.apache.thrift.protocol.TField("e", org.apache.thrift.protocol.TType.STRUCT, (short)1);
+
+    private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
+    static {
+      schemes.put(StandardScheme.class, new uploadFileSegmentsAccessInfo_resultStandardSchemeFactory());
+      schemes.put(TupleScheme.class, new uploadFileSegmentsAccessInfo_resultTupleSchemeFactory());
+    }
+
+    private UploadFileSegmentsAccessInfoTResponse success; // required
+    private alluxio.thrift.AlluxioTException e; // required
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+      SUCCESS((short)0, "success"),
+      E((short)1, "e");
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          case 0: // SUCCESS
+            return SUCCESS;
+          case 1: // E
+            return E;
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+
+    // isset id assignments
+    public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.SUCCESS, new org.apache.thrift.meta_data.FieldMetaData("success", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, UploadFileSegmentsAccessInfoTResponse.class)));
+      tmpMap.put(_Fields.E, new org.apache.thrift.meta_data.FieldMetaData("e", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRUCT)));
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(uploadFileSegmentsAccessInfo_result.class, metaDataMap);
+    }
+
+    public uploadFileSegmentsAccessInfo_result() {
+    }
+
+    public uploadFileSegmentsAccessInfo_result(
+      UploadFileSegmentsAccessInfoTResponse success,
+      alluxio.thrift.AlluxioTException e)
+    {
+      this();
+      this.success = success;
+      this.e = e;
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public uploadFileSegmentsAccessInfo_result(uploadFileSegmentsAccessInfo_result other) {
+      if (other.isSetSuccess()) {
+        this.success = new UploadFileSegmentsAccessInfoTResponse(other.success);
+      }
+      if (other.isSetE()) {
+        this.e = new alluxio.thrift.AlluxioTException(other.e);
+      }
+    }
+
+    public uploadFileSegmentsAccessInfo_result deepCopy() {
+      return new uploadFileSegmentsAccessInfo_result(this);
+    }
+
+    @Override
+    public void clear() {
+      this.success = null;
+      this.e = null;
+    }
+
+    public UploadFileSegmentsAccessInfoTResponse getSuccess() {
+      return this.success;
+    }
+
+    public uploadFileSegmentsAccessInfo_result setSuccess(UploadFileSegmentsAccessInfoTResponse success) {
+      this.success = success;
+      return this;
+    }
+
+    public void unsetSuccess() {
+      this.success = null;
+    }
+
+    /** Returns true if field success is set (has been assigned a value) and false otherwise */
+    public boolean isSetSuccess() {
+      return this.success != null;
+    }
+
+    public void setSuccessIsSet(boolean value) {
+      if (!value) {
+        this.success = null;
+      }
+    }
+
+    public alluxio.thrift.AlluxioTException getE() {
+      return this.e;
+    }
+
+    public uploadFileSegmentsAccessInfo_result setE(alluxio.thrift.AlluxioTException e) {
+      this.e = e;
+      return this;
+    }
+
+    public void unsetE() {
+      this.e = null;
+    }
+
+    /** Returns true if field e is set (has been assigned a value) and false otherwise */
+    public boolean isSetE() {
+      return this.e != null;
+    }
+
+    public void setEIsSet(boolean value) {
+      if (!value) {
+        this.e = null;
+      }
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      case SUCCESS:
+        if (value == null) {
+          unsetSuccess();
+        } else {
+          setSuccess((UploadFileSegmentsAccessInfoTResponse)value);
+        }
+        break;
+
+      case E:
+        if (value == null) {
+          unsetE();
+        } else {
+          setE((alluxio.thrift.AlluxioTException)value);
+        }
+        break;
+
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      case SUCCESS:
+        return getSuccess();
+
+      case E:
+        return getE();
+
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      case SUCCESS:
+        return isSetSuccess();
+      case E:
+        return isSetE();
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof uploadFileSegmentsAccessInfo_result)
+        return this.equals((uploadFileSegmentsAccessInfo_result)that);
+      return false;
+    }
+
+    public boolean equals(uploadFileSegmentsAccessInfo_result that) {
+      if (that == null)
+        return false;
+
+      boolean this_present_success = true && this.isSetSuccess();
+      boolean that_present_success = true && that.isSetSuccess();
+      if (this_present_success || that_present_success) {
+        if (!(this_present_success && that_present_success))
+          return false;
+        if (!this.success.equals(that.success))
+          return false;
+      }
+
+      boolean this_present_e = true && this.isSetE();
+      boolean that_present_e = true && that.isSetE();
+      if (this_present_e || that_present_e) {
+        if (!(this_present_e && that_present_e))
+          return false;
+        if (!this.e.equals(that.e))
+          return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      List<Object> list = new ArrayList<Object>();
+
+      boolean present_success = true && (isSetSuccess());
+      list.add(present_success);
+      if (present_success)
+        list.add(success);
+
+      boolean present_e = true && (isSetE());
+      list.add(present_e);
+      if (present_e)
+        list.add(e);
+
+      return list.hashCode();
+    }
+
+    @Override
+    public int compareTo(uploadFileSegmentsAccessInfo_result other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+
+      lastComparison = Boolean.valueOf(isSetSuccess()).compareTo(other.isSetSuccess());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetSuccess()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.success, other.success);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      lastComparison = Boolean.valueOf(isSetE()).compareTo(other.isSetE());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetE()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.e, other.e);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(org.apache.thrift.protocol.TProtocol iprot) throws org.apache.thrift.TException {
+      schemes.get(iprot.getScheme()).getScheme().read(iprot, this);
+    }
+
+    public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
+      schemes.get(oprot.getScheme()).getScheme().write(oprot, this);
+      }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("uploadFileSegmentsAccessInfo_result(");
+      boolean first = true;
+
+      sb.append("success:");
+      if (this.success == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.success);
+      }
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("e:");
+      if (this.e == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.e);
+      }
+      first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws org.apache.thrift.TException {
+      // check for required fields
+      // check for sub-struct validity
+      if (success != null) {
+        success.validate();
+      }
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      try {
+        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
+      try {
+        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private static class uploadFileSegmentsAccessInfo_resultStandardSchemeFactory implements SchemeFactory {
+      public uploadFileSegmentsAccessInfo_resultStandardScheme getScheme() {
+        return new uploadFileSegmentsAccessInfo_resultStandardScheme();
+      }
+    }
+
+    private static class uploadFileSegmentsAccessInfo_resultStandardScheme extends StandardScheme<uploadFileSegmentsAccessInfo_result> {
+
+      public void read(org.apache.thrift.protocol.TProtocol iprot, uploadFileSegmentsAccessInfo_result struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TField schemeField;
+        iprot.readStructBegin();
+        while (true)
+        {
+          schemeField = iprot.readFieldBegin();
+          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) { 
+            break;
+          }
+          switch (schemeField.id) {
+            case 0: // SUCCESS
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+                struct.success = new UploadFileSegmentsAccessInfoTResponse();
+                struct.success.read(iprot);
+                struct.setSuccessIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            case 1: // E
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+                struct.e = new alluxio.thrift.AlluxioTException();
+                struct.e.read(iprot);
+                struct.setEIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            default:
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+          }
+          iprot.readFieldEnd();
+        }
+        iprot.readStructEnd();
+
+        // check for required fields of primitive type, which can't be checked in the validate method
+        struct.validate();
+      }
+
+      public void write(org.apache.thrift.protocol.TProtocol oprot, uploadFileSegmentsAccessInfo_result struct) throws org.apache.thrift.TException {
+        struct.validate();
+
+        oprot.writeStructBegin(STRUCT_DESC);
+        if (struct.success != null) {
+          oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
+          struct.success.write(oprot);
+          oprot.writeFieldEnd();
+        }
+        if (struct.e != null) {
+          oprot.writeFieldBegin(E_FIELD_DESC);
+          struct.e.write(oprot);
+          oprot.writeFieldEnd();
+        }
+        oprot.writeFieldStop();
+        oprot.writeStructEnd();
+      }
+
+    }
+
+    private static class uploadFileSegmentsAccessInfo_resultTupleSchemeFactory implements SchemeFactory {
+      public uploadFileSegmentsAccessInfo_resultTupleScheme getScheme() {
+        return new uploadFileSegmentsAccessInfo_resultTupleScheme();
+      }
+    }
+
+    private static class uploadFileSegmentsAccessInfo_resultTupleScheme extends TupleScheme<uploadFileSegmentsAccessInfo_result> {
+
+      @Override
+      public void write(org.apache.thrift.protocol.TProtocol prot, uploadFileSegmentsAccessInfo_result struct) throws org.apache.thrift.TException {
+        TTupleProtocol oprot = (TTupleProtocol) prot;
+        BitSet optionals = new BitSet();
+        if (struct.isSetSuccess()) {
+          optionals.set(0);
+        }
+        if (struct.isSetE()) {
+          optionals.set(1);
+        }
+        oprot.writeBitSet(optionals, 2);
+        if (struct.isSetSuccess()) {
+          struct.success.write(oprot);
+        }
+        if (struct.isSetE()) {
+          struct.e.write(oprot);
+        }
+      }
+
+      @Override
+      public void read(org.apache.thrift.protocol.TProtocol prot, uploadFileSegmentsAccessInfo_result struct) throws org.apache.thrift.TException {
+        TTupleProtocol iprot = (TTupleProtocol) prot;
+        BitSet incoming = iprot.readBitSet(2);
+        if (incoming.get(0)) {
+          struct.success = new UploadFileSegmentsAccessInfoTResponse();
           struct.success.read(iprot);
           struct.setSuccessIsSet(true);
         }

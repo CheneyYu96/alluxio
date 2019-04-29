@@ -255,4 +255,14 @@ public interface FileSystemMasterClient extends Client {
    * @param options the options to update ufs operation mode
    */
   void updateUfsMode(AlluxioURI ufsUri, UpdateUfsModeOptions options) throws AlluxioStatusException;
+
+  /**
+   * Upload the info of files that clients access to master
+   * @param ufsUri
+   * @param offset
+   * @param length
+   * @throws AlluxioStatusException
+   */
+
+  void uploadFileSegmentsAccessInfo(AlluxioURI ufsUri, long offset, long length)throws AlluxioStatusException;
 }

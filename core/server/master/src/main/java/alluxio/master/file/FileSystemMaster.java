@@ -26,7 +26,7 @@ import alluxio.exception.UnexpectedAlluxioException;
 import alluxio.exception.status.InvalidArgumentException;
 import alluxio.exception.status.UnavailableException;
 import alluxio.master.Master;
-import alluxio.wire.SyncPointInfo;
+import alluxio.wire.*;
 import alluxio.master.file.meta.FileSystemMasterView;
 import alluxio.master.file.meta.PersistenceState;
 import alluxio.master.file.options.CheckConsistencyOptions;
@@ -47,11 +47,6 @@ import alluxio.security.authorization.AclEntry;
 import alluxio.thrift.FileSystemCommand;
 import alluxio.thrift.UfsInfo;
 import alluxio.underfs.UnderFileSystem;
-import alluxio.wire.FileBlockInfo;
-import alluxio.wire.FileInfo;
-import alluxio.wire.MountPointInfo;
-import alluxio.wire.SetAclAction;
-import alluxio.wire.WorkerInfo;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -553,4 +548,14 @@ public interface FileSystemMaster extends Master {
    * @return true if successfully recorded in the journal
    */
   boolean recordActiveSyncTxid(long txId, long mountId);
+
+  /**
+   * Update Client accesses files' UFSPath, offset and length
+   *
+   * @param UFSPath path of the file
+   * @param offset offset
+   * @param length read length
+   *
+   */
+  void recordBlockAccessInfo(String UFSPath, long offset, long length);
 }

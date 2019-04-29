@@ -265,4 +265,9 @@ public final class RetryHandlingFileSystemMasterClient extends AbstractMasterCli
     retryRPC(() -> mClient.updateUfsMode(ufsUri.getRootPath(), options.toThrift()),
         "UpdateUfsMode");
   }
+
+  @Override
+  public synchronized void uploadFileSegmentsAccessInfo(final AlluxioURI ufsUri, final long offset, final long length) throws AlluxioStatusException {
+    retryRPC(() -> mClient.uploadFileSegmentsAccessInfo(ufsUri.getPath(), offset, length), "uploadFileSegmentsAccessInfo");
+  }
 }

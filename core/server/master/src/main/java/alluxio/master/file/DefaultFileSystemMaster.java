@@ -85,6 +85,7 @@ import alluxio.master.file.options.SetAclOptions;
 import alluxio.master.file.options.SetAttributeOptions;
 import alluxio.master.file.options.WorkerHeartbeatOptions;
 import alluxio.master.journal.JournalContext;
+import alluxio.master.stats.FileSegmentsAccessRecorder;
 import alluxio.metrics.MasterMetrics;
 import alluxio.metrics.MetricsSystem;
 import alluxio.proto.journal.File;
@@ -133,16 +134,7 @@ import alluxio.util.executor.ExecutorServiceFactory;
 import alluxio.util.interfaces.Scoped;
 import alluxio.util.io.PathUtils;
 import alluxio.util.network.NetworkAddressUtils;
-import alluxio.wire.BlockInfo;
-import alluxio.wire.BlockLocation;
-import alluxio.wire.CommonOptions;
-import alluxio.wire.FileBlockInfo;
-import alluxio.wire.FileInfo;
-import alluxio.wire.LoadMetadataType;
-import alluxio.wire.MountPointInfo;
-import alluxio.wire.SetAclAction;
-import alluxio.wire.SyncPointInfo;
-import alluxio.wire.WorkerInfo;
+import alluxio.wire.*;
 
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.Gauge;
@@ -345,6 +337,8 @@ public final class DefaultFileSystemMaster extends CoreMaster implements FileSys
   private Future<List<AlluxioURI>> mStartupConsistencyCheck;
 
   private ActiveSyncManager mSyncManager;
+
+  private FileSegmentsAccessRecorder mFileSegmentsAccessRecorder;
   /**
    * Log writer for user access audit log.
    */
@@ -391,6 +385,7 @@ public final class DefaultFileSystemMaster extends CoreMaster implements FileSys
     mUfsBlockLocationCache = UfsBlockLocationCache.Factory.create(mMountTable);
     mUfsSyncPathCache = new UfsSyncPathCache();
     mSyncManager = new ActiveSyncManager(mMountTable, this);
+    mFileSegmentsAccessRecorder = new FileSegmentsAccessRecorder();
 
     resetState();
     Metrics.registerGauges(this, mUfsManager);
@@ -3142,6 +3137,11 @@ public final class DefaultFileSystemMaster extends CoreMaster implements FileSys
     }
 
     return true;
+  }
+
+  @Override
+  public void recordBlockAccessInfo(String UFSPath, long offset, long length) {
+    mFileSegmentsAccessRecorder.onAccess(new FileSegmentsInfo(UFSPath, offset, length));
   }
 
   private boolean syncMetadata(RpcContext rpcContext, LockedInodePath inodePath,

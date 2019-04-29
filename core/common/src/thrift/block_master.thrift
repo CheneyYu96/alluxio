@@ -138,6 +138,7 @@ service BlockMasterClientService extends common.AlluxioService {
   GetWorkerInfoListTResponse getWorkerReport(
     /** the method options */ 1: GetWorkerReportTOptions options,
   ) throws (1: exception.AlluxioTException e)
+
 }
 
 struct BlockHeartbeatTOptions {
