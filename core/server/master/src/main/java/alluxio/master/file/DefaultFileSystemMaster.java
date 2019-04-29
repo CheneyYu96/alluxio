@@ -64,6 +64,16 @@ import alluxio.util.interfaces.Scoped;
 import alluxio.util.io.PathUtils;
 import alluxio.util.network.NetworkAddressUtils;
 
+import alluxio.wire.BlockInfo;
+import alluxio.wire.BlockLocation;
+import alluxio.wire.CommonOptions;
+import alluxio.wire.FileBlockInfo;
+import alluxio.wire.FileInfo;
+import alluxio.wire.LoadMetadataType;
+import alluxio.wire.MountPointInfo;
+import alluxio.wire.SetAclAction;
+import alluxio.wire.SyncPointInfo;
+import alluxio.wire.WorkerInfo;
 import alluxio.wire.*;
 
 import com.codahale.metrics.Counter;
