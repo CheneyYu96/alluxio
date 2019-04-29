@@ -11,6 +11,7 @@
 
 package alluxio.client.file;
 
+import alluxio.AlluxioURI;
 import alluxio.Configuration;
 import alluxio.PropertyKey;
 import alluxio.Seekable;
@@ -26,6 +27,7 @@ import alluxio.exception.status.UnavailableException;
 import alluxio.network.netty.NettyRPC;
 import alluxio.network.netty.NettyRPCContext;
 import alluxio.proto.dataserver.Protocol;
+import alluxio.resource.CloseableResource;
 import alluxio.retry.CountingRetry;
 import alluxio.util.proto.ProtoMessage;
 import alluxio.wire.WorkerNetAddress;
@@ -120,6 +122,11 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     }
     CountingRetry retry = new CountingRetry(MAX_WORKERS_TO_RETRY);
     IOException lastException = null;
+
+    FileSystemMasterClient masterClientResource = mContext.acquireMasterClient();
+    masterClientResource.uploadFileSegmentsAccessInfo(new AlluxioURI(mStatus.getUfsPath()), mPosition, mLength);
+
+
     while (retry.attempt()) {
       try {
         updateStream();
@@ -127,6 +134,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
         if (result != -1) {
           mPosition++;
         }
+
         return result;
       } catch (UnavailableException | DeadlineExceededException | ConnectException e) {
         lastException = e;
@@ -182,6 +190,10 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     if (lastException != null) {
       throw lastException;
     }
+
+    FileSystemMasterClient masterClientResource = mContext.acquireMasterClient();
+    masterClientResource.uploadFileSegmentsAccessInfo(new AlluxioURI(mStatus.getUfsPath()), (long)off, (long)len);
+
     return len - bytesLeft;
   }
 

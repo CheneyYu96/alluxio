@@ -154,4 +154,5 @@ public final class BlockMasterClientServiceHandler implements BlockMasterClientS
       return new GetWorkerInfoListTResponse(workerInfos);
     }, "GetWorkerReport", "options=%s", options);
   }
+
 }

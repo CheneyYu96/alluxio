@@ -309,6 +309,8 @@ struct UpdateUfsModeTOptions {
 }
 struct UpdateUfsModeTResponse {}
 
+struct UploadFileSegmentsAccessInfoTResponse{}
+
 /**
  * This interface contains file system master service endpoints for Alluxio clients.
  */
@@ -514,6 +516,15 @@ service FileSystemMasterClientService extends common.AlluxioService {
     /** the method options */ 2: UpdateUfsModeTOptions options,
     )
     throws (1: exception.AlluxioTException e)
+
+  /**
+   * Upload UFSPath, offset and length to master for recording.
+   */
+  UploadFileSegmentsAccessInfoTResponse uploadFileSegmentsAccessInfo(
+    /** the UFSPath of the file*/ 1: string UFSPath,
+    /** the offset in the file*/ 2: i64 offset,
+    /** the length of bytes to be read*/ 3: i64 len,
+  ) throws (1: exception.AlluxioTException e)
 }
 
 struct FileSystemHeartbeatTOptions {
