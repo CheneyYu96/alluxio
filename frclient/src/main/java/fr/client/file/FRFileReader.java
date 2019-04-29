@@ -7,10 +7,12 @@ import alluxio.client.file.FileSystem;
 import alluxio.client.file.options.OpenFileOptions;
 import alluxio.exception.AlluxioException;
 import alluxio.util.CommonUtils;
+import fr.client.utils.OffLenPair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  *
@@ -42,23 +44,29 @@ public class FRFileReader {
 
     /**
      *
-     * @param offset
-     * @param length
      * @return actual read length
      * @throws IOException
      * @throws AlluxioException
      */
-    public int readFile(long offset, long length) throws IOException, AlluxioException {
+    public int readFile(List<OffLenPair> pairs) throws IOException, AlluxioException {
         long startTimeMs = CommonUtils.getCurrentMs();
 
         FileInStream is = mFileSystem.openFile(mSourceFilePath, mReadOptions);
+
+        long length = pairs
+                .stream()
+                .mapToLong( o -> o.length)
+                .sum();
         mBuf = new byte[(int) length];
 
-        is.seek(offset);
-        int toRead = is.read(mBuf, 0, (int) length);
+        int toRead = 0;
+        for(OffLenPair pair : pairs){
+            is.seek(pair.offset);
+            toRead += is.read(mBuf, toRead, (int) pair.length);
+        }
         is.close();
 
-        LOG.info("Read file:" + mSourceFilePath.getPath() + "; offset:" + offset + "; length:" + toRead + "; elapsed:" + (CommonUtils.getCurrentMs() - startTimeMs));
+        LOG.info("Read file:" + mSourceFilePath.getPath() + "; length:" + toRead + "; elapsed:" + (CommonUtils.getCurrentMs() - startTimeMs));
         return toRead;
     }
 
