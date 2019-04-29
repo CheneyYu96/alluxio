@@ -34,10 +34,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.concurrent.NotThreadSafe;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.management.ManagementFactory;
 
 /**
  * Provides an {@link InputStream} implementation that is based on {@link PacketReader}s to
@@ -72,7 +70,7 @@ public class BlockInStream extends InputStream implements BoundedStream, Seekabl
 
   private boolean mClosed = false;
   private boolean mEOF = false;
-  private final String mLogPath;
+//  private final String mLogPath;
 
   /**
    * Creates a {@link BlockInStream}.
@@ -217,7 +215,7 @@ public class BlockInStream extends InputStream implements BoundedStream, Seekabl
     mInStreamSource = blockSource;
     mId = id;
     mLength = length;
-    mLogPath = System.getProperty("user.home") + "/logs/workerLoads.txt";
+//    mLogPath = System.getProperty("user.home") + "/logs/workerLoads.txt";
   }
 
   @Override
@@ -266,27 +264,35 @@ public class BlockInStream extends InputStream implements BoundedStream, Seekabl
     mPos += toRead;
 
     // record data shuffling
-    FileWriter fw = null;
-    try {
-      if (mPacketReader instanceof LocalFilePacketReader) {
-        LOG.info("Read bytes from local. size:" + toRead + "; blockID:" + mId + "; mPos:" + mPos);
-      }
-      else if (mPacketReader instanceof NettyPacketReader) {
-        String hostName = ((NettyPacketReader) mPacketReader).getWorkerHostName();
-        LOG.info("Read bytes from remote. size:" + toRead + "; hostname:" + hostName + "; blockID:" + mId + "; mPos:" + mPos);
+//    FileWriter fw = null;
+//    try {
+//      if (mPacketReader instanceof LocalFilePacketReader) {
+//        LOG.info("Read bytes from local. size:" + toRead + "; blockID:" + mId + "; mPos:" + mPos);
+//      }
+//      else if (mPacketReader instanceof NettyPacketReader) {
+//        String hostName = ((NettyPacketReader) mPacketReader).getWorkerHostName();
+//        LOG.info("Read bytes from remote. size:" + toRead + "; hostname:" + hostName + "; blockID:" + mId + "; mPos:" + mPos);
+//
+//        String vmName = ManagementFactory.getRuntimeMXBean().getName();
+//
+//        fw = new FileWriter(mLogPath, true); //the true will append the new data
+//        fw.write(System.currentTimeMillis() + "\t" + hostName + "\t" + toRead + "\t" + vmName + "\t" + mId + "\t" + mPos + "\n");
+//        fw.close();
+//      }
+//    }
+//    catch(IOException e) {
+//      LOG.error("IO exception when record data shuffling: " + e.getMessage());
+//      if(fw != null) {
+//        fw.close();
+//      }
+//    }
 
-        String vmName = ManagementFactory.getRuntimeMXBean().getName();
-
-        fw = new FileWriter(mLogPath, true); //the true will append the new data
-        fw.write(System.currentTimeMillis() + "\t" + hostName + "\t" + toRead + "\t" + vmName + "\t" + mId + "\t" + mPos + "\n");
-        fw.close();
-      }
+    if (mPacketReader instanceof LocalFilePacketReader) {
+      LOG.info("Read bytes from local. size:" + toRead + "; blockID:" + mId + "; mPos:" + mPos);
     }
-    catch(IOException e) {
-      LOG.error("IO exception when record data shuffling: " + e.getMessage());
-      if(fw != null) {
-        fw.close();
-      }
+    else if (mPacketReader instanceof NettyPacketReader) {
+      String hostName = ((NettyPacketReader) mPacketReader).getWorkerHostName();
+      LOG.info("Read bytes from remote. size:" + toRead + "; hostname:" + hostName + "; blockID:" + mId + "; mPos:" + mPos);
     }
 
     return toRead;
