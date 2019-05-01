@@ -309,7 +309,14 @@ struct UpdateUfsModeTOptions {
 }
 struct UpdateUfsModeTResponse {}
 
-struct UploadFileSegmentsAccessInfoTResponse{}
+struct fileSegmentInfo{
+  1: string fileURI,
+  2: i64 offset,
+  3: i64 len
+}
+struct UploadFileSegmentsAccessInfoTResponse{
+  1: list<fileSegmentInfo> replList
+}
 
 /**
  * This interface contains file system master service endpoints for Alluxio clients.

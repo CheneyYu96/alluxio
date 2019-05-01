@@ -38,6 +38,7 @@ import org.slf4j.LoggerFactory;
 public class UploadFileSegmentsAccessInfoTResponse implements org.apache.thrift.TBase<UploadFileSegmentsAccessInfoTResponse, UploadFileSegmentsAccessInfoTResponse._Fields>, java.io.Serializable, Cloneable, Comparable<UploadFileSegmentsAccessInfoTResponse> {
   private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("UploadFileSegmentsAccessInfoTResponse");
 
+  private static final org.apache.thrift.protocol.TField REPL_LIST_FIELD_DESC = new org.apache.thrift.protocol.TField("replList", org.apache.thrift.protocol.TType.LIST, (short)1);
 
   private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
   static {
@@ -45,10 +46,11 @@ public class UploadFileSegmentsAccessInfoTResponse implements org.apache.thrift.
     schemes.put(TupleScheme.class, new UploadFileSegmentsAccessInfoTResponseTupleSchemeFactory());
   }
 
+  private List<fileSegmentInfo> replList; // required
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
-;
+    REPL_LIST((short)1, "replList");
 
     private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -63,6 +65,8 @@ public class UploadFileSegmentsAccessInfoTResponse implements org.apache.thrift.
      */
     public static _Fields findByThriftId(int fieldId) {
       switch(fieldId) {
+        case 1: // REPL_LIST
+          return REPL_LIST;
         default:
           return null;
       }
@@ -101,9 +105,14 @@ public class UploadFileSegmentsAccessInfoTResponse implements org.apache.thrift.
       return _fieldName;
     }
   }
+
+  // isset id assignments
   public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+    tmpMap.put(_Fields.REPL_LIST, new org.apache.thrift.meta_data.FieldMetaData("replList", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+        new org.apache.thrift.meta_data.ListMetaData(org.apache.thrift.protocol.TType.LIST, 
+            new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, fileSegmentInfo.class))));
     metaDataMap = Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(UploadFileSegmentsAccessInfoTResponse.class, metaDataMap);
   }
@@ -111,10 +120,24 @@ public class UploadFileSegmentsAccessInfoTResponse implements org.apache.thrift.
   public UploadFileSegmentsAccessInfoTResponse() {
   }
 
+  public UploadFileSegmentsAccessInfoTResponse(
+    List<fileSegmentInfo> replList)
+  {
+    this();
+    this.replList = replList;
+  }
+
   /**
    * Performs a deep copy on <i>other</i>.
    */
   public UploadFileSegmentsAccessInfoTResponse(UploadFileSegmentsAccessInfoTResponse other) {
+    if (other.isSetReplList()) {
+      List<fileSegmentInfo> __this__replList = new ArrayList<fileSegmentInfo>(other.replList.size());
+      for (fileSegmentInfo other_element : other.replList) {
+        __this__replList.add(new fileSegmentInfo(other_element));
+      }
+      this.replList = __this__replList;
+    }
   }
 
   public UploadFileSegmentsAccessInfoTResponse deepCopy() {
@@ -123,15 +146,66 @@ public class UploadFileSegmentsAccessInfoTResponse implements org.apache.thrift.
 
   @Override
   public void clear() {
+    this.replList = null;
+  }
+
+  public int getReplListSize() {
+    return (this.replList == null) ? 0 : this.replList.size();
+  }
+
+  public java.util.Iterator<fileSegmentInfo> getReplListIterator() {
+    return (this.replList == null) ? null : this.replList.iterator();
+  }
+
+  public void addToReplList(fileSegmentInfo elem) {
+    if (this.replList == null) {
+      this.replList = new ArrayList<fileSegmentInfo>();
+    }
+    this.replList.add(elem);
+  }
+
+  public List<fileSegmentInfo> getReplList() {
+    return this.replList;
+  }
+
+  public UploadFileSegmentsAccessInfoTResponse setReplList(List<fileSegmentInfo> replList) {
+    this.replList = replList;
+    return this;
+  }
+
+  public void unsetReplList() {
+    this.replList = null;
+  }
+
+  /** Returns true if field replList is set (has been assigned a value) and false otherwise */
+  public boolean isSetReplList() {
+    return this.replList != null;
+  }
+
+  public void setReplListIsSet(boolean value) {
+    if (!value) {
+      this.replList = null;
+    }
   }
 
   public void setFieldValue(_Fields field, Object value) {
     switch (field) {
+    case REPL_LIST:
+      if (value == null) {
+        unsetReplList();
+      } else {
+        setReplList((List<fileSegmentInfo>)value);
+      }
+      break;
+
     }
   }
 
   public Object getFieldValue(_Fields field) {
     switch (field) {
+    case REPL_LIST:
+      return getReplList();
+
     }
     throw new IllegalStateException();
   }
@@ -143,6 +217,8 @@ public class UploadFileSegmentsAccessInfoTResponse implements org.apache.thrift.
     }
 
     switch (field) {
+    case REPL_LIST:
+      return isSetReplList();
     }
     throw new IllegalStateException();
   }
@@ -160,12 +236,26 @@ public class UploadFileSegmentsAccessInfoTResponse implements org.apache.thrift.
     if (that == null)
       return false;
 
+    boolean this_present_replList = true && this.isSetReplList();
+    boolean that_present_replList = true && that.isSetReplList();
+    if (this_present_replList || that_present_replList) {
+      if (!(this_present_replList && that_present_replList))
+        return false;
+      if (!this.replList.equals(that.replList))
+        return false;
+    }
+
     return true;
   }
 
   @Override
   public int hashCode() {
     List<Object> list = new ArrayList<Object>();
+
+    boolean present_replList = true && (isSetReplList());
+    list.add(present_replList);
+    if (present_replList)
+      list.add(replList);
 
     return list.hashCode();
   }
@@ -178,6 +268,16 @@ public class UploadFileSegmentsAccessInfoTResponse implements org.apache.thrift.
 
     int lastComparison = 0;
 
+    lastComparison = Boolean.valueOf(isSetReplList()).compareTo(other.isSetReplList());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetReplList()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.replList, other.replList);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
     return 0;
   }
 
@@ -198,6 +298,13 @@ public class UploadFileSegmentsAccessInfoTResponse implements org.apache.thrift.
     StringBuilder sb = new StringBuilder("UploadFileSegmentsAccessInfoTResponse(");
     boolean first = true;
 
+    sb.append("replList:");
+    if (this.replList == null) {
+      sb.append("null");
+    } else {
+      sb.append(this.replList);
+    }
+    first = false;
     sb.append(")");
     return sb.toString();
   }
@@ -241,6 +348,25 @@ public class UploadFileSegmentsAccessInfoTResponse implements org.apache.thrift.
           break;
         }
         switch (schemeField.id) {
+          case 1: // REPL_LIST
+            if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
+              {
+                org.apache.thrift.protocol.TList _list118 = iprot.readListBegin();
+                struct.replList = new ArrayList<fileSegmentInfo>(_list118.size);
+                fileSegmentInfo _elem119;
+                for (int _i120 = 0; _i120 < _list118.size; ++_i120)
+                {
+                  _elem119 = new fileSegmentInfo();
+                  _elem119.read(iprot);
+                  struct.replList.add(_elem119);
+                }
+                iprot.readListEnd();
+              }
+              struct.setReplListIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -256,6 +382,18 @@ public class UploadFileSegmentsAccessInfoTResponse implements org.apache.thrift.
       struct.validate();
 
       oprot.writeStructBegin(STRUCT_DESC);
+      if (struct.replList != null) {
+        oprot.writeFieldBegin(REPL_LIST_FIELD_DESC);
+        {
+          oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.replList.size()));
+          for (fileSegmentInfo _iter121 : struct.replList)
+          {
+            _iter121.write(oprot);
+          }
+          oprot.writeListEnd();
+        }
+        oprot.writeFieldEnd();
+      }
       oprot.writeFieldStop();
       oprot.writeStructEnd();
     }
@@ -273,11 +411,40 @@ public class UploadFileSegmentsAccessInfoTResponse implements org.apache.thrift.
     @Override
     public void write(org.apache.thrift.protocol.TProtocol prot, UploadFileSegmentsAccessInfoTResponse struct) throws org.apache.thrift.TException {
       TTupleProtocol oprot = (TTupleProtocol) prot;
+      BitSet optionals = new BitSet();
+      if (struct.isSetReplList()) {
+        optionals.set(0);
+      }
+      oprot.writeBitSet(optionals, 1);
+      if (struct.isSetReplList()) {
+        {
+          oprot.writeI32(struct.replList.size());
+          for (fileSegmentInfo _iter122 : struct.replList)
+          {
+            _iter122.write(oprot);
+          }
+        }
+      }
     }
 
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, UploadFileSegmentsAccessInfoTResponse struct) throws org.apache.thrift.TException {
       TTupleProtocol iprot = (TTupleProtocol) prot;
+      BitSet incoming = iprot.readBitSet(1);
+      if (incoming.get(0)) {
+        {
+          org.apache.thrift.protocol.TList _list123 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+          struct.replList = new ArrayList<fileSegmentInfo>(_list123.size);
+          fileSegmentInfo _elem124;
+          for (int _i125 = 0; _i125 < _list123.size; ++_i125)
+          {
+            _elem124 = new fileSegmentInfo();
+            _elem124.read(iprot);
+            struct.replList.add(_elem124);
+          }
+        }
+        struct.setReplListIsSet(true);
+      }
     }
   }
 

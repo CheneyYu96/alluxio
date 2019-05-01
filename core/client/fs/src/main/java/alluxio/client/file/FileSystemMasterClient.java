@@ -32,6 +32,7 @@ import alluxio.exception.status.AlreadyExistsException;
 import alluxio.exception.status.NotFoundException;
 import alluxio.master.MasterClientConfig;
 import alluxio.security.authorization.AclEntry;
+import alluxio.wire.FileSegmentsInfo;
 import alluxio.wire.MountPointInfo;
 import alluxio.wire.SetAclAction;
 import alluxio.wire.SyncPointInfo;
@@ -264,5 +265,5 @@ public interface FileSystemMasterClient extends Client {
    * @throws AlluxioStatusException
    */
 
-  void uploadFileSegmentsAccessInfo(AlluxioURI ufsUri, long offset, long length)throws AlluxioStatusException;
+  FileSegmentsInfo uploadFileSegmentsAccessInfo(AlluxioURI ufsUri, long offset, long length)throws AlluxioStatusException;
 }
