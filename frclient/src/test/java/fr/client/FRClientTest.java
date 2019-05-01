@@ -68,15 +68,18 @@ public class FRClientTest {
         pairs.add(new OffLenPair(4, 11));
         pairs.add(new OffLenPair(15, 20));
 
-        LOG.info("--------------Test: write from local "+ testFile + " to Alluxio------------------");
-        AlluxioURI path = frClientTest.writeFileTest(testFile);
+        AlluxioURI path = new AlluxioURI("/test/alluxio-site.properties.template");
+
+
+//        LOG.info("--------------Test: write from local "+ testFile + " to Alluxio------------------");
+//        AlluxioURI path = frClientTest.writeFileTest(testFile);
 
         LOG.info("--------------Test: read from Alluxio--------------------------");
         frClientTest.readOffTest(path, pairs);
 
 
-        LOG.info("--------------Test: Replicate data segment in Alluxio--------------");
-        frClientTest.replicateTest(path, pairs, 2);
+//        LOG.info("--------------Test: Replicate data segment in Alluxio--------------");
+//        frClientTest.replicateTest(path, pairs, 2);
 
     }
 

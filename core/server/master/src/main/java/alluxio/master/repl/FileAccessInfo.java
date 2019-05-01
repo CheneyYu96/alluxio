@@ -1,6 +1,7 @@
 package alluxio.master.repl;
 
 import alluxio.AlluxioURI;
+import com.google.common.collect.ImmutableMap;
 import fr.client.utils.OffLenPair;
 
 import java.util.Map;
@@ -17,6 +18,11 @@ public class FileAccessInfo {
     public FileAccessInfo(AlluxioURI mFilePath) {
         this.mFilePath = mFilePath;
         this.offsetCount = new ConcurrentHashMap<>();
+    }
+
+    public FileAccessInfo(AlluxioURI mFilePath, OffLenPair accessPair) {
+        this.mFilePath = mFilePath;
+        this.offsetCount = new ConcurrentHashMap<>(ImmutableMap.of(accessPair, (long) 1));
     }
 
     public AlluxioURI getFilePath() {
