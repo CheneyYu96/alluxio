@@ -21,6 +21,9 @@ import alluxio.client.PositionedReadable;
 import alluxio.client.block.AlluxioBlockStore;
 import alluxio.client.block.stream.BlockInStream;
 import alluxio.client.file.options.InStreamOptions;
+import alluxio.client.file.options.OpenFileOptions;
+import alluxio.exception.AlluxioException;
+import alluxio.exception.FileDoesNotExistException;
 import alluxio.exception.PreconditionMessage;
 import alluxio.exception.status.DeadlineExceededException;
 import alluxio.exception.status.UnavailableException;
@@ -30,6 +33,7 @@ import alluxio.proto.dataserver.Protocol;
 import alluxio.resource.CloseableResource;
 import alluxio.retry.CountingRetry;
 import alluxio.util.proto.ProtoMessage;
+import alluxio.wire.FileSegmentsInfo;
 import alluxio.wire.WorkerNetAddress;
 
 import com.google.common.base.Preconditions;
@@ -73,8 +77,10 @@ public class FileInStream extends InputStream implements BoundedStream, Position
   private static final int MAX_WORKERS_TO_RETRY =
       Configuration.getInt(PropertyKey.USER_BLOCK_WORKER_CLIENT_READ_RETRY);
 
-  private final URIStatus mStatus;
-  private final InStreamOptions mOptions;
+//  private final URIStatus mStatus;
+//  private final InStreamOptions mOptions;
+  private URIStatus mStatus;
+  private InStreamOptions mOptions;
   private final AlluxioBlockStore mBlockStore;
   private final FileSystemContext mContext;
 
@@ -114,6 +120,16 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     mLastBlockIdCached = 0;
   }
 
+  public void changeFileInStream(long offset, long length)
+      throws FileDoesNotExistException, IOException, AlluxioException {
+    FileSystemMasterClient masterClientResource = mContext.acquireMasterClient();
+    FileSegmentsInfo actualSeg = masterClientResource.uploadFileSegmentsAccessInfo(new AlluxioURI(mStatus.getPath()), offset, length); // To be checked
+    FileSystem tempSystem = FileSystem.Factory.get(mContext);
+    mStatus = tempSystem.getStatus(new AlluxioURI(actualSeg.getFilePath()));
+    mOptions = OpenFileOptions.defaults().toInStreamOptions(mStatus);
+    //mStatus = masterClientResource.getStatus();
+  }
+
   /* Input Stream methods */
   @Override
   public int read() throws IOException {
@@ -123,8 +139,11 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     CountingRetry retry = new CountingRetry(MAX_WORKERS_TO_RETRY);
     IOException lastException = null;
 
-    FileSystemMasterClient masterClientResource = mContext.acquireMasterClient();
-    masterClientResource.uploadFileSegmentsAccessInfo(new AlluxioURI(mStatus.getUfsPath()), mPosition, mLength);
+    try {
+      changeFileInStream(mPosition, mLength);
+    } catch (AlluxioException e) {
+      e.printStackTrace();
+    }
 
 
     while (retry.attempt()) {
@@ -164,6 +183,12 @@ public class FileInStream extends InputStream implements BoundedStream, Position
       return -1;
     }
 
+    try {
+      changeFileInStream(mPosition, (long)len);
+    } catch (AlluxioException e) {
+      e.printStackTrace();
+    }
+
     int bytesLeft = len;
     int currentOffset = off;
     CountingRetry retry = new CountingRetry(MAX_WORKERS_TO_RETRY);
@@ -190,9 +215,6 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     if (lastException != null) {
       throw lastException;
     }
-
-    FileSystemMasterClient masterClientResource = mContext.acquireMasterClient();
-    masterClientResource.uploadFileSegmentsAccessInfo(new AlluxioURI(mStatus.getUfsPath()), (long)off, (long)len);
 
     return len - bytesLeft;
   }

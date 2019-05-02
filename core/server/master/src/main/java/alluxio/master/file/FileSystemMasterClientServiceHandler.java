@@ -16,6 +16,7 @@ import alluxio.Constants;
 import alluxio.RpcUtils;
 import alluxio.RpcUtils.RpcCallableThrowsIOException;
 import alluxio.thrift.*;
+import alluxio.wire.FileSegmentsInfo;
 import alluxio.wire.SyncPointInfo;
 import alluxio.master.file.options.CheckConsistencyOptions;
 import alluxio.master.file.options.CompleteFileOptions;
@@ -333,7 +334,13 @@ public final class FileSystemMasterClientServiceHandler implements
   public UploadFileSegmentsAccessInfoTResponse uploadFileSegmentsAccessInfo(String UFSPath, long offset, long len) throws AlluxioTException, TException {
     return RpcUtils.call(LOG, (RpcCallableThrowsIOException<UploadFileSegmentsAccessInfoTResponse>) () -> {
       mFileSystemMaster.recordBlockAccessInfo(UFSPath, offset, len);
-      return new UploadFileSegmentsAccessInfoTResponse();
+      // TODO: update the Path, offset and len
+      List<fileSegmentInfo> fileSegmentsInfoList = new ArrayList<>();
+      fileSegmentsInfoList.add(new fileSegmentInfo(UFSPath, offset, len));  // add the original request one.
+      // TODO: get and add other replica's info
+
+      return new UploadFileSegmentsAccessInfoTResponse(fileSegmentsInfoList);
+      //return new UploadFileSegmentsAccessInfoTResponse(UFSPath, offset, len);
     }, "uploadFileSegmentsAccessInfo", "path=%s, offset=%s, len=%s", UFSPath, offset, len);
   }
 
