@@ -29,6 +29,7 @@ import javax.annotation.concurrent.ThreadSafe;
 public final class BlockMasterFactory implements MasterFactory<CoreMasterContext> {
   private static final Logger LOG = LoggerFactory.getLogger(BlockMasterFactory.class);
 
+  private static BlockMaster mBlockMaster;
   /**
    * Constructs a new {@link BlockMasterFactory}.
    */
@@ -44,12 +45,23 @@ public final class BlockMasterFactory implements MasterFactory<CoreMasterContext
     return Constants.BLOCK_MASTER_NAME;
   }
 
+  public static BlockMaster getBlockMaster(){
+    if (mBlockMaster == null){
+      LOG.warn("Try to get block master before creating");
+      return null;
+    }
+    else {
+      return mBlockMaster;
+    }
+  }
+
   @Override
   public BlockMaster create(MasterRegistry registry, CoreMasterContext context) {
     LOG.info("Creating {} ", BlockMaster.class.getName());
     MetricsMaster metricsMaster = registry.get(MetricsMaster.class);
     BlockMaster master = new DefaultBlockMaster(metricsMaster, context);
     registry.add(BlockMaster.class, master);
+    mBlockMaster = master;
     return master;
   }
 }

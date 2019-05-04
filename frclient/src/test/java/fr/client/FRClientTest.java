@@ -70,12 +70,13 @@ public class FRClientTest {
 
         AlluxioURI path = new AlluxioURI("/test/alluxio-site.properties.template");
 
-
 //        LOG.info("--------------Test: write from local "+ testFile + " to Alluxio------------------");
 //        AlluxioURI path = frClientTest.writeFileTest(testFile);
 
         LOG.info("--------------Test: read from Alluxio--------------------------");
-        frClientTest.readOffTest(path, pairs);
+        for (int i = 0; i < 10; i++) {
+            frClientTest.readOffTest(path, pairs);
+        }
 
 
 //        LOG.info("--------------Test: Replicate data segment in Alluxio--------------");

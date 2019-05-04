@@ -23,4 +23,9 @@ public class ReplUnit {
     public int getReplicas() {
         return replicas;
     }
+
+    @Override
+    public String toString() {
+        return "ReplUnit{replicas: " + replicas + "; pairs: " + offLenPairs + "}";
+    }
 }

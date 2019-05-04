@@ -4087,8 +4087,10 @@ public final class PropertyKey implements Comparable<PropertyKey> {
 
 
     // TODO: FR parameters
-    public static final String FR_CHECK_INTERVSL = "fr.repl.interval";
+    public static final String FR_REPL_INTERVAL = "fr.repl.interval";
     public static final String FR_REPL_POLICY = "fr.repl.policy.class";
+    public static final String FR_REPL_WEIGHT = "fr.repl.weight";
+    public static final String FR_RECORD_INTERVAL = "fr.record.interval";
 
     private Name() {} // prevent instantiation
   }
@@ -4575,15 +4577,25 @@ public final class PropertyKey implements Comparable<PropertyKey> {
   /**
    * FR property keys
    */
-  public static final PropertyKey FR_CHECK_INTERVSL =
-          new Builder(Name.FR_CHECK_INTERVSL)
+  public static final PropertyKey FR_REPL_INTERVAL =
+          new Builder(Name.FR_REPL_INTERVAL)
                   .setDefaultValue(60 /* in seconds */)
                   .build();
 
-    public static final PropertyKey FR_REPL_POLICY =
-            new Builder(Name.FR_REPL_POLICY)
-                    .setDefaultValue("alluxio.master.repl.policy.NaivePolicy")
-                    .setDescription("The default replication policy for replication")
-                    .build();
+  public static final PropertyKey FR_REPL_POLICY =
+          new Builder(Name.FR_REPL_POLICY)
+                  .setDefaultValue("alluxio.master.repl.policy.NaivePolicy")
+                  .setDescription("The default replication policy for replication")
+                  .build();
+
+  public static final PropertyKey FR_REPL_WEIGHT =
+          new Builder(Name.FR_REPL_WEIGHT)
+                  .setDefaultValue(1.0)
+                  .build();
+
+  public static final PropertyKey FR_RECORD_INTERVAL =
+          new Builder(Name.FR_RECORD_INTERVAL)
+                  .setDefaultValue(10 * 1000 /* in miliseconds */)
+                  .build();
 
 }

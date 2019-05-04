@@ -26,6 +26,7 @@ import alluxio.exception.UnexpectedAlluxioException;
 import alluxio.exception.status.InvalidArgumentException;
 import alluxio.exception.status.UnavailableException;
 import alluxio.master.Master;
+import alluxio.thrift.fileSegmentInfo;
 import alluxio.wire.*;
 import alluxio.master.file.meta.FileSystemMasterView;
 import alluxio.master.file.meta.PersistenceState;
@@ -557,5 +558,5 @@ public interface FileSystemMaster extends Master {
    * @param length read length
    *
    */
-  void recordBlockAccessInfo(String UFSPath, long offset, long length);
+  List<fileSegmentInfo> recordBlockAccessInfo(String UFSPath, long offset, long length);
 }

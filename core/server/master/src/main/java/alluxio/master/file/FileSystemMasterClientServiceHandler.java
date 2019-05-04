@@ -15,41 +15,21 @@ import alluxio.AlluxioURI;
 import alluxio.Constants;
 import alluxio.RpcUtils;
 import alluxio.RpcUtils.RpcCallableThrowsIOException;
-import alluxio.thrift.*;
-import alluxio.wire.FileSegmentsInfo;
-import alluxio.wire.SyncPointInfo;
-import alluxio.master.file.options.CheckConsistencyOptions;
-import alluxio.master.file.options.CompleteFileOptions;
-import alluxio.master.file.options.CreateDirectoryOptions;
-import alluxio.master.file.options.CreateFileOptions;
-import alluxio.master.file.options.DeleteOptions;
-import alluxio.master.file.options.DescendantType;
-import alluxio.master.file.options.FreeOptions;
-import alluxio.master.file.options.GetStatusOptions;
-import alluxio.master.file.options.ListStatusOptions;
-import alluxio.master.file.options.LoadMetadataOptions;
-import alluxio.master.file.options.MountOptions;
-import alluxio.master.file.options.RenameOptions;
-import alluxio.master.file.options.SetAclOptions;
-import alluxio.master.file.options.SetAttributeOptions;
+import alluxio.master.file.options.*;
 import alluxio.security.authorization.AclEntry;
+import alluxio.thrift.*;
 import alluxio.underfs.UnderFileSystem;
 import alluxio.wire.MountPointInfo;
 import alluxio.wire.SetAclAction;
-
+import alluxio.wire.SyncPointInfo;
 import com.google.common.base.Preconditions;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
 import javax.annotation.concurrent.NotThreadSafe;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * This class is a Thrift handler for file system master RPCs invoked by an Alluxio client.
@@ -331,17 +311,11 @@ public final class FileSystemMasterClientServiceHandler implements
   }
 
   @Override
-  public UploadFileSegmentsAccessInfoTResponse uploadFileSegmentsAccessInfo(String UFSPath, long offset, long len) throws AlluxioTException, TException {
-    return RpcUtils.call(LOG, (RpcCallableThrowsIOException<UploadFileSegmentsAccessInfoTResponse>) () -> {
-      mFileSystemMaster.recordBlockAccessInfo(UFSPath, offset, len);
-      // TODO: update the Path, offset and len
-      List<fileSegmentInfo> fileSegmentsInfoList = new ArrayList<>();
-      fileSegmentsInfoList.add(new fileSegmentInfo(UFSPath, offset, len));  // add the original request one.
-      // TODO: get and add other replica's info
-
-      return new UploadFileSegmentsAccessInfoTResponse(fileSegmentsInfoList);
-      //return new UploadFileSegmentsAccessInfoTResponse(UFSPath, offset, len);
-    }, "uploadFileSegmentsAccessInfo", "path=%s, offset=%s, len=%s", UFSPath, offset, len);
+  public UploadFileSegmentsAccessInfoTResponse uploadFileSegmentsAccessInfo(String UFSPath, long offset, long len)
+          throws AlluxioTException, TException {
+    return RpcUtils.call(LOG, (RpcCallableThrowsIOException<UploadFileSegmentsAccessInfoTResponse>) () ->
+            new UploadFileSegmentsAccessInfoTResponse(mFileSystemMaster.recordBlockAccessInfo(UFSPath, offset, len)),
+            "uploadFileSegmentsAccessInfo", "path=%s, offset=%s, len=%s", UFSPath, offset, len);
   }
 
 //  @Override

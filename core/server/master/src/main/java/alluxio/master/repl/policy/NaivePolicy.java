@@ -1,6 +1,7 @@
 package alluxio.master.repl.policy;
 
-import alluxio.master.repl.FileAccessInfo;
+import alluxio.master.repl.meta.FileAccessInfo;
+import fr.client.utils.MultiReplUnit;
 import fr.client.utils.OffLenPair;
 import fr.client.utils.ReplUnit;
 
@@ -24,5 +25,10 @@ public class NaivePolicy implements ReplPolicy {
                 .collect(Collectors.toList());
 
         return Collections.singletonList(new ReplUnit(hotPairs, 1));
+    }
+
+    @Override
+    public List<MultiReplUnit> calcMultiReplicas(List<FileAccessInfo> fileAccessInfos) {
+        return null;
     }
 }

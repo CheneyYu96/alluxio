@@ -1,5 +1,7 @@
 package fr.client.utils;
 
+import com.google.common.base.Objects;
+
 /**
  * Pairs for offset and length
  *
@@ -26,4 +28,13 @@ public class OffLenPair {
                 length == that.length;
     }
 
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(offset, length);
+    }
+
+    @Override
+    public String toString() {
+        return "(" + offset + ":" + length + ")";
+    }
 }

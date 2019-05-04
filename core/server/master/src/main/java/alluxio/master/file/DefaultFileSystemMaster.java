@@ -33,11 +33,8 @@ import alluxio.master.file.meta.InodeTree.LockPattern;
 import alluxio.master.file.meta.options.MountInfo;
 import alluxio.master.file.options.*;
 import alluxio.master.journal.JournalContext;
-
-import alluxio.master.stats.FileSegmentsAccessRecorder;
-
 import alluxio.master.repl.ReplManager;
-
+import alluxio.master.stats.FileSegmentsAccessRecorder;
 import alluxio.metrics.MasterMetrics;
 import alluxio.metrics.MetricsSystem;
 import alluxio.proto.journal.File;
@@ -63,19 +60,15 @@ import alluxio.util.executor.ExecutorServiceFactory;
 import alluxio.util.interfaces.Scoped;
 import alluxio.util.io.PathUtils;
 import alluxio.util.network.NetworkAddressUtils;
-
 import alluxio.wire.BlockInfo;
 import alluxio.wire.BlockLocation;
-import alluxio.wire.CommonOptions;
 import alluxio.wire.FileBlockInfo;
 import alluxio.wire.FileInfo;
-import alluxio.wire.LoadMetadataType;
 import alluxio.wire.MountPointInfo;
 import alluxio.wire.SetAclAction;
 import alluxio.wire.SyncPointInfo;
 import alluxio.wire.WorkerInfo;
 import alluxio.wire.*;
-
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.Gauge;
 import com.google.common.annotations.VisibleForTesting;
@@ -3085,8 +3078,15 @@ public final class DefaultFileSystemMaster extends CoreMaster implements FileSys
   }
 
   @Override
-  public void recordBlockAccessInfo(String UFSPath, long offset, long length) {
-    mFileSegmentsAccessRecorder.onAccess(new FileSegmentsInfo(UFSPath, offset, length));
+  public List<fileSegmentInfo> recordBlockAccessInfo(String UFSPath, long offset, long length) {
+//    mFileSegmentsAccessRecorder.onAccess(new FileSegmentsInfo(UFSPath, offset, length));
+
+    return mReplManager
+            .recordAccess(new AlluxioURI(UFSPath), offset, length)
+            .entrySet()
+            .stream()
+            .map( e -> new fileSegmentInfo(e.getKey().getPath(), e.getValue().offset, e.getValue().length))
+            .collect(Collectors.toList());
   }
 
   private boolean syncMetadata(RpcContext rpcContext, LockedInodePath inodePath,
