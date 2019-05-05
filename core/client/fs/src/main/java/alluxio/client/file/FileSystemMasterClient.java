@@ -265,5 +265,5 @@ public interface FileSystemMasterClient extends Client {
    * @throws AlluxioStatusException
    */
 
-  FileSegmentsInfo uploadFileSegmentsAccessInfo(AlluxioURI ufsUri, long offset, long length)throws AlluxioStatusException;
+  List<FileSegmentsInfo> uploadFileSegmentsAccessInfo(AlluxioURI ufsUri, long offset, long length)throws AlluxioStatusException;
 }

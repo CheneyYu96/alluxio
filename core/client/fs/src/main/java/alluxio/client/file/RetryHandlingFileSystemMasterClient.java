@@ -262,13 +262,16 @@ public final class RetryHandlingFileSystemMasterClient extends AbstractMasterCli
   }
 
   @Override
-  public synchronized FileSegmentsInfo uploadFileSegmentsAccessInfo(final AlluxioURI ufsUri, final long offset, final long length) throws AlluxioStatusException {
+  public synchronized List<FileSegmentsInfo> uploadFileSegmentsAccessInfo(final AlluxioURI ufsUri, final long offset, final long length) throws AlluxioStatusException {
     return retryRPC(() -> {
       UploadFileSegmentsAccessInfoTResponse temp = mClient.uploadFileSegmentsAccessInfo(ufsUri.getPath(), offset, length);
       // Now get the first one in the list
-      fileSegmentInfo first = temp.getReplList().get(0);
+      List<fileSegmentInfo> fileSegmentInfos = temp.getReplList();
 
-      return new FileSegmentsInfo(first.getFileURI(), first.getOffset(), first.getLen());
+      return fileSegmentInfos
+              .stream()
+              .map( o -> new FileSegmentsInfo(o.getFileURI(), o.getOffset(), o.getLen()))
+              .collect(Collectors.toList());
     }, "uploadFileSegmentsAccessInfo");
   }
 }

@@ -30,24 +30,22 @@ import alluxio.exception.status.UnavailableException;
 import alluxio.network.netty.NettyRPC;
 import alluxio.network.netty.NettyRPCContext;
 import alluxio.proto.dataserver.Protocol;
-import alluxio.resource.CloseableResource;
 import alluxio.retry.CountingRetry;
 import alluxio.util.proto.ProtoMessage;
 import alluxio.wire.FileSegmentsInfo;
 import alluxio.wire.WorkerNetAddress;
-
 import com.google.common.base.Preconditions;
 import io.netty.channel.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.concurrent.NotThreadSafe;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ConnectException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-
-import javax.annotation.concurrent.NotThreadSafe;
 
 /**
  * A streaming API to read a file. This API represents a file as a stream of bytes and provides a
@@ -123,11 +121,18 @@ public class FileInStream extends InputStream implements BoundedStream, Position
   public void changeFileInStream(long offset, long length)
       throws FileDoesNotExistException, IOException, AlluxioException {
     FileSystemMasterClient masterClientResource = mContext.acquireMasterClient();
-    FileSegmentsInfo actualSeg = masterClientResource.uploadFileSegmentsAccessInfo(new AlluxioURI(mStatus.getPath()), offset, length); // To be checked
+
+    List<FileSegmentsInfo> allSegs = masterClientResource
+            .uploadFileSegmentsAccessInfo(new AlluxioURI(mStatus.getPath()), offset, length); // To be checked
+
+    // decide segment to read
+    FileSegmentsInfo segsToRead = allSegs.get(0);
     FileSystem tempSystem = FileSystem.Factory.get(mContext);
-    mStatus = tempSystem.getStatus(new AlluxioURI(actualSeg.getFilePath()));
+    mStatus = tempSystem.getStatus(new AlluxioURI(segsToRead.getFilePath()));
     mOptions = OpenFileOptions.defaults().toInStreamOptions(mStatus);
     //mStatus = masterClientResource.getStatus();
+
+    mContext.releaseMasterClient(masterClientResource);
   }
 
   /* Input Stream methods */
@@ -139,6 +144,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     CountingRetry retry = new CountingRetry(MAX_WORKERS_TO_RETRY);
     IOException lastException = null;
 
+    // TODO: change in stream in read()
     try {
       changeFileInStream(mPosition, mLength);
     } catch (AlluxioException e) {

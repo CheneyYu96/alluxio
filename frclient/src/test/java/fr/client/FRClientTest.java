@@ -74,7 +74,7 @@ public class FRClientTest {
 //        AlluxioURI path = frClientTest.writeFileTest(testFile);
 
         LOG.info("--------------Test: read from Alluxio--------------------------");
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 2; i++) {
             frClientTest.readOffTest(path, pairs);
         }
 

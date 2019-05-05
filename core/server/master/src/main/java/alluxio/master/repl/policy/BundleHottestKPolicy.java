@@ -22,6 +22,9 @@ public class BundleHottestKPolicy implements ReplPolicy {
 
     public BundleHottestKPolicy() {
         weight = Configuration.getDouble(PropertyKey.FR_REPL_WEIGHT);
+    }
+
+    private void updateWorkNum(){
         workNum = BlockMasterFactory.getBlockMaster().getWorkerCount();
     }
 
@@ -34,6 +37,7 @@ public class BundleHottestKPolicy implements ReplPolicy {
 
     @Override
     public List<ReplUnit> calcReplicas(FileAccessInfo fileAccessInfo) {
+        updateWorkNum();
 
         List<Pair<OffLenPair, Long>> sortedPops = fileAccessInfo
                 .getOffsetCount()
@@ -90,7 +94,7 @@ public class BundleHottestKPolicy implements ReplPolicy {
 
             double doubleR = Math.sqrt(hotLoad * hotLoad / (workNum * weight * hotSize));
 
-            System.out.println("k = " + k + "; r = " + doubleR);
+            System.out.println("k=" + k + "; Lh=" + hotLoad + "; workNum=" + workNum + "; Sh=" + hotSize + "; r=" + doubleR);
 
             if (doubleR > workNum){
                 double localObj = calcObjective(hotLoad, coldLoad, hotSize, workNum);
