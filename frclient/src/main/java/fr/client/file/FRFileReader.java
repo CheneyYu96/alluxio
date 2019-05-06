@@ -27,11 +27,14 @@ public class FRFileReader {
 
     private byte[] mBuf;
 
-    public FRFileReader(AlluxioURI filePath) {
+    public FRFileReader(AlluxioURI filePath, boolean requireTrans) {
         mSourceFilePath = filePath;
 
         mFileSystem = FileSystem.Factory.get();
-        mReadOptions = OpenFileOptions.defaults().setReadType(ReadType.NO_CACHE);
+        mReadOptions = OpenFileOptions
+                .defaults()
+                .setReadType(ReadType.NO_CACHE)
+                .setRequireTrans(requireTrans);
     }
 
     public byte[] getBuf() {

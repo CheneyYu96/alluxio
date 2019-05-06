@@ -48,7 +48,7 @@ public class FRClientTest {
     }
 
     public void readOffTest(AlluxioURI path, List<OffLenPair> pairs) throws Exception{
-        FRFileReader reader = new FRFileReader(path);
+        FRFileReader reader = new FRFileReader(path, true);
         reader.readFile(pairs);
         System.out.println(new String(reader.getBuf()));
     }
@@ -74,7 +74,7 @@ public class FRClientTest {
 //        AlluxioURI path = frClientTest.writeFileTest(testFile);
 
         LOG.info("--------------Test: read from Alluxio--------------------------");
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < 5; i++) {
             frClientTest.readOffTest(path, pairs);
         }
 

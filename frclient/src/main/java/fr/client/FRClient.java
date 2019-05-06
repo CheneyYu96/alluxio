@@ -44,7 +44,7 @@ public class FRClient {
 
         AlluxioURI destFilePath = new AlluxioURI(String.format("%s/%s", replicaParent, replicaName));
 
-        FRFileReader reader = new FRFileReader(sourceFilePath);
+        FRFileReader reader = new FRFileReader(sourceFilePath, false);
         FRFileWriter writer = new FRFileWriter(destFilePath);
 
         try {

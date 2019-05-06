@@ -58,6 +58,8 @@ public class ReplManager {
     }
 
     public Map<AlluxioURI, OffLenPair> recordAccess(AlluxioURI requestFile, long offset, long length){
+
+        LOG.info("record access from file {}. offset {} length {}", requestFile.getPath(), offset, length);
         OffLenPair pair = new OffLenPair(offset, length);
         Map<AlluxioURI, OffLenPair> mappedOffsets = new ConcurrentHashMap<>(ImmutableMap.of(requestFile, pair));
 
@@ -70,6 +72,9 @@ public class ReplManager {
             }
         }
         else {
+            // TODO: access replicas?
+//            if(replicaMap.containsKey(requestFile)){
+//            }
             accessRecords.put(requestFile, new FileAccessInfo(requestFile, pair));
         }
         return mappedOffsets;
