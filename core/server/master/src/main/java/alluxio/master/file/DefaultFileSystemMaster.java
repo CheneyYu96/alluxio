@@ -11,33 +11,12 @@
 
 package alluxio.master.file;
 
-import alluxio.AlluxioURI;
-import alluxio.Configuration;
-import alluxio.Constants;
-import alluxio.PropertyKey;
-import alluxio.Server;
+import alluxio.*;
 import alluxio.clock.SystemClock;
 import alluxio.collections.Pair;
 import alluxio.collections.PrefixList;
-import alluxio.exception.AccessControlException;
-import alluxio.exception.AlluxioException;
-import alluxio.exception.BlockInfoException;
-import alluxio.exception.ConnectionFailedException;
-import alluxio.exception.DirectoryNotEmptyException;
-import alluxio.exception.ExceptionMessage;
-import alluxio.exception.FileAlreadyCompletedException;
-import alluxio.exception.FileAlreadyExistsException;
-import alluxio.exception.FileDoesNotExistException;
-import alluxio.exception.InvalidFileSizeException;
-import alluxio.exception.InvalidPathException;
-import alluxio.exception.PreconditionMessage;
-import alluxio.exception.UnexpectedAlluxioException;
-import alluxio.exception.status.FailedPreconditionException;
-import alluxio.exception.status.InvalidArgumentException;
-import alluxio.exception.status.NotFoundException;
-import alluxio.exception.status.PermissionDeniedException;
-import alluxio.exception.status.ResourceExhaustedException;
-import alluxio.exception.status.UnavailableException;
+import alluxio.exception.*;
+import alluxio.exception.status.*;
 import alluxio.heartbeat.HeartbeatContext;
 import alluxio.heartbeat.HeartbeatThread;
 import alluxio.master.CoreMaster;
@@ -48,53 +27,18 @@ import alluxio.master.audit.AuditContext;
 import alluxio.master.block.BlockId;
 import alluxio.master.block.BlockMaster;
 import alluxio.master.file.activesync.ActiveSyncManager;
-import alluxio.master.file.meta.FileSystemMasterView;
-import alluxio.master.file.meta.InodeDirectory;
-import alluxio.master.file.meta.InodeDirectoryIdGenerator;
-import alluxio.master.file.meta.InodeDirectoryView;
-import alluxio.master.file.meta.InodeFile;
-import alluxio.master.file.meta.InodeFileView;
-import alluxio.master.file.meta.InodeLockManager;
-import alluxio.master.file.meta.InodePathPair;
-import alluxio.master.file.meta.InodeTree;
+import alluxio.master.file.meta.*;
 import alluxio.master.file.meta.InodeTree.LockMode;
 import alluxio.master.file.meta.InodeTree.LockPattern;
-import alluxio.master.file.meta.InodeView;
-import alluxio.master.file.meta.LockedInodePath;
-import alluxio.master.file.meta.LockingScheme;
-import alluxio.master.file.meta.MountTable;
-import alluxio.master.file.meta.PersistenceState;
-import alluxio.master.file.meta.UfsAbsentPathCache;
-import alluxio.master.file.meta.UfsBlockLocationCache;
-import alluxio.master.file.meta.UfsSyncPathCache;
-import alluxio.master.file.meta.UfsSyncUtils;
 import alluxio.master.file.meta.options.MountInfo;
-import alluxio.master.file.options.CheckConsistencyOptions;
-import alluxio.master.file.options.CompleteFileOptions;
-import alluxio.master.file.options.CreateDirectoryOptions;
-import alluxio.master.file.options.CreateFileOptions;
-import alluxio.master.file.options.DeleteOptions;
-import alluxio.master.file.options.DescendantType;
-import alluxio.master.file.options.FreeOptions;
-import alluxio.master.file.options.GetStatusOptions;
-import alluxio.master.file.options.ListStatusOptions;
-import alluxio.master.file.options.LoadMetadataOptions;
-import alluxio.master.file.options.MountOptions;
-import alluxio.master.file.options.RenameOptions;
-import alluxio.master.file.options.SetAclOptions;
-import alluxio.master.file.options.SetAttributeOptions;
-import alluxio.master.file.options.WorkerHeartbeatOptions;
+import alluxio.master.file.options.*;
 import alluxio.master.journal.JournalContext;
+import alluxio.master.repl.ReplManager;
+import alluxio.master.stats.FileSegmentsAccessRecorder;
 import alluxio.metrics.MasterMetrics;
 import alluxio.metrics.MetricsSystem;
 import alluxio.proto.journal.File;
-import alluxio.proto.journal.File.AddSyncPointEntry;
-import alluxio.proto.journal.File.NewBlockEntry;
-import alluxio.proto.journal.File.RemoveSyncPointEntry;
-import alluxio.proto.journal.File.RenameEntry;
-import alluxio.proto.journal.File.SetAclEntry;
-import alluxio.proto.journal.File.UpdateInodeEntry;
-import alluxio.proto.journal.File.UpdateInodeFileEntry;
+import alluxio.proto.journal.File.*;
 import alluxio.proto.journal.File.UpdateInodeFileEntry.Builder;
 import alluxio.proto.journal.Journal.JournalEntry;
 import alluxio.resource.CloseableResource;
@@ -103,27 +47,10 @@ import alluxio.retry.CountingRetry;
 import alluxio.retry.RetryPolicy;
 import alluxio.security.authentication.AuthType;
 import alluxio.security.authentication.AuthenticatedClientUser;
-import alluxio.security.authorization.AccessControlList;
-import alluxio.security.authorization.AclEntry;
-import alluxio.security.authorization.AclEntryType;
-import alluxio.security.authorization.DefaultAccessControlList;
-import alluxio.security.authorization.Mode;
-import alluxio.thrift.CommandType;
-import alluxio.thrift.FileSystemCommand;
-import alluxio.thrift.FileSystemCommandOptions;
-import alluxio.thrift.FileSystemMasterWorkerService;
-import alluxio.thrift.MountTOptions;
-import alluxio.thrift.PersistCommandOptions;
-import alluxio.thrift.PersistFile;
-import alluxio.thrift.UfsInfo;
-import alluxio.underfs.Fingerprint;
+import alluxio.security.authorization.*;
+import alluxio.thrift.*;
+import alluxio.underfs.*;
 import alluxio.underfs.Fingerprint.Tag;
-import alluxio.underfs.MasterUfsManager;
-import alluxio.underfs.UfsFileStatus;
-import alluxio.underfs.UfsManager;
-import alluxio.underfs.UfsStatus;
-import alluxio.underfs.UnderFileSystem;
-import alluxio.underfs.UnderFileSystemConfiguration;
 import alluxio.underfs.options.ListOptions;
 import alluxio.util.CommonUtils;
 import alluxio.util.IdUtils;
@@ -135,15 +62,13 @@ import alluxio.util.io.PathUtils;
 import alluxio.util.network.NetworkAddressUtils;
 import alluxio.wire.BlockInfo;
 import alluxio.wire.BlockLocation;
-import alluxio.wire.CommonOptions;
 import alluxio.wire.FileBlockInfo;
 import alluxio.wire.FileInfo;
-import alluxio.wire.LoadMetadataType;
 import alluxio.wire.MountPointInfo;
 import alluxio.wire.SetAclAction;
 import alluxio.wire.SyncPointInfo;
 import alluxio.wire.WorkerInfo;
-
+import alluxio.wire.*;
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.Gauge;
 import com.google.common.annotations.VisibleForTesting;
@@ -157,34 +82,15 @@ import org.apache.thrift.TProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
+import javax.annotation.concurrent.NotThreadSafe;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.SortedMap;
-import java.util.Stack;
-import java.util.TreeMap;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import javax.annotation.Nullable;
-import javax.annotation.concurrent.NotThreadSafe;
 
 /**
  * The master that handles all file system metadata management.
@@ -345,10 +251,18 @@ public final class DefaultFileSystemMaster extends CoreMaster implements FileSys
   private Future<List<AlluxioURI>> mStartupConsistencyCheck;
 
   private ActiveSyncManager mSyncManager;
+
+  private FileSegmentsAccessRecorder mFileSegmentsAccessRecorder;
   /**
    * Log writer for user access audit log.
    */
   private AsyncUserAccessAuditLogWriter mAsyncAuditLogWriter;
+
+
+  /**
+   * FR: replication manager
+   */
+  private ReplManager mReplManager;
 
   /**
    * Creates a new instance of {@link DefaultFileSystemMaster}.
@@ -391,6 +305,10 @@ public final class DefaultFileSystemMaster extends CoreMaster implements FileSys
     mUfsBlockLocationCache = UfsBlockLocationCache.Factory.create(mMountTable);
     mUfsSyncPathCache = new UfsSyncPathCache();
     mSyncManager = new ActiveSyncManager(mMountTable, this);
+    mFileSegmentsAccessRecorder = new FileSegmentsAccessRecorder();
+
+    // FR: create replication manager
+    mReplManager = new ReplManager();
 
     resetState();
     Metrics.registerGauges(this, mUfsManager);
@@ -474,6 +392,12 @@ public final class DefaultFileSystemMaster extends CoreMaster implements FileSys
     );
   }
 
+
+  /**
+   * TODO: submit thread for finer-grained replication
+   * @param isPrimary
+   * @throws IOException
+   */
   @Override
   public void start(Boolean isPrimary) throws IOException {
     super.start(isPrimary);
@@ -599,6 +523,10 @@ public final class DefaultFileSystemMaster extends CoreMaster implements FileSys
             new HeartbeatThread(HeartbeatContext.MASTER_UFS_CLEANUP, new UfsCleaner(this),
                 (int) Configuration.getMs(PropertyKey.UNDERFS_CLEANUP_INTERVAL)));
       }
+
+      // TODO: checking statues in replication manager
+      getExecutorService().submit(() -> mReplManager.checkStats());
+
       mSyncManager.start();
     }
   }
@@ -791,6 +719,11 @@ public final class DefaultFileSystemMaster extends CoreMaster implements FileSys
   public FileInfo getFileInfo(AlluxioURI path, GetStatusOptions options)
       throws FileDoesNotExistException, InvalidPathException, AccessControlException, IOException {
     Metrics.GET_FILE_INFO_OPS.inc();
+    /*
+     * 1. record access in stats
+     * 2. get translated file path
+     * TODO: record &translate original file to replicas, if needed
+     */
     LockingScheme lockingScheme =
         createLockingScheme(path, options.getCommonOptions(), LockPattern.READ);
     try (RpcContext rpcContext = createRpcContext();
@@ -3142,6 +3075,18 @@ public final class DefaultFileSystemMaster extends CoreMaster implements FileSys
     }
 
     return true;
+  }
+
+  @Override
+  public List<fileSegmentInfo> recordBlockAccessInfo(String UFSPath, long offset, long length) {
+//    mFileSegmentsAccessRecorder.onAccess(new FileSegmentsInfo(UFSPath, offset, length));
+
+    return mReplManager
+            .recordAccess(new AlluxioURI(UFSPath), offset, length)
+            .entrySet()
+            .stream()
+            .map( e -> new fileSegmentInfo(e.getKey().getPath(), e.getValue().offset, e.getValue().length))
+            .collect(Collectors.toList());
   }
 
   private boolean syncMetadata(RpcContext rpcContext, LockedInodePath inodePath,

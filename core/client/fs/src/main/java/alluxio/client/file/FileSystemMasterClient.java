@@ -32,6 +32,7 @@ import alluxio.exception.status.AlreadyExistsException;
 import alluxio.exception.status.NotFoundException;
 import alluxio.master.MasterClientConfig;
 import alluxio.security.authorization.AclEntry;
+import alluxio.wire.FileSegmentsInfo;
 import alluxio.wire.MountPointInfo;
 import alluxio.wire.SetAclAction;
 import alluxio.wire.SyncPointInfo;
@@ -255,4 +256,14 @@ public interface FileSystemMasterClient extends Client {
    * @param options the options to update ufs operation mode
    */
   void updateUfsMode(AlluxioURI ufsUri, UpdateUfsModeOptions options) throws AlluxioStatusException;
+
+  /**
+   * Upload the info of files that clients access to master
+   * @param ufsUri
+   * @param offset
+   * @param length
+   * @throws AlluxioStatusException
+   */
+
+  List<FileSegmentsInfo> uploadFileSegmentsAccessInfo(AlluxioURI ufsUri, long offset, long length)throws AlluxioStatusException;
 }

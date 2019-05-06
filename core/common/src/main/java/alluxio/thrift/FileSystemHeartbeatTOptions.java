@@ -344,13 +344,13 @@ public class FileSystemHeartbeatTOptions implements org.apache.thrift.TBase<File
           case 1: // PERSISTED_FILE_FINGERPRINTS
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list118 = iprot.readListBegin();
-                struct.persistedFileFingerprints = new ArrayList<String>(_list118.size);
-                String _elem119;
-                for (int _i120 = 0; _i120 < _list118.size; ++_i120)
+                org.apache.thrift.protocol.TList _list126 = iprot.readListBegin();
+                struct.persistedFileFingerprints = new ArrayList<String>(_list126.size);
+                String _elem127;
+                for (int _i128 = 0; _i128 < _list126.size; ++_i128)
                 {
-                  _elem119 = iprot.readString();
-                  struct.persistedFileFingerprints.add(_elem119);
+                  _elem127 = iprot.readString();
+                  struct.persistedFileFingerprints.add(_elem127);
                 }
                 iprot.readListEnd();
               }
@@ -379,9 +379,9 @@ public class FileSystemHeartbeatTOptions implements org.apache.thrift.TBase<File
           oprot.writeFieldBegin(PERSISTED_FILE_FINGERPRINTS_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, struct.persistedFileFingerprints.size()));
-            for (String _iter121 : struct.persistedFileFingerprints)
+            for (String _iter129 : struct.persistedFileFingerprints)
             {
-              oprot.writeString(_iter121);
+              oprot.writeString(_iter129);
             }
             oprot.writeListEnd();
           }
@@ -413,9 +413,9 @@ public class FileSystemHeartbeatTOptions implements org.apache.thrift.TBase<File
       if (struct.isSetPersistedFileFingerprints()) {
         {
           oprot.writeI32(struct.persistedFileFingerprints.size());
-          for (String _iter122 : struct.persistedFileFingerprints)
+          for (String _iter130 : struct.persistedFileFingerprints)
           {
-            oprot.writeString(_iter122);
+            oprot.writeString(_iter130);
           }
         }
       }
@@ -427,13 +427,13 @@ public class FileSystemHeartbeatTOptions implements org.apache.thrift.TBase<File
       BitSet incoming = iprot.readBitSet(1);
       if (incoming.get(0)) {
         {
-          org.apache.thrift.protocol.TList _list123 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-          struct.persistedFileFingerprints = new ArrayList<String>(_list123.size);
-          String _elem124;
-          for (int _i125 = 0; _i125 < _list123.size; ++_i125)
+          org.apache.thrift.protocol.TList _list131 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+          struct.persistedFileFingerprints = new ArrayList<String>(_list131.size);
+          String _elem132;
+          for (int _i133 = 0; _i133 < _list131.size; ++_i133)
           {
-            _elem124 = iprot.readString();
-            struct.persistedFileFingerprints.add(_elem124);
+            _elem132 = iprot.readString();
+            struct.persistedFileFingerprints.add(_elem132);
           }
         }
         struct.setPersistedFileFingerprintsIsSet(true);

@@ -42,6 +42,18 @@ public final class OpenFileOptions {
   /** The location policy to determine the worker location to serve UFS block reads. */
   private BlockLocationPolicy mUfsReadLocationPolicy;
 
+  /** FR: if it is translation-allowed*/
+  private boolean mRequireTrans;
+
+  public boolean isRequireTrans() {
+    return mRequireTrans;
+  }
+
+  public OpenFileOptions setRequireTrans(boolean requireTrans) {
+    mRequireTrans = requireTrans;
+    return this;
+  }
+
   /**
    * @return the default {@link InStreamOptions}
    */
@@ -66,6 +78,8 @@ public final class OpenFileOptions {
     mUfsReadLocationPolicy = BlockLocationPolicy.Factory.create(blockLocationPolicyCreateOptions);
     mMaxUfsReadConcurrency =
         Configuration.getInt(PropertyKey.USER_UFS_BLOCK_READ_CONCURRENCY_MAX);
+
+    mRequireTrans = Configuration.getBoolean(PropertyKey.FR_CLIENT_TRANS);
   }
 
   /**

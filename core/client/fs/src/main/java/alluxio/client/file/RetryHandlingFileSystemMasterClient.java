@@ -31,19 +31,14 @@ import alluxio.client.file.options.UpdateUfsModeOptions;
 import alluxio.exception.status.AlluxioStatusException;
 import alluxio.master.MasterClientConfig;
 import alluxio.security.authorization.AclEntry;
-import alluxio.thrift.AlluxioService;
-import alluxio.thrift.FileSystemMasterClientService;
-import alluxio.thrift.GetMountTableTResponse;
-import alluxio.thrift.GetNewBlockIdForFileTOptions;
-import alluxio.thrift.LoadMetadataTOptions;
-import alluxio.thrift.ScheduleAsyncPersistenceTOptions;
-import alluxio.thrift.StartSyncTOptions;
-import alluxio.thrift.StopSyncTOptions;
-import alluxio.thrift.UnmountTOptions;
+import alluxio.thrift.*;
+
 import alluxio.wire.FileInfo;
 import alluxio.wire.MountPointInfo;
 import alluxio.wire.SetAclAction;
 import alluxio.wire.SyncPointInfo;
+import alluxio.wire.FileSegmentsInfo;
+
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -264,5 +259,19 @@ public final class RetryHandlingFileSystemMasterClient extends AbstractMasterCli
       final UpdateUfsModeOptions options) throws AlluxioStatusException {
     retryRPC(() -> mClient.updateUfsMode(ufsUri.getRootPath(), options.toThrift()),
         "UpdateUfsMode");
+  }
+
+  @Override
+  public synchronized List<FileSegmentsInfo> uploadFileSegmentsAccessInfo(final AlluxioURI ufsUri, final long offset, final long length) throws AlluxioStatusException {
+    return retryRPC(() -> {
+      UploadFileSegmentsAccessInfoTResponse temp = mClient.uploadFileSegmentsAccessInfo(ufsUri.getPath(), offset, length);
+      // Now get the first one in the list
+      List<fileSegmentInfo> fileSegmentInfos = temp.getReplList();
+
+      return fileSegmentInfos
+              .stream()
+              .map( o -> new FileSegmentsInfo(o.getFileURI(), o.getOffset(), o.getLen()))
+              .collect(Collectors.toList());
+    }, "uploadFileSegmentsAccessInfo");
   }
 }

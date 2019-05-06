@@ -15,86 +15,21 @@ import alluxio.AlluxioURI;
 import alluxio.Constants;
 import alluxio.RpcUtils;
 import alluxio.RpcUtils.RpcCallableThrowsIOException;
-import alluxio.wire.SyncPointInfo;
-import alluxio.master.file.options.CheckConsistencyOptions;
-import alluxio.master.file.options.CompleteFileOptions;
-import alluxio.master.file.options.CreateDirectoryOptions;
-import alluxio.master.file.options.CreateFileOptions;
-import alluxio.master.file.options.DeleteOptions;
-import alluxio.master.file.options.DescendantType;
-import alluxio.master.file.options.FreeOptions;
-import alluxio.master.file.options.GetStatusOptions;
-import alluxio.master.file.options.ListStatusOptions;
-import alluxio.master.file.options.LoadMetadataOptions;
-import alluxio.master.file.options.MountOptions;
-import alluxio.master.file.options.RenameOptions;
-import alluxio.master.file.options.SetAclOptions;
-import alluxio.master.file.options.SetAttributeOptions;
+import alluxio.master.file.options.*;
 import alluxio.security.authorization.AclEntry;
-import alluxio.thrift.AlluxioTException;
-import alluxio.thrift.CheckConsistencyTOptions;
-import alluxio.thrift.CheckConsistencyTResponse;
-import alluxio.thrift.CompleteFileTOptions;
-import alluxio.thrift.CompleteFileTResponse;
-import alluxio.thrift.CreateDirectoryTOptions;
-import alluxio.thrift.CreateDirectoryTResponse;
-import alluxio.thrift.CreateFileTOptions;
-import alluxio.thrift.CreateFileTResponse;
-import alluxio.thrift.DeleteTOptions;
-import alluxio.thrift.DeleteTResponse;
-import alluxio.thrift.FileInfo;
-import alluxio.thrift.FileSystemMasterClientService;
-import alluxio.thrift.FreeTOptions;
-import alluxio.thrift.FreeTResponse;
-import alluxio.thrift.GetMountTableTResponse;
-import alluxio.thrift.GetNewBlockIdForFileTOptions;
-import alluxio.thrift.GetNewBlockIdForFileTResponse;
-import alluxio.thrift.GetServiceVersionTOptions;
-import alluxio.thrift.GetServiceVersionTResponse;
-import alluxio.thrift.GetStatusTOptions;
-import alluxio.thrift.GetStatusTResponse;
-import alluxio.thrift.GetSyncPathListTResponse;
-import alluxio.thrift.ListStatusTOptions;
-import alluxio.thrift.ListStatusTResponse;
-import alluxio.thrift.LoadMetadataTOptions;
-import alluxio.thrift.LoadMetadataTResponse;
-import alluxio.thrift.MountTOptions;
-import alluxio.thrift.MountTResponse;
-import alluxio.thrift.RenameTOptions;
-import alluxio.thrift.RenameTResponse;
-import alluxio.thrift.ScheduleAsyncPersistenceTOptions;
-import alluxio.thrift.ScheduleAsyncPersistenceTResponse;
-import alluxio.thrift.SetAclTOptions;
-import alluxio.thrift.SetAclTResponse;
-import alluxio.thrift.SetAttributeTOptions;
-import alluxio.thrift.SetAttributeTResponse;
-import alluxio.thrift.StartSyncTOptions;
-import alluxio.thrift.StartSyncTResponse;
-import alluxio.thrift.StopSyncTOptions;
-import alluxio.thrift.StopSyncTResponse;
-import alluxio.thrift.TAclEntry;
-import alluxio.thrift.TSetAclAction;
-import alluxio.thrift.UnmountTOptions;
-import alluxio.thrift.UnmountTResponse;
-import alluxio.thrift.UpdateUfsModeTOptions;
-import alluxio.thrift.UpdateUfsModeTResponse;
+import alluxio.thrift.*;
 import alluxio.underfs.UnderFileSystem;
 import alluxio.wire.MountPointInfo;
 import alluxio.wire.SetAclAction;
-
+import alluxio.wire.SyncPointInfo;
 import com.google.common.base.Preconditions;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
 import javax.annotation.concurrent.NotThreadSafe;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * This class is a Thrift handler for file system master RPCs invoked by an Alluxio client.
@@ -374,4 +309,19 @@ public final class FileSystemMasterClientServiceHandler implements
       return new UpdateUfsModeTResponse();
     }, "UpdateUfsMode", "ufsPath=%s, options=%s", ufsPath, options);
   }
+
+  @Override
+  public UploadFileSegmentsAccessInfoTResponse uploadFileSegmentsAccessInfo(String UFSPath, long offset, long len)
+          throws AlluxioTException, TException {
+    return RpcUtils.call(LOG, (RpcCallableThrowsIOException<UploadFileSegmentsAccessInfoTResponse>) () ->
+            new UploadFileSegmentsAccessInfoTResponse(mFileSystemMaster.recordBlockAccessInfo(UFSPath, offset, len)),
+            "uploadFileSegmentsAccessInfo", "path=%s, offset=%s, len=%s", UFSPath, offset, len);
+  }
+
+//  @Override
+//  public synchronized UploadFileSegmentsAccessInfoTResponse uploadFileSegmentsAccessInfo(String UFSPath, long offset, long len) throws AlluxioTException, TException {
+//    mFileSystemMaster.recordBlockAccessInfo(UFSPath, offset, len);
+//    return new UploadFileSegmentsAccessInfoTResponse();
+//  }
+
 }

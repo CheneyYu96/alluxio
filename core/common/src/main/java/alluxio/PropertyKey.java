@@ -15,7 +15,6 @@ import alluxio.exception.ExceptionMessage;
 import alluxio.util.OSUtils;
 import alluxio.util.io.PathUtils;
 import alluxio.wire.Scope;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -24,6 +23,8 @@ import com.google.common.collect.Sets;
 import com.sun.management.OperatingSystemMXBean;
 import com.sun.management.UnixOperatingSystemMXBean;
 
+import javax.annotation.Nullable;
+import javax.annotation.concurrent.ThreadSafe;
 import java.lang.annotation.Annotation;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Field;
@@ -35,9 +36,6 @@ import java.util.function.BiFunction;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.annotation.Nullable;
-import javax.annotation.concurrent.ThreadSafe;
 
 /**
  * Configuration property keys. This class provides a set of pre-defined property keys.
@@ -4087,6 +4085,15 @@ public final class PropertyKey implements Comparable<PropertyKey> {
     public static final String MASTER_JVM_MONITOR_ENABLED = "alluxio.master.jvm.monitor.enabled";
     public static final String WORKER_JVM_MONITOR_ENABLED = "alluxio.worker.jvm.monitor.enabled";
 
+
+    // TODO: FR parameters
+    public static final String FR_REPL_INTERVAL = "fr.repl.interval";
+    public static final String FR_REPL_POLICY = "fr.repl.policy.class";
+    public static final String FR_REPL_WEIGHT = "fr.repl.weight";
+    public static final String FR_RECORD_INTERVAL = "fr.record.interval";
+
+    public static final String FR_CLIENT_TRANS = "fr.client.translation";
+
     private Name() {} // prevent instantiation
   }
 
@@ -4567,4 +4574,34 @@ public final class PropertyKey implements Comparable<PropertyKey> {
       return false;
     }
   }
+
+
+  /**
+   * FR property keys
+   */
+  public static final PropertyKey FR_REPL_INTERVAL =
+          new Builder(Name.FR_REPL_INTERVAL)
+                  .setDefaultValue(60 /* in seconds */)
+                  .build();
+
+  public static final PropertyKey FR_REPL_POLICY =
+          new Builder(Name.FR_REPL_POLICY)
+                  .setDefaultValue("alluxio.master.repl.policy.NaivePolicy")
+                  .setDescription("The default replication policy for replication")
+                  .build();
+
+  public static final PropertyKey FR_REPL_WEIGHT =
+          new Builder(Name.FR_REPL_WEIGHT)
+                  .setDefaultValue(1.0)
+                  .build();
+
+  public static final PropertyKey FR_RECORD_INTERVAL =
+          new Builder(Name.FR_RECORD_INTERVAL)
+                  .setDefaultValue(10 * 1000 /* in miliseconds */)
+                  .build();
+
+  public static final PropertyKey FR_CLIENT_TRANS =
+          new Builder(Name.FR_CLIENT_TRANS)
+                  .setDefaultValue(true)
+                  .build();
 }

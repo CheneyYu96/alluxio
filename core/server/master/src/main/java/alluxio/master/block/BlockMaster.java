@@ -21,11 +21,7 @@ import alluxio.master.Master;
 import alluxio.metrics.Metric;
 import alluxio.thrift.Command;
 import alluxio.thrift.RegisterWorkerTOptions;
-import alluxio.wire.Address;
-import alluxio.wire.BlockInfo;
-import alluxio.wire.ConfigProperty;
-import alluxio.wire.WorkerInfo;
-import alluxio.wire.WorkerNetAddress;
+import alluxio.wire.*;
 
 import java.util.List;
 import java.util.Map;
