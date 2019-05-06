@@ -78,7 +78,8 @@ public final class OpenFileOptions {
     mUfsReadLocationPolicy = BlockLocationPolicy.Factory.create(blockLocationPolicyCreateOptions);
     mMaxUfsReadConcurrency =
         Configuration.getInt(PropertyKey.USER_UFS_BLOCK_READ_CONCURRENCY_MAX);
-    mRequireTrans = true;
+
+    mRequireTrans = Configuration.getBoolean(PropertyKey.FR_CLIENT_TRANS);
   }
 
   /**
