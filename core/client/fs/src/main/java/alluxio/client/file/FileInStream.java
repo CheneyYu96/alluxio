@@ -114,11 +114,14 @@ public class FileInStream extends InputStream implements BoundedStream, Position
   /** FR: record replica location info */
   private ReplicasInfo mReplicasInfo;
 
+  private FileSegmentsInfo mCurrentSeg;
   private URIStatus mNewStatus;
   private InStreamOptions mNewOptions;
   private long mNewPosition;
 
   private long mNewLength;
+  private long mNewEndPos;
+
   private long mNewBlockSize;
 
   protected FileInStream(URIStatus status, InStreamOptions options, FileSystemContext context) {
@@ -142,7 +145,10 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     mNewOptions = options;
     mNewPosition = 0;
     mNewLength = mNewStatus.getLength();
+    mNewEndPos = mNewPosition + mNewLength;
     mNewBlockSize = mNewStatus.getBlockSizeBytes();
+    mCurrentSeg = new FileSegmentsInfo(status.getPath(), 0, 0);
+
   }
 
   class ReplicasInfo{
@@ -197,7 +203,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     }
   }
 
-  public int changeFileInStream(long offset, long length)
+  public void changeFileInStream(long offset, long length)
       throws FileDoesNotExistException, IOException, AlluxioException {
     FileSystemMasterClient masterClientResource = mContext.acquireMasterClient();
 
@@ -219,7 +225,6 @@ public class FileInStream extends InputStream implements BoundedStream, Position
             .filter( p -> localWorker.getHost().equals(p.getSecond().getHost()))
             .findFirst().orElse(null);
 
-    long len = length;
 
     // local worker exists
     if (segToReadWithLoc != null){
@@ -231,8 +236,6 @@ public class FileInStream extends InputStream implements BoundedStream, Position
       else {
         updateMetadata(segToRead);
       }
-
-      len = segToRead.getLength();
     }
     else {
       Pair<FileSegmentsInfo, WorkerNetAddress> sameSegToRead = allSegWithLoc
@@ -251,7 +254,6 @@ public class FileInStream extends InputStream implements BoundedStream, Position
       }
     }
 
-    return (int) len;
   }
 
   private void updateMetadata(FileSegmentsInfo segToRead){
@@ -260,6 +262,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     mNewPosition = segToRead.getOffset();
     mNewBlockSize = mNewStatus.getBlockSizeBytes();
     mNewLength = mNewStatus.getLength();
+    mNewEndPos = mNewLength + mNewPosition;
     mBlockInStream = null;
   }
 
@@ -287,6 +290,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
         int result = mBlockInStream.read();
         if (result != -1) {
           mPosition++;
+          mNewPosition++;
         }
 
         return result;
@@ -319,13 +323,23 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     }
 
     if(mOptions.getOptions().isRequireTrans()) {
-      long startTimeMs = CommonUtils.getCurrentMs();
-      try {
-        len = changeFileInStream(mPosition, (long) len);
-      } catch (AlluxioException e) {
-        e.printStackTrace();
+
+      // continuous access within the new segment
+      if(mCurrentSeg.getOffset() + mCurrentSeg.getLength() == mNewPosition
+              && mNewPosition + len <= mNewEndPos){
+        mCurrentSeg.addLength(len);
       }
-      LOG.info("update file in stream. elapsed:" + (CommonUtils.getCurrentMs() - startTimeMs));
+      else {
+        long startTimeMs = CommonUtils.getCurrentMs();
+        try {
+          changeFileInStream(mPosition, (long) len);
+        } catch (AlluxioException e) {
+          e.printStackTrace();
+        }
+        LOG.info("update file in stream. elapsed:" + (CommonUtils.getCurrentMs() - startTimeMs));
+
+        mCurrentSeg.setOffset(mNewPosition).setLength(len);
+      }
     }
 
     int bytesLeft = len;
@@ -333,9 +347,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     CountingRetry retry = new CountingRetry(MAX_WORKERS_TO_RETRY);
     IOException lastException = null;
 
-    long localPosition = mOptions.getOptions().isRequireTrans() ? mNewPosition : mPosition;
-    long localLength = mOptions.getOptions().isRequireTrans() ? mNewLength : mLength;
-    while (bytesLeft > 0 && localPosition != localLength && retry.attempt()) {
+    while (bytesLeft > 0 && mPosition != mLength && retry.attempt()) {
       try {
         updateStream();
         int bytesRead = mBlockInStream.read(b, currentOffset, bytesLeft);
@@ -344,7 +356,6 @@ public class FileInStream extends InputStream implements BoundedStream, Position
           currentOffset += bytesRead;
           mPosition += bytesRead;
 
-          localPosition += bytesRead;
           mNewPosition += bytesRead; // update position for replicas
         }
         retry.reset();
