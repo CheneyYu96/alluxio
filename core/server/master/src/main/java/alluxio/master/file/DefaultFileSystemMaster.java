@@ -3089,6 +3089,11 @@ public final class DefaultFileSystemMaster extends CoreMaster implements FileSys
             .collect(Collectors.toList());
   }
 
+  @Override
+  public void recordOffsetInfo(String UFSPath, List<Long> offset, List<Long> length) {
+    mReplManager.recordAccess(new AlluxioURI(UFSPath), offset, length);
+  }
+
   private boolean syncMetadata(RpcContext rpcContext, LockedInodePath inodePath,
       LockingScheme lockingScheme, DescendantType syncDescendantType) {
     boolean result;

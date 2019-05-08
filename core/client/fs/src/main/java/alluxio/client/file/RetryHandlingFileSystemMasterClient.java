@@ -229,6 +229,12 @@ public final class RetryHandlingFileSystemMasterClient extends AbstractMasterCli
   }
 
   @Override
+  public void sendParquetInfo(AlluxioURI path, List<Long> offset, List<Long> length)
+      throws AlluxioStatusException {
+    retryRPC(() -> mClient.sendParquetInfo(path.getPath(), offset, length), "SendParquetInfo");
+  }
+
+  @Override
   public synchronized void scheduleAsyncPersist(final AlluxioURI path)
       throws AlluxioStatusException {
     retryRPC(() -> mClient.scheduleAsyncPersistence(path.getPath(),

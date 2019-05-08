@@ -4,6 +4,7 @@ import alluxio.AlluxioURI;
 import alluxio.Configuration;
 import alluxio.PropertyKey;
 import alluxio.master.repl.meta.FileAccessInfo;
+import alluxio.master.repl.meta.FileOffsetInfo;
 import alluxio.master.repl.meta.FileRepInfo;
 import alluxio.master.repl.policy.ReplPolicy;
 import alluxio.util.CommonUtils;
@@ -37,6 +38,7 @@ public class ReplManager {
     private Map<AlluxioURI, FileAccessInfo> accessRecords;
     private Map<AlluxioURI, FileRepInfo> fileReplicas;
     private Map<AlluxioURI, AlluxioURI> replicaMap;
+    private Map<AlluxioURI, FileOffsetInfo> offsetInfoMap;
     private int checkInterval; /* in seconds */
 
     public ReplManager() {
@@ -44,6 +46,7 @@ public class ReplManager {
         accessRecords = new ConcurrentHashMap<>();
         fileReplicas = new ConcurrentHashMap<>();
         replicaMap = new ConcurrentHashMap<>();
+        offsetInfoMap = new ConcurrentHashMap<>();
 
         replPolicy = CommonUtils.createNewClassInstance(Configuration.getClass(
                 PropertyKey.FR_REPL_POLICY), new Class[] {}, new Object[] {});
@@ -78,6 +81,16 @@ public class ReplManager {
             accessRecords.put(requestFile, new FileAccessInfo(requestFile, pair));
         }
         return mappedOffsets;
+    }
+
+    public void recordAccess(AlluxioURI filePath, List<Long> offset, List<Long> length){
+        if (!offsetInfoMap.containsKey(filePath)) {
+            if (offset.size() == length.size()) {
+                offsetInfoMap.put(filePath, new FileOffsetInfo(filePath,offset,length));
+            } else {
+                LOG.error("File {}'s offset and length does not match", filePath);
+            }
+        }
     }
 
     public void checkStats(){
