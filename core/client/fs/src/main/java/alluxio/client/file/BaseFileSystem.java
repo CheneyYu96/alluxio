@@ -542,6 +542,19 @@ public class BaseFileSystem implements FileSystem {
     }
   }
 
+  @Override
+  public void sendParquetInfo(AlluxioURI path, List<Long> offset, List<Long> length) {
+    FileSystemMasterClient masterClient = mFileSystemContext.acquireMasterClient();
+    try {
+      masterClient.sendParquetInfo(path, offset, length);
+      LOG.info("Send Parquet File {}'s offset info to master", path );
+    } catch (AlluxioStatusException e) {
+      e.printStackTrace();
+    } finally {
+      mFileSystemContext.releaseMasterClient(masterClient);
+    }
+  }
+
   /**
    * Checks an {@link AlluxioURI} for scheme and authority information. Warn the user and throw an
    * exception if necessary.
