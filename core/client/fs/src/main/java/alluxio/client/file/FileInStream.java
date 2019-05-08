@@ -273,13 +273,13 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     IOException lastException = null;
 
     // TODO: change in stream in read()
-    if(mOptions.getOptions().isRequireTrans()) {
-      try {
-        changeFileInStream(mPosition, mLength);
-      } catch (AlluxioException e) {
-        e.printStackTrace();
-      }
-    }
+//    if(mOptions.getOptions().isRequireTrans()) {
+//      try {
+//        changeFileInStream(mPosition, mLength);
+//      } catch (AlluxioException e) {
+//        e.printStackTrace();
+//      }
+//    }
 
     while (retry.attempt()) {
       try {

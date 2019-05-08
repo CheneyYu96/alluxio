@@ -34,7 +34,6 @@ import alluxio.master.file.meta.options.MountInfo;
 import alluxio.master.file.options.*;
 import alluxio.master.journal.JournalContext;
 import alluxio.master.repl.ReplManager;
-import alluxio.master.stats.FileSegmentsAccessRecorder;
 import alluxio.metrics.MasterMetrics;
 import alluxio.metrics.MetricsSystem;
 import alluxio.proto.journal.File;
@@ -252,7 +251,6 @@ public final class DefaultFileSystemMaster extends CoreMaster implements FileSys
 
   private ActiveSyncManager mSyncManager;
 
-  private FileSegmentsAccessRecorder mFileSegmentsAccessRecorder;
   /**
    * Log writer for user access audit log.
    */
@@ -305,7 +303,6 @@ public final class DefaultFileSystemMaster extends CoreMaster implements FileSys
     mUfsBlockLocationCache = UfsBlockLocationCache.Factory.create(mMountTable);
     mUfsSyncPathCache = new UfsSyncPathCache();
     mSyncManager = new ActiveSyncManager(mMountTable, this);
-    mFileSegmentsAccessRecorder = new FileSegmentsAccessRecorder();
 
     // FR: create replication manager
     mReplManager = new ReplManager();
