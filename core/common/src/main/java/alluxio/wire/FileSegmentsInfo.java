@@ -71,7 +71,7 @@ public class FileSegmentsInfo implements Serializable {
   }
 
   public void addLength(long delta){
-    mLength =+ delta;
+    mLength = mLength + delta;
   }
 
 //  /**

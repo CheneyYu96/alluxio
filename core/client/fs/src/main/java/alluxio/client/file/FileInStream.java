@@ -147,7 +147,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     mNewLength = mNewStatus.getLength();
     mNewEndPos = mNewPosition + mNewLength;
     mNewBlockSize = mNewStatus.getBlockSizeBytes();
-    mCurrentSeg = new FileSegmentsInfo(status.getPath(), 0, 0);
+    mCurrentSeg = new FileSegmentsInfo(status.getPath(), -1, 0);
 
   }
 
@@ -205,12 +205,18 @@ public class FileInStream extends InputStream implements BoundedStream, Position
 
   public void changeFileInStream(long offset, long length)
       throws FileDoesNotExistException, IOException, AlluxioException {
+
     FileSystemMasterClient masterClientResource = mContext.acquireMasterClient();
 
     List<FileSegmentsInfo> allSegs = masterClientResource
             .uploadFileSegmentsAccessInfo(new AlluxioURI(mStatus.getPath()), offset, length);
 
     mContext.releaseMasterClient(masterClientResource);
+
+    // no replicas
+    if(allSegs.size() == 1){
+      mNewPosition = allSegs.get(0).getOffset();
+    }
 
     // decide segment to read
     WorkerNetAddress localWorker = mContext.getLocalWorker();
@@ -266,6 +272,28 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     mBlockInStream = null;
   }
 
+  private void checkStreamUpdate(int len) throws IOException {
+    if(mCurrentSeg.getOffset() + mCurrentSeg.getLength() == mNewPosition
+            && mNewPosition + len <= mNewEndPos){
+      mCurrentSeg.addLength(len);
+    }
+    else {
+      long startTimeMs = CommonUtils.getCurrentMs();
+      try {
+        changeFileInStream(mPosition, (long) len);
+      } catch (AlluxioException e) {
+        e.printStackTrace();
+      }
+      mCurrentSeg.setOffset(mNewPosition).setLength(len);
+      LOG.info("update file in stream. elapsed:" + (CommonUtils.getCurrentMs() - startTimeMs) + " mPos: " + mPosition + ". mNewPos: " + mNewPosition + ". len: " + len);
+
+    }
+
+    LOG.info("check seg. pos: " + mCurrentSeg.getOffset() + ". len: " + mCurrentSeg.getLength());
+
+
+  }
+
   /* Input Stream methods */
   @Override
   public int read() throws IOException {
@@ -276,13 +304,10 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     IOException lastException = null;
 
     // TODO: change in stream in read()
-//    if(mOptions.getOptions().isRequireTrans()) {
-//      try {
-//        changeFileInStream(mPosition, mLength);
-//      } catch (AlluxioException e) {
-//        e.printStackTrace();
-//      }
-//    }
+    if(mOptions.getOptions().isRequireTrans()) {
+      checkStreamUpdate(1);
+    }
+    LOG.info("read no parameter. mPos: " + mPosition + ". mNewPos: " + mNewPosition);
 
     while (retry.attempt()) {
       try {
@@ -325,21 +350,10 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     if(mOptions.getOptions().isRequireTrans()) {
 
       // continuous access within the new segment
-      if(mCurrentSeg.getOffset() + mCurrentSeg.getLength() == mNewPosition
-              && mNewPosition + len <= mNewEndPos){
-        mCurrentSeg.addLength(len);
-      }
-      else {
-        long startTimeMs = CommonUtils.getCurrentMs();
-        try {
-          changeFileInStream(mPosition, (long) len);
-        } catch (AlluxioException e) {
-          e.printStackTrace();
-        }
-        LOG.info("update file in stream. elapsed:" + (CommonUtils.getCurrentMs() - startTimeMs));
-
-        mCurrentSeg.setOffset(mNewPosition).setLength(len);
-      }
+      checkStreamUpdate(len);
+    }
+    else {
+      LOG.info("no translation. mPos: " + mPosition + ". mNewPos: " + mNewPosition);
     }
 
     int bytesLeft = len;
@@ -381,6 +395,9 @@ public class FileInStream extends InputStream implements BoundedStream, Position
       return 0;
     }
 
+    LOG.info("skip. mPos: " + mPosition + ". mNewPos: " + mNewPosition);
+
+
     long toSkip = Math.min(n, mLength - mPosition);
     seek(mPosition + toSkip);
     return toSkip;
@@ -408,6 +425,8 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     if (pos < 0 || pos >= mLength) {
       return -1;
     }
+
+    LOG.info("positionedRead. mPos: " + mPosition + ". mNewPos: " + mNewPosition);
 
     int lenCopy = len;
     CountingRetry retry = new CountingRetry(MAX_WORKERS_TO_RETRY);
@@ -477,6 +496,17 @@ public class FileInStream extends InputStream implements BoundedStream, Position
       closeBlockInStream(mBlockInStream);
     }
     mPosition += delta;
+
+    if(mOptions.getOptions().isRequireTrans()) {
+      try {
+        changeFileInStream(mPosition, (long) 0);
+      } catch (AlluxioException e) {
+        e.printStackTrace();
+      }
+    }
+
+    LOG.info("seek pos. mPos: " + mPosition + ". mNewPos: " + mNewPosition);
+
   }
 
   /**
