@@ -289,8 +289,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
 
     }
 
-    LOG.info("check seg. pos: " + mCurrentSeg.getOffset() + ". len: " + mCurrentSeg.getLength());
-
+//    LOG.info("check seg. pos: " + mCurrentSeg.getOffset() + ". len: " + mCurrentSeg.getLength());
 
   }
 
@@ -307,7 +306,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     if(mOptions.getOptions().isRequireTrans()) {
       checkStreamUpdate(1);
     }
-    LOG.info("read no parameter. mPos: " + mPosition + ". mNewPos: " + mNewPosition);
+//    LOG.info("read no parameter. mPos: " + mPosition + ". mNewPos: " + mNewPosition);
 
     while (retry.attempt()) {
       try {
@@ -348,12 +347,8 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     }
 
     if(mOptions.getOptions().isRequireTrans()) {
-
       // continuous access within the new segment
       checkStreamUpdate(len);
-    }
-    else {
-      LOG.info("no translation. mPos: " + mPosition + ". mNewPos: " + mNewPosition);
     }
 
     int bytesLeft = len;
@@ -395,7 +390,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
       return 0;
     }
 
-    LOG.info("skip. mPos: " + mPosition + ". mNewPos: " + mNewPosition);
+//    LOG.info("skip. mPos: " + mPosition + ". mNewPos: " + mNewPosition);
 
 
     long toSkip = Math.min(n, mLength - mPosition);
@@ -426,7 +421,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
       return -1;
     }
 
-    LOG.info("positionedRead. mPos: " + mPosition + ". mNewPos: " + mNewPosition);
+//    LOG.info("positionedRead. mPos: " + mPosition + ". mNewPos: " + mNewPosition);
 
     int lenCopy = len;
     CountingRetry retry = new CountingRetry(MAX_WORKERS_TO_RETRY);
