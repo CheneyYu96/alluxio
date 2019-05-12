@@ -1,8 +1,12 @@
 #!/usr/local/bin/python3
 
 import re
+import os
+import sys
 
-f = open('output.txt', 'r')
+file = sys.argv[1]
+
+f = open(file, 'r')
 
 index = 0
 offset_list = []
@@ -18,7 +22,8 @@ for line in f:
 
 f.close()
 
-fo = open("offset.txt", 'w')
+dir_name = os.path.dirname(file)
+fo = open(dir_name + "/offset.txt", 'w')
 
 for i in range(len(offset_list)):
     fo.write(offset_list[i]+','+length_list[i]+'\n')

@@ -75,9 +75,6 @@ public class ReplManager {
             }
         }
         else {
-            // TODO: access replicas?
-//            if(replicaMap.containsKey(requestFile)){
-//            }
             accessRecords.put(requestFile, new FileAccessInfo(requestFile, pair));
         }
         return mappedOffsets;
