@@ -4093,6 +4093,7 @@ public final class PropertyKey implements Comparable<PropertyKey> {
     public static final String FR_RECORD_INTERVAL = "fr.record.interval";
 
     public static final String FR_CLIENT_TRANS = "fr.client.translation";
+    public static final String FR_PARQUET_INFO = "fr.parquet.info";
 
     private Name() {} // prevent instantiation
   }
@@ -4602,6 +4603,11 @@ public final class PropertyKey implements Comparable<PropertyKey> {
 
   public static final PropertyKey FR_CLIENT_TRANS =
           new Builder(Name.FR_CLIENT_TRANS)
+                  .setDefaultValue(true)
+                  .build();
+
+  public static final PropertyKey FR_PARQUET_INFO =
+          new Builder(Name.FR_PARQUET_INFO)
                   .setDefaultValue(true)
                   .build();
 }

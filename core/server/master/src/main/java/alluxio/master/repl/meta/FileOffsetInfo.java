@@ -5,6 +5,8 @@ import fr.client.utils.OffLenPair;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Record offset information of a parquet file.
@@ -12,6 +14,7 @@ import java.util.List;
 public class FileOffsetInfo {
     private AlluxioURI mFilePath;
     private List<OffLenPair> offsetList;
+    private Map<Long, OffLenPair> offLenPairMap;
 
     /**
      * Default Constructor with file path known.
@@ -20,6 +23,7 @@ public class FileOffsetInfo {
     public FileOffsetInfo(AlluxioURI path){
         mFilePath = path;
         offsetList = new ArrayList<>();
+        offLenPairMap = new ConcurrentHashMap<>();
     }
 
     /**
@@ -29,10 +33,11 @@ public class FileOffsetInfo {
      * @param length corresponding length list
      */
     public FileOffsetInfo(AlluxioURI path, List<Long> offset, List<Long> length) {
-        mFilePath = path;
-        offsetList = new ArrayList<>();
+        this(path);
         for (int i = 0; i < offset.size(); i++) {
-            offsetList.add(new OffLenPair(offset.get(i), length.get(i)));
+            OffLenPair newOff = new OffLenPair(offset.get(i), length.get(i));
+            offsetList.add(newOff);
+            offLenPairMap.put(offset.get(i), newOff);
         }
     }
 
@@ -46,6 +51,10 @@ public class FileOffsetInfo {
 
     public OffLenPair getOffset(int i){
         return offsetList.get(i);
+    }
+
+    public OffLenPair getPairByOffset(long offset){
+        return offLenPairMap.get(offset);
     }
 
 }

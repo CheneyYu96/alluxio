@@ -41,6 +41,7 @@ public class ReplManager {
     private Map<AlluxioURI, FileOffsetInfo> offsetInfoMap;
     private int checkInterval; /* in seconds */
 
+    private boolean useParuqetInfo;
     public ReplManager() {
         frClient = new FRClient();
         accessRecords = new ConcurrentHashMap<>();
@@ -51,6 +52,7 @@ public class ReplManager {
         replPolicy = CommonUtils.createNewClassInstance(Configuration.getClass(
                 PropertyKey.FR_REPL_POLICY), new Class[] {}, new Object[] {});
         checkInterval = Configuration.getInt(PropertyKey.FR_REPL_INTERVAL);
+        useParuqetInfo = Configuration.getBoolean(PropertyKey.FR_PARQUET_INFO);
 
         LOG.info("Create replication manager. check_interval : {}. policy : {}", checkInterval, replPolicy.getClass().getName());
     }
@@ -63,7 +65,8 @@ public class ReplManager {
     public Map<AlluxioURI, OffLenPair> recordAccess(AlluxioURI requestFile, long offset, long length){
 
         LOG.info("record access from file {}. offset {} length {}", requestFile.getPath(), offset, length);
-        OffLenPair pair = new OffLenPair(offset, length);
+        OffLenPair pair = useParuqetInfo ? offsetInfoMap.get(requestFile).getPairByOffset(offset) : new OffLenPair(offset, length);
+
         Map<AlluxioURI, OffLenPair> mappedOffsets = new ConcurrentHashMap<>(ImmutableMap.of(requestFile, pair));
 
         if(accessRecords.containsKey(requestFile)){
