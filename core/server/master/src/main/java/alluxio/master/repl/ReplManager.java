@@ -4,6 +4,7 @@ import alluxio.AlluxioURI;
 import alluxio.Configuration;
 import alluxio.PropertyKey;
 import alluxio.master.repl.meta.FileAccessInfo;
+import alluxio.master.repl.meta.FileOffsetInfo;
 import alluxio.master.repl.meta.FileRepInfo;
 import alluxio.master.repl.policy.ReplPolicy;
 import alluxio.util.CommonUtils;
@@ -37,17 +38,21 @@ public class ReplManager {
     private Map<AlluxioURI, FileAccessInfo> accessRecords;
     private Map<AlluxioURI, FileRepInfo> fileReplicas;
     private Map<AlluxioURI, AlluxioURI> replicaMap;
+    private Map<AlluxioURI, FileOffsetInfo> offsetInfoMap;
     private int checkInterval; /* in seconds */
 
+    private boolean useParuqetInfo;
     public ReplManager() {
         frClient = new FRClient();
         accessRecords = new ConcurrentHashMap<>();
         fileReplicas = new ConcurrentHashMap<>();
         replicaMap = new ConcurrentHashMap<>();
+        offsetInfoMap = new ConcurrentHashMap<>();
 
         replPolicy = CommonUtils.createNewClassInstance(Configuration.getClass(
                 PropertyKey.FR_REPL_POLICY), new Class[] {}, new Object[] {});
         checkInterval = Configuration.getInt(PropertyKey.FR_REPL_INTERVAL);
+        useParuqetInfo = Configuration.getBoolean(PropertyKey.FR_PARQUET_INFO);
 
         LOG.info("Create replication manager. check_interval : {}. policy : {}", checkInterval, replPolicy.getClass().getName());
     }
@@ -60,7 +65,8 @@ public class ReplManager {
     public Map<AlluxioURI, OffLenPair> recordAccess(AlluxioURI requestFile, long offset, long length){
 
         LOG.info("record access from file {}. offset {} length {}", requestFile.getPath(), offset, length);
-        OffLenPair pair = new OffLenPair(offset, length);
+        OffLenPair pair = useParuqetInfo ? offsetInfoMap.get(requestFile).getPairByOffset(offset) : new OffLenPair(offset, length);
+
         Map<AlluxioURI, OffLenPair> mappedOffsets = new ConcurrentHashMap<>(ImmutableMap.of(requestFile, pair));
 
         if(accessRecords.containsKey(requestFile)){
@@ -72,12 +78,19 @@ public class ReplManager {
             }
         }
         else {
-            // TODO: access replicas?
-//            if(replicaMap.containsKey(requestFile)){
-//            }
             accessRecords.put(requestFile, new FileAccessInfo(requestFile, pair));
         }
         return mappedOffsets;
+    }
+
+    public void recordAccess(AlluxioURI filePath, List<Long> offset, List<Long> length){
+        if (!offsetInfoMap.containsKey(filePath)) {
+            if (offset.size() == length.size()) {
+                offsetInfoMap.put(filePath, new FileOffsetInfo(filePath,offset,length));
+            } else {
+                LOG.error("File {}'s offset and length does not match", filePath);
+            }
+        }
     }
 
     public void checkStats(){

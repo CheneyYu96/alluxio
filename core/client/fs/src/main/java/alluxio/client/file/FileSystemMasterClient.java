@@ -217,6 +217,16 @@ public interface FileSystemMasterClient extends Client {
   void setAttribute(AlluxioURI path, SetAttributeOptions options) throws AlluxioStatusException;
 
   /**
+   * Send retrieved Parquet information
+   *
+   * @param path the file or directory path
+   * @param offset Parquet column offsets
+   * @param length Parquet column lengths
+   * @throws AlluxioStatusException
+   */
+  void sendParquetInfo(AlluxioURI path, List<Long> offset, List<Long> length) throws AlluxioStatusException;
+
+  /**
    * Start the active syncing process for a specified path.
    *
    * @param path the file or directory to be synced

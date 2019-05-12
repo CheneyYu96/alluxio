@@ -559,4 +559,6 @@ public interface FileSystemMaster extends Master {
    *
    */
   List<fileSegmentInfo> recordBlockAccessInfo(String UFSPath, long offset, long length);
+
+  void recordOffsetInfo(String UFSPath, List<Long> offset, List<Long> length);
 }
