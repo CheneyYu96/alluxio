@@ -83,6 +83,9 @@ struct GetStatusTResponse {
   1: FileInfo fileInfo
 }
 
+struct SendParquetInfoTResponse {
+}
+
 enum SyncPointStatus {
   Not_Initially_Synced = 0;
   Syncing = 1;
@@ -485,6 +488,16 @@ service FileSystemMasterClientService extends common.AlluxioService {
     /** the method options */ 2: SetAttributeTOptions options,
     )
     throws (1: exception.AlluxioTException e)
+
+  /**
+   * Send Parquet Information
+   **/
+  SendParquetInfoTResponse sendParquetInfo(
+    /** the path of the file or directory */ 1: string path,
+    /** the offsets of the parquet file */ 2: list<i64> offset
+    /** the offset length of the parquet file */ 3: list<i64> length
+  )
+  throws (1: exception.AlluxioTException e)
 
   /**
    * Start the active syncing of the directory or file

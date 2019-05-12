@@ -263,6 +263,15 @@ public final class FileSystemMasterClientServiceHandler implements
   }
 
   @Override
+  public SendParquetInfoTResponse sendParquetInfo(String path, List<Long> offset, List<Long> length)
+      throws AlluxioTException {
+    return RpcUtils.call(LOG, (RpcCallableThrowsIOException<SendParquetInfoTResponse>) () -> {
+      mFileSystemMaster.recordOffsetInfo(path, offset, length);
+      return new SendParquetInfoTResponse();
+    }, "SendParquetInfo", "path=%s, offset=%s, length=%s", path, offset, length);
+  }
+
+  @Override
   public StartSyncTResponse startSync(String path, StartSyncTOptions options)
       throws AlluxioTException {
     return RpcUtils.call(LOG, (RpcCallableThrowsIOException<StartSyncTResponse>) () -> {
@@ -317,11 +326,5 @@ public final class FileSystemMasterClientServiceHandler implements
             new UploadFileSegmentsAccessInfoTResponse(mFileSystemMaster.recordBlockAccessInfo(UFSPath, offset, len)),
             "uploadFileSegmentsAccessInfo", "path=%s, offset=%s, len=%s", UFSPath, offset, len);
   }
-
-//  @Override
-//  public synchronized UploadFileSegmentsAccessInfoTResponse uploadFileSegmentsAccessInfo(String UFSPath, long offset, long len) throws AlluxioTException, TException {
-//    mFileSystemMaster.recordBlockAccessInfo(UFSPath, offset, len);
-//    return new UploadFileSegmentsAccessInfoTResponse();
-//  }
 
 }
