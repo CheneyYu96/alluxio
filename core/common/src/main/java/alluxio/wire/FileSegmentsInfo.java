@@ -70,6 +70,10 @@ public class FileSegmentsInfo implements Serializable {
     return this;
   }
 
+  public void addLength(long delta){
+    mLength = mLength + delta;
+  }
+
 //  /**
 //   * @return thrift representation of the segment information
 //   */
