@@ -216,10 +216,17 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     // no replicas
     if(allSegs.size() == 1){
       mNewPosition = allSegs.get(0).getOffset();
+      return;
     }
 
     // decide segment to read
     WorkerNetAddress localWorker = mContext.getLocalWorker();
+
+    // no local worker, usually in master
+    if (localWorker == null){
+      mNewPosition = allSegs.get(0).getOffset();
+      return;
+    }
 
     List<Pair<FileSegmentsInfo, WorkerNetAddress>> allSegWithLoc = allSegs
             .stream()
