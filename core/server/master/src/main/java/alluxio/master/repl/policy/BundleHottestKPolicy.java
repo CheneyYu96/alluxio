@@ -8,6 +8,8 @@ import alluxio.master.repl.meta.FileAccessInfo;
 import fr.client.utils.MultiReplUnit;
 import fr.client.utils.OffLenPair;
 import fr.client.utils.ReplUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.List;
@@ -17,6 +19,8 @@ import java.util.stream.Collectors;
  *
  */
 public class BundleHottestKPolicy implements ReplPolicy {
+    private static final Logger LOG = LoggerFactory.getLogger(BundleHottestKPolicy.class);
+
     private double weight;
     private int workNum;
 
@@ -47,7 +51,7 @@ public class BundleHottestKPolicy implements ReplPolicy {
                 .map( o -> new Pair<>(o.getKey(), o.getValue()))
                 .collect(Collectors.toList());
 
-        System.out.println(sortedPops);
+        LOG.info("file: {}. sorted popularity: {}", fileAccessInfo.getFilePath().getPath(), sortedPops);
 
         long totalSize = sortedPops
                 .stream()
@@ -94,7 +98,7 @@ public class BundleHottestKPolicy implements ReplPolicy {
 
             double doubleR = Math.sqrt(hotLoad * hotLoad / (workNum * weight * hotSize));
 
-            System.out.println("k=" + k + "; Lh=" + hotLoad + "; workNum=" + workNum + "; Sh=" + hotSize + "; r=" + doubleR);
+//            System.out.println("k=" + k + "; Lh=" + hotLoad + "; workNum=" + workNum + "; Sh=" + hotSize + "; r=" + doubleR);
 
             if (doubleR > workNum){
                 double localObj = calcObjective(hotLoad, coldLoad, hotSize, workNum);
@@ -121,7 +125,7 @@ public class BundleHottestKPolicy implements ReplPolicy {
 
         }
 
-        System.out.println("Opt K = " + bestK + "; Opt R = " + bestR + "; Opt Obj = " + bestObj);
+        LOG.info("Opt K = {}; Opt R = {}; Opt Obj = {}", bestK, bestR, bestObj);
 
         List<OffLenPair> replPairs = sortedPops
                 .stream()

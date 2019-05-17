@@ -65,7 +65,18 @@ public class ReplManager {
     public Map<AlluxioURI, OffLenPair> recordAccess(AlluxioURI requestFile, long offset, long length){
 
         LOG.info("record access from file {}. offset {} length {}", requestFile.getPath(), offset, length);
-        OffLenPair pair = useParuqetInfo ? offsetInfoMap.get(requestFile).getPairByOffset(offset) : new OffLenPair(offset, length);
+
+        OffLenPair pair = new OffLenPair(offset, length);
+
+        if (useParuqetInfo){
+            OffLenPair pairForParquet = offsetInfoMap.get(requestFile).getPairByOffset(offset);
+            if(pairForParquet == null){
+                return ImmutableMap.of(requestFile, pair);
+            }
+            else {
+                pair = pairForParquet;
+            }
+        }
 
         Map<AlluxioURI, OffLenPair> mappedOffsets = new ConcurrentHashMap<>(ImmutableMap.of(requestFile, pair));
 

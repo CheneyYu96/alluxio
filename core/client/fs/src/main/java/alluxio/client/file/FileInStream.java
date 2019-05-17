@@ -309,7 +309,6 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     CountingRetry retry = new CountingRetry(MAX_WORKERS_TO_RETRY);
     IOException lastException = null;
 
-    // TODO: change in stream in read()
     if(mOptions.getOptions().isRequireTrans()) {
       checkStreamUpdate(1);
     }
@@ -500,11 +499,12 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     mPosition += delta;
 
     if(mOptions.getOptions().isRequireTrans()) {
-      try {
-        changeFileInStream(mPosition, (long) 0);
-      } catch (AlluxioException e) {
-        e.printStackTrace();
-      }
+      mNewPosition = -1; // refresh file in stream
+//      try {
+//        changeFileInStream(mPosition, (long) 0);
+//      } catch (AlluxioException e) {
+//        e.printStackTrace();
+//      }
     }
 
     LOG.info("seek pos. mPos: " + mPosition + ". mNewPos: " + mNewPosition);
