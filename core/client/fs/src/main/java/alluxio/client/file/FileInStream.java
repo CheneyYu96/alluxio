@@ -310,7 +310,8 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     IOException lastException = null;
 
     if(mOptions.getOptions().isRequireTrans()) {
-      checkStreamUpdate(1);
+      mNewPosition = mPosition;
+//      checkStreamUpdate(1);
     }
 //    LOG.info("read no parameter. mPos: " + mPosition + ". mNewPos: " + mNewPosition);
 
