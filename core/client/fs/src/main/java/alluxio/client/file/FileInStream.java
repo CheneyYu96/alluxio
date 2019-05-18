@@ -215,7 +215,13 @@ public class FileInStream extends InputStream implements BoundedStream, Position
 
     // no replicas
     if(allSegs.size() == 1){
-      mNewPosition = allSegs.get(0).getOffset();
+      // reading orginal table currently
+      if (mNewStatus.getPath().equals(mStatus.getPath())){
+        mNewPosition = mPosition;
+      }
+      else {
+        updateMetadata(allSegs.get(0), length);
+      }
       return;
     }
 
@@ -224,7 +230,8 @@ public class FileInStream extends InputStream implements BoundedStream, Position
 
     // no local worker, usually in master
     if (localWorker == null){
-      mNewPosition = allSegs.get(0).getOffset();
+      int index = new Random().nextInt(allSegs.size());
+      updateMetadata(allSegs.get(index), length);
       return;
     }
 
