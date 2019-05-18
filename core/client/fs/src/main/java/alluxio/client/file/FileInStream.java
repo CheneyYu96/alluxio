@@ -247,7 +247,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
         mNewPosition = segToReadWithLoc.getFirst().getOffset();
       }
       else {
-        updateMetadata(segToRead);
+        updateMetadata(segToRead, length);
       }
     }
     else {
@@ -263,19 +263,19 @@ public class FileInStream extends InputStream implements BoundedStream, Position
       else {
         // select seg randomly
         int index = new Random().nextInt(allSegWithLoc.size());
-        updateMetadata(allSegWithLoc.get(index).getFirst());
+        updateMetadata(allSegWithLoc.get(index).getFirst(), length);
       }
     }
 
   }
 
-  private void updateMetadata(FileSegmentsInfo segToRead){
+  private void updateMetadata(FileSegmentsInfo segToRead, long readLength){
     mNewStatus = mReplicasInfo.getReplicaStatus(segToRead);
     mNewOptions = OpenFileOptions.defaults().toInStreamOptions(mNewStatus);
     mNewPosition = segToRead.getOffset();
     mNewBlockSize = mNewStatus.getBlockSizeBytes();
     mNewLength = mNewStatus.getLength();
-    mNewEndPos = mNewLength + mNewPosition;
+    mNewEndPos = mNewPosition + readLength;
     mBlockInStream = null;
   }
 
@@ -292,7 +292,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
         e.printStackTrace();
       }
       mCurrentSeg.setOffset(mNewPosition).setLength(len);
-      LOG.info("update file in stream. elapsed:" + (CommonUtils.getCurrentMs() - startTimeMs) + " mPos: " + mPosition + ". mNewPos: " + mNewPosition + ". len: " + len);
+      LOG.info("update file in stream. elapsed:" + (CommonUtils.getCurrentMs() - startTimeMs) + " mPos: " + mPosition + ". mNewPos: " + mNewPosition + ". len: " + len + ". fileToRead: " + mNewStatus.getPath());
 
     }
 
