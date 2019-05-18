@@ -77,6 +77,13 @@ public class ReplManager {
                 pair = pairForParquet;
             }
         }
+        else {
+            // skip small segments, i.e., less than 10 bytes, so as to ignore file meta data
+            // TODO: small segment can also happen for some columns
+            if (length < 10){
+                return ImmutableMap.of(requestFile, pair);
+            }
+        }
 
         Map<AlluxioURI, OffLenPair> mappedOffsets = new ConcurrentHashMap<>(ImmutableMap.of(requestFile, pair));
 
