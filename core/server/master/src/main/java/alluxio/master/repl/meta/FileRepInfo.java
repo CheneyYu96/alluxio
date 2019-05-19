@@ -3,6 +3,7 @@ package alluxio.master.repl.meta;
 import alluxio.AlluxioURI;
 import fr.client.utils.OffLenPair;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,6 +22,10 @@ public class FileRepInfo {
         this.originalFilePath = originalFilePath;
         this.mappedReplicas = new ConcurrentHashMap<>();
         this.mappedPairs = new ConcurrentHashMap<>();
+    }
+
+    public List<AlluxioURI> getReplicasURI(){
+        return new ArrayList<>(mappedReplicas.keySet());
     }
 
     public Map<OffLenPair, OffLenPair> getMappedReplicas(AlluxioURI replica){

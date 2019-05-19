@@ -716,11 +716,7 @@ public final class DefaultFileSystemMaster extends CoreMaster implements FileSys
   public FileInfo getFileInfo(AlluxioURI path, GetStatusOptions options)
       throws FileDoesNotExistException, InvalidPathException, AccessControlException, IOException {
     Metrics.GET_FILE_INFO_OPS.inc();
-    /*
-     * 1. record access in stats
-     * 2. get translated file path
-     * TODO: record &translate original file to replicas, if needed
-     */
+
     LockingScheme lockingScheme =
         createLockingScheme(path, options.getCommonOptions(), LockPattern.READ);
     try (RpcContext rpcContext = createRpcContext();

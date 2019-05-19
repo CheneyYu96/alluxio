@@ -3,11 +3,15 @@ package alluxio.master.repl;
 import alluxio.AlluxioURI;
 import alluxio.Configuration;
 import alluxio.PropertyKey;
+import alluxio.exception.status.UnavailableException;
+import alluxio.master.block.BlockMasterFactory;
 import alluxio.master.repl.meta.FileAccessInfo;
 import alluxio.master.repl.meta.FileOffsetInfo;
 import alluxio.master.repl.meta.FileRepInfo;
 import alluxio.master.repl.policy.ReplPolicy;
 import alluxio.util.CommonUtils;
+import alluxio.wire.WorkerInfo;
+import alluxio.wire.WorkerNetAddress;
 import com.google.common.collect.ImmutableMap;
 import fr.client.FRClient;
 import fr.client.utils.OffLenPair;
@@ -20,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * Control selective replication for raw data segments.
@@ -124,13 +129,42 @@ public class ReplManager {
                     if (replUnits != null && replUnits.size() > 0){
                         LOG.info("Make replication decision for file : {} ", filePath.getName());
 
-                        FileRepInfo repInfo = fileReplicas.getOrDefault(filePath, new FileRepInfo(filePath));
+                        // delete old replicas
+
+                        if (fileReplicas.containsKey(filePath)) {
+                            FileRepInfo oldRepInfo = fileReplicas.remove(filePath);
+                            frClient.deleteReplicas(oldRepInfo.getReplicasURI());
+                        }
+
+                        FileRepInfo repInfo = new FileRepInfo(filePath);
 
                         replUnits.forEach(unit -> {
                             LOG.info("File : {}. Replication : {}", filePath.getName(), unit);
 
                             if(unit.getReplicas() > 0) {
-                                List<AlluxioURI> replicas = frClient.copyFileOffset(filePath, unit);
+
+                                List<WorkerNetAddress> availWorkerAddress = null;
+
+                                try {
+                                    List<WorkerInfo> allWorkers = BlockMasterFactory
+                                            .getBlockMaster()
+                                            .getWorkerInfoList();
+
+                                    availWorkerAddress = allWorkers
+                                            .stream()
+                                            .map(WorkerInfo::getAddress)
+                                            .collect(Collectors.toList());
+
+                                    //TODO: filter current worker
+
+
+                                } catch (UnavailableException e) {
+                                    e.printStackTrace();
+                                }
+
+                                List<AlluxioURI> replicas = availWorkerAddress != null ?
+                                        frClient.copyFileOffset(filePath, unit, availWorkerAddress) :
+                                        frClient.copyFileOffset(filePath, unit);
 
                                 List<OffLenPair> originPairs = unit.getOffLenPairs();
                                 long newOffset = 0;
