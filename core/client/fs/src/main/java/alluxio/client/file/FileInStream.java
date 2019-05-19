@@ -147,7 +147,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     mNewLength = mNewStatus.getLength();
     mNewEndPos = mNewPosition + mNewLength;
     mNewBlockSize = mNewStatus.getBlockSizeBytes();
-    mCurrentSeg = new FileSegmentsInfo(status.getPath(), -1, 0);
+    mCurrentSeg = new FileSegmentsInfo(status.getPath(), -1, Long.MIN_VALUE);
 
   }
 
@@ -220,7 +220,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
         mNewPosition = mPosition;
       }
       else {
-        updateMetadata(allSegs.get(0), length);
+        updateMetadata(allSegs.get(0));
       }
       return;
     }
@@ -231,7 +231,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     // no local worker, usually in master
     if (localWorker == null){
       int index = new Random().nextInt(allSegs.size());
-      updateMetadata(allSegs.get(index), length);
+      updateMetadata(allSegs.get(index));
       return;
     }
 
@@ -254,7 +254,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
         mNewPosition = segToReadWithLoc.getFirst().getOffset();
       }
       else {
-        updateMetadata(segToRead, length);
+        updateMetadata(segToRead);
       }
     }
     else {
@@ -270,19 +270,19 @@ public class FileInStream extends InputStream implements BoundedStream, Position
       else {
         // select seg randomly
         int index = new Random().nextInt(allSegWithLoc.size());
-        updateMetadata(allSegWithLoc.get(index).getFirst(), length);
+        updateMetadata(allSegWithLoc.get(index).getFirst());
       }
     }
 
   }
 
-  private void updateMetadata(FileSegmentsInfo segToRead, long readLength){
+  private void updateMetadata(FileSegmentsInfo segToRead){
     mNewStatus = mReplicasInfo.getReplicaStatus(segToRead);
     mNewOptions = OpenFileOptions.defaults().toInStreamOptions(mNewStatus);
     mNewPosition = segToRead.getOffset();
     mNewBlockSize = mNewStatus.getBlockSizeBytes();
     mNewLength = mNewStatus.getLength();
-    mNewEndPos = mNewPosition + readLength;
+    mNewEndPos = mNewPosition + segToRead.getLength();
     mBlockInStream = null;
   }
 
@@ -317,8 +317,8 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     IOException lastException = null;
 
     if(mOptions.getOptions().isRequireTrans()) {
-      mNewPosition = mPosition;
-//      checkStreamUpdate(1);
+//      mNewPosition = mPosition;
+      checkStreamUpdate(1);
     }
 //    LOG.info("read no parameter. mPos: " + mPosition + ". mNewPos: " + mNewPosition);
 
