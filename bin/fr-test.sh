@@ -151,7 +151,7 @@ move_par_jar_to_spark(){
 
     for f in $(ls $DIR/alluxio/jars); do
         mv ${PREFIX}/${f} ${BACKUP}
-        mv ${DIR}/alluxio/jars/${f} ${PREFIX}
+        cp ${DIR}/alluxio/jars/${f} ${PREFIX}
     done
 }
 
