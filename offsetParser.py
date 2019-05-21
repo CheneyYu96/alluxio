@@ -5,7 +5,7 @@ import click
 
 @click.command()
 @click.argument('inpath', type=click.Path(exists=True, resolve_path=True))
-@click.argument('outpath', type=click.Path(exists=True, resolve_path=True))
+@click.argument('outpath', type=str)
 def parse(inpath, outpath):
     index = 0
     offset_list = []

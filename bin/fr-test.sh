@@ -147,11 +147,11 @@ send_par_info(){
         IDX=0
         for sf in $(ls ${DIR}/tpch_parquet/${f}); do
 
-            extract_par_info ${DIR}/tpch_parquet/${f}/${sf} ${INFO_DIR}/${f}/${IDX}.txt
-
-            java -jar ${DIR}/alluxio/writeparquet/target/writeparquet-2.0.0-SNAPSHOT.jar ${DIR}/tpch_parquet/${f}/${sf} ${INFO_DIR}/${f}/${IDX}.txt
-
-            let IDX++
+            if [[ "${sf}" != "_SUCCESS" ]]; then
+                 extract_par_info ${DIR}/tpch_parquet/${f}/${sf} ${INFO_DIR}/${f}/${IDX}.txt
+                java -jar ${DIR}/alluxio/writeparquet/target/writeparquet-2.0.0-SNAPSHOT.jar ${DIR}/tpch_parquet/${f}/${sf} ${INFO_DIR}/${f}/${IDX}.txt
+                let IDX++
+            fi
 
         done
     done
