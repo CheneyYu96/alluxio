@@ -131,6 +131,15 @@ trace_range_test(){
     done
 }
 
+all_test(){
+    scl=$1
+    times=$2
+
+    for((t=0;t<${times};t++)); do
+        trace_test $scl 0
+    done
+}
+
 usage() {
     echo "Usage: $0 shffl|noshffl scale #query"
 }
@@ -179,6 +188,8 @@ else
         trace)                  trace_test $2 $3
                                 ;;
         trace-range)            trace_range_test $2 $3
+                                ;;
+        all)                    all_test $2 $3
                                 ;;
         * )                     usage
     esac
