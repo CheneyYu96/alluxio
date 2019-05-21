@@ -1,39 +1,35 @@
-#!/usr/local/bin/python3
-
 import re
 import os
 import sys
-from pathlib import Path
+import click
 
-file = sys.argv[1]
+@click.command()
+@click.argument('inpath', type=click.Path(exists=True, resolve_path=True))
+@click.argument('outpath', type=click.Path(exists=True, resolve_path=True))
+def parse(inpath, outpath):
+    index = 0
+    offset_list = []
+    length_list = []
 
-f = open(file, 'r')
-
-index = 0
-offset_list = []
-length_list = []
-flag = False
-for line in f:
-    line_list = line.split(' ')
-    line_list = [x for x in line_list if x]
-    if (re.match('column', line_list[0])):
+    with open(inpath, 'r') as f:
         flag = False
-    elif (re.match('offset', line_list[0])):
-        flag = True
-    if (flag and re.match('page',line_list[0])):
-        index +=1
-        if (index % 2==0):
-            offset_list.append(line_list[1])
-            length_list.append(line_list[2])
+        for line in f:
+            line_list = line.split(' ')
+            line_list = [x for x in line_list if x]
+            if (re.match('column', line_list[0])):
+                flag = False
+            elif (re.match('offset', line_list[0])):
+                flag = True
+            if (flag and re.match('page',line_list[0])):
+                index +=1
+                if (index % 2==0):
+                    offset_list.append(line_list[1])
+                    length_list.append(line_list[2])
 
-f.close()
 
-# dir_name = os.path.dirname(file)
-dir_name = Path(file).resolve().parents[0]
+    with open(outpath, 'w') as f:
+        for i in range(len(offset_list)):
+            f.write(offset_list[i]+','+length_list[i]+'\n')
 
-# fo = open(dir_name + "/offset.txt", 'w')
-fo = open(dir_name / "offset.txt", 'w')
-for i in range(len(offset_list)):
-    fo.write(offset_list[i]+','+length_list[i]+'\n')
-
-fo.close()
+if __name__ == '__main__':
+    parse()
