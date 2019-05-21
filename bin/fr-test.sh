@@ -132,6 +132,30 @@ usage() {
 }
 
 
+send_par_info(){
+    java -jar ${DIR}/alluxio/writeparquet/target/writeparquet-2.0.0-SNAPSHOT.jar fileparquet fileinfo
+}
+
+
+extract_par_info(){
+    PAR_FILE=$1
+    hadoop jar ${DIR}/parquet-mr/parquet-cli/target/parquet-cli-1.12.0-SNAPSHOT-runtime.jar \
+        org.apache.parquet.cli.Main column-index ${PAR_FILE}
+
+}
+
+move_par_jar_to_spark(){
+    PREFIX=$DIR/spark/jars
+    BACKUP=$DIR/spark/backup
+    mkdir -p $BACKUP
+
+    for f in $(ls $DIR/alluxio/jars); do
+        NAME=`basename f`
+        mv $PREFIX/$NAME $BACKUP
+        mv $f $PREFIX
+    done
+}
+
 if [[ "$#" -lt 3 ]]; then
     usage
     exit 1
@@ -142,6 +166,8 @@ else
         trace)                  trace_test $2 $3
                                 ;;
         trace-range)            trace_range_test $2 $3
+                                ;;
+        move-jar)               move_par_jar_to_spark
                                 ;;
         * )                     usage
     esac
