@@ -150,7 +150,7 @@ send_par_info(){
             if [[ "${sf}" != "_SUCCESS" ]]; then
                  extract_par_info ${DIR}/tpch_parquet/${f}/${sf} ${INFO_DIR}/${f}/${IDX}.txt
                 java -jar ${DIR}/alluxio/writeparquet/target/writeparquet-2.0.0-SNAPSHOT.jar ${DIR}/tpch_parquet/${f}/${sf} ${INFO_DIR}/${f}/${IDX}.txt
-                let IDX++
+                let "IDX++"
             fi
 
         done
