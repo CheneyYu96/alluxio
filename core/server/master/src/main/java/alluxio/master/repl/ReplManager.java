@@ -155,9 +155,6 @@ public class ReplManager {
                                             .map(WorkerInfo::getAddress)
                                             .collect(Collectors.toList());
 
-                                    //TODO: filter current worker
-
-
                                 } catch (UnavailableException e) {
                                     e.printStackTrace();
                                 }

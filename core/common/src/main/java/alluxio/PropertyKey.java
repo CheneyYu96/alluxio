@@ -4089,6 +4089,7 @@ public final class PropertyKey implements Comparable<PropertyKey> {
     // TODO: FR parameters
     public static final String FR_REPL_INTERVAL = "fr.repl.interval";
     public static final String FR_REPL_POLICY = "fr.repl.policy.class";
+    public static final String FR_REPL_HOTLOAD = "fr.repl.hotload";
     public static final String FR_REPL_WEIGHT = "fr.repl.weight";
     public static final String FR_RECORD_INTERVAL = "fr.record.interval";
 
@@ -4589,6 +4590,11 @@ public final class PropertyKey implements Comparable<PropertyKey> {
           new Builder(Name.FR_REPL_POLICY)
                   .setDefaultValue("alluxio.master.repl.policy.NaivePolicy")
                   .setDescription("The default replication policy for replication")
+                  .build();
+
+  public static final PropertyKey FR_REPL_HOTLOAD =
+          new Builder(Name.FR_REPL_HOTLOAD)
+                  .setDefaultValue(true)
                   .build();
 
   public static final PropertyKey FR_REPL_WEIGHT =

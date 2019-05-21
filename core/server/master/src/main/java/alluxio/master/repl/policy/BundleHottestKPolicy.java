@@ -23,9 +23,40 @@ public class BundleHottestKPolicy implements ReplPolicy {
 
     private double weight;
     private int workNum;
+    private HotLoadCalculator hotLoadCalculator;
 
     public BundleHottestKPolicy() {
         weight = Configuration.getDouble(PropertyKey.FR_REPL_WEIGHT);
+        hotLoadCalculator = Configuration.getBoolean(PropertyKey.FR_REPL_HOTLOAD) ? this::calcHotLoadWithPattern : this::calcHotLoadWOPattern;
+    }
+
+    interface HotLoadCalculator{
+        double calcHotLoad(int k, List<Pair<OffLenPair, Double>> sortedLoads, List<Pair<OffLenPair, Long>> sortedPops, long queryNum);
+    }
+
+    private double calcHotLoadWithPattern(int k, List<Pair<OffLenPair, Double>> sortedLoads, List<Pair<OffLenPair, Long>> sortedPops, long queryNum){
+        double hotLoad = sortedLoads
+                .stream()
+                .limit(k + 1)
+                .mapToDouble(Pair::getSecond)
+                .reduce( 0.0, Double::sum);
+
+        double regret = sortedPops
+                .stream()
+                .skip(k + 1)
+                .mapToDouble( o -> 1 - o.getSecond() * 1.0 / queryNum)
+                .reduce(1.0, (d1, d2) -> d1 * d2);
+
+        hotLoad = hotLoad * regret;
+        return hotLoad;
+    }
+
+    private double calcHotLoadWOPattern(int k, List<Pair<OffLenPair, Double>> sortedLoads, List<Pair<OffLenPair, Long>> sortedPops, long queryNum){
+        return sortedLoads
+                .stream()
+                .limit(k + 1)
+                .mapToDouble(Pair::getSecond)
+                .reduce( 0.0, Double::sum);
     }
 
     private void updateWorkNum(){
@@ -43,53 +74,50 @@ public class BundleHottestKPolicy implements ReplPolicy {
     public List<ReplUnit> calcReplicas(FileAccessInfo fileAccessInfo) {
         updateWorkNum();
 
-        List<Pair<OffLenPair, Long>> sortedPops = fileAccessInfo
+        List<Pair<OffLenPair, Long>> allPops = fileAccessInfo
                 .getOffsetCount()
                 .entrySet()
                 .stream()
-                .sorted((e1, e2) -> e1.getValue() < e2.getValue()?1:-1)
                 .map( o -> new Pair<>(o.getKey(), o.getValue()))
                 .collect(Collectors.toList());
 
-        LOG.info("file: {}. sorted popularity: {}", fileAccessInfo.getFilePath().getPath(), sortedPops);
-
-        long totalSize = sortedPops
+        long totalSize = allPops
                 .stream()
                 .mapToLong(o -> o.getFirst().length)
                 .reduce((long) 0, Long::sum);
 
+        List<Pair<OffLenPair, Double>> sortedLoads = allPops
+                .stream()
+                .map( o -> new Pair<>(o.getFirst(), o.getFirst().length * o.getSecond() * 1.0 / totalSize))
+                .sorted((e1, e2) -> e1.getSecond() < e2.getSecond()?1:-1)
+                .collect(Collectors.toList());
+
+        LOG.info("file: {}. sorted loads: {}", fileAccessInfo.getFilePath().getPath(), sortedLoads);
+
+
+        List<Pair<OffLenPair, Long>> sortedPops = sortedLoads
+                .stream()
+                .map( o -> new Pair<>(o.getFirst(), fileAccessInfo.getOffsetCount().get(o.getFirst())))
+                .collect(Collectors.toList());
+
         List<Double> sortedSizes = sortedPops
                 .stream()
-                .map( o -> o.getSecond() * 1.0 / totalSize)
+                .map( o -> o.getFirst().length * 1.0 / totalSize)
                 .collect(Collectors.toList());
 
-
-        List<Double> sortedLoads = sortedPops
-                .stream()
-                .mapToDouble( o -> o.getFirst().length * o.getSecond() * 1.0 / totalSize)
-                .boxed()
-                .collect(Collectors.toList());
+        double allLoad = sortedLoads.stream().mapToDouble(Pair::getSecond).reduce(0.0, Double::sum);
 
         int bestK = -1;
         int bestR = -1;
+        // initial obj as no replicas
+//        double bestObj = calcObjective(0, allLoad, 0, 0);
         double bestObj = Double.POSITIVE_INFINITY;
 
         for(int k = 0; k < sortedPops.size(); k++){
-            double hotLoad = sortedLoads
-                    .stream()
-                    .limit(k + 1)
-                    .reduce( 0.0, Double::sum);
 
+            double hotLoad = hotLoadCalculator.calcHotLoad(k, sortedLoads, sortedPops, fileAccessInfo.getQueryNum());
 
-            double regret = sortedPops
-                    .stream()
-                    .skip(k + 1)
-                    .mapToDouble( o -> 1 - o.getSecond() * 1.0 / fileAccessInfo.getQueryNum())
-                    .reduce(1.0, (d1, d2) -> d1 * d2);
-
-            hotLoad *= regret;
-
-            double coldLoad = sortedLoads.stream().reduce(0.0, Double::sum) - hotLoad;
+            double coldLoad = allLoad - hotLoad;
 
             double hotSize = sortedSizes
                     .stream()
