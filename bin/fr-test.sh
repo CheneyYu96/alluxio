@@ -131,28 +131,38 @@ usage() {
     echo "Usage: $0 shffl|noshffl scale #query"
 }
 
+INFO_DIR=${DIR}/info
 
 send_par_info(){
-    java -jar ${DIR}/alluxio/writeparquet/target/writeparquet-2.0.0-SNAPSHOT.jar fileparquet fileinfo
+
+    mkdir -p $INFO_DIR
+
+     for f in $(ls $DIR/tpch_parquet); do
+         mkdir -p $INFO_DIR/$f
+
+        IDX=0
+        for sf in $(ls ${DIR}/tpch_parquet/${f}); do
+
+            extract_par_info ${DIR}/tpch_parquet/${f}/${sf} ${INFO_DIR}/${f}/${IDX}.txt
+
+            java -jar ${DIR}/alluxio/writeparquet/target/writeparquet-2.0.0-SNAPSHOT.jar ${DIR}/tpch_parquet/${f}/${sf} ${INFO_DIR}/${f}/${IDX}.txt
+
+            let IDX++
+
+        done
+    done
+
 }
 
 
 extract_par_info(){
     PAR_FILE=$1
+    INFO_FILE=$2
     hadoop jar ${DIR}/parquet-mr/parquet-cli/target/parquet-cli-1.12.0-SNAPSHOT-runtime.jar \
-        org.apache.parquet.cli.Main column-index ${PAR_FILE}
+        org.apache.parquet.cli.Main column-index ${PAR_FILE} > ${INFO_DIR}/tmp.txt
 
-}
+    python ${DIR}/alluxio/offsetParser.py ${INFO_DIR}/tmp.txt ${INFO_FILE}
 
-move_par_jar_to_spark(){
-    PREFIX=$DIR/spark/jars
-    BACKUP=$DIR/spark/backup
-    mkdir -p $BACKUP
-
-    for f in $(ls $DIR/alluxio/jars); do
-        mv ${PREFIX}/${f} ${BACKUP}
-        cp ${DIR}/alluxio/jars/${f} ${PREFIX}
-    done
 }
 
 if [[ "$#" -lt 3 ]]; then
@@ -165,8 +175,6 @@ else
         trace)                  trace_test $2 $3
                                 ;;
         trace-range)            trace_range_test $2 $3
-                                ;;
-        move-jar)               move_par_jar_to_spark
                                 ;;
         * )                     usage
     esac
