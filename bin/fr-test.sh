@@ -39,22 +39,22 @@ convert(){
         shuffle_env
         move_data
 
-#        $DIR/spark/bin/spark-submit \
-#            --executor-memory 4g \
-#            --driver-memory 4g \
-#            --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
-#            $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar \
-#                --convert-table \
-#                $(check_from_hdfs ${FROM_HDFS})
-
-#       test one row group per part file
         $DIR/spark/bin/spark-submit \
             --executor-memory 4g \
             --driver-memory 4g \
-            --master local \
+            --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
             $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar \
                 --convert-table \
                 $(check_from_hdfs ${FROM_HDFS})
+
+#       test one row group per part file
+#        $DIR/spark/bin/spark-submit \
+#            --executor-memory 4g \
+#            --driver-memory 4g \
+#            --master local \
+#            $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar \
+#                --convert-table \
+#                $(check_from_hdfs ${FROM_HDFS})
 
         save_par_data
     fi
