@@ -84,9 +84,10 @@ trace_test(){
     if [[ `cat ${ALLUXIO_ENV}` == "1" ]]; then
         echo 'Alluxio env already prepared'
     else
-        shuffle_env
+        fr_env
         move_par_data
-        clear_workerloads
+        send_par_info
+
         echo '1' > ${ALLUXIO_ENV}
     fi
 

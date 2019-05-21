@@ -73,7 +73,7 @@ public class ReplManager {
 
     public Map<AlluxioURI, OffLenPair> recordAccess(AlluxioURI requestFile, long offset, long length){
 
-        LOG.info("record access from file {}. offset {} length {}", requestFile.getPath(), offset, length);
+        LOG.debug("Receive request for file {}. offset {} length {}", requestFile.getPath(), offset, length);
 
         OffLenPair pair = new OffLenPair(offset, length);
 
@@ -98,6 +98,8 @@ public class ReplManager {
                 return ImmutableMap.of(requestFile, pair);
             }
         }
+
+        LOG.info("Record access for file {}. offset {} length {}", requestFile.getPath(), pair.offset, pair.length);
 
         Map<AlluxioURI, OffLenPair> mappedOffsets = new ConcurrentHashMap<>(ImmutableMap.of(requestFile, pair));
 
