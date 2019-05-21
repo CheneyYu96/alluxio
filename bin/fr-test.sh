@@ -150,9 +150,9 @@ move_par_jar_to_spark(){
     mkdir -p $BACKUP
 
     for f in $(ls $DIR/alluxio/jars); do
-        NAME=`basename f`
-        mv $PREFIX/$NAME $BACKUP
-        mv $f $PREFIX
+        NAME=`basename $f`
+        mv ${PREFIX}/${NAME} ${BACKUP}
+        mv $f ${PREFIX}
     done
 }
 
