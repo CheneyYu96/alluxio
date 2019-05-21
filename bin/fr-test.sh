@@ -71,6 +71,7 @@ trace_test(){
     convert
 
     USE_PARQUER=1
+    NEED_PAR_INFO=0
 
     from=$query
     to=$query
@@ -86,7 +87,9 @@ trace_test(){
     else
         fr_env
         move_par_data
-        send_par_info
+        if [[ "${NEED_PAR_INFO}" -eq "1" ]]; then
+             send_par_info
+        fi
 
         echo '1' > ${ALLUXIO_ENV}
     fi
