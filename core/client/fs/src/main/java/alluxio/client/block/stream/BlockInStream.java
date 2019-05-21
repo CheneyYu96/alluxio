@@ -288,11 +288,11 @@ public class BlockInStream extends InputStream implements BoundedStream, Seekabl
 //    }
 
     if (mPacketReader instanceof LocalFilePacketReader) {
-      LOG.info("Read bytes from local. size:" + toRead + "; blockID:" + mId + "; mPos:" + mPos);
+      LOG.debug("Read bytes from local. size:" + toRead + "; blockID:" + mId + "; mPos:" + mPos);
     }
     else if (mPacketReader instanceof NettyPacketReader) {
       String hostName = ((NettyPacketReader) mPacketReader).getWorkerHostName();
-      LOG.info("Read bytes from remote. size:" + toRead + "; hostname:" + hostName + "; blockID:" + mId + "; mPos:" + mPos);
+      LOG.debug("Read bytes from remote. size:" + toRead + "; hostname:" + hostName + "; blockID:" + mId + "; mPos:" + mPos);
     }
 
     return toRead;

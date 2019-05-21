@@ -46,6 +46,8 @@ public class ReplManager {
     private Map<AlluxioURI, FileOffsetInfo> offsetInfoMap;
     private int checkInterval; /* in seconds */
 
+    private String frDir;
+
     private boolean useParuqetInfo;
     public ReplManager() {
         frClient = new FRClient();
@@ -58,6 +60,8 @@ public class ReplManager {
                 PropertyKey.FR_REPL_POLICY), new Class[] {}, new Object[] {});
         checkInterval = Configuration.getInt(PropertyKey.FR_REPL_INTERVAL);
         useParuqetInfo = Configuration.getBoolean(PropertyKey.FR_PARQUET_INFO);
+
+        frDir = Configuration.get(PropertyKey.FR_REPL_DIR);
 
         LOG.info("Create replication manager. check_interval : {}. policy : {}", checkInterval, replPolicy.getClass().getName());
     }
@@ -72,6 +76,11 @@ public class ReplManager {
         LOG.info("record access from file {}. offset {} length {}", requestFile.getPath(), offset, length);
 
         OffLenPair pair = new OffLenPair(offset, length);
+
+        // ignore replicas, usually comes from web UI
+        if (requestFile.getPath().startsWith(frDir)){
+            return ImmutableMap.of(requestFile, pair);
+        }
 
         if (useParuqetInfo){
             OffLenPair pairForParquet = offsetInfoMap.get(requestFile).getPairByOffset(offset);
@@ -134,6 +143,7 @@ public class ReplManager {
                         if (fileReplicas.containsKey(filePath)) {
                             FileRepInfo oldRepInfo = fileReplicas.remove(filePath);
                             frClient.deleteReplicas(oldRepInfo.getReplicasURI());
+                            LOG.info("Delete replicas for file: {}.", filePath.getPath());
                         }
 
                         FileRepInfo repInfo = new FileRepInfo(filePath);

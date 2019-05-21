@@ -1,6 +1,8 @@
 package fr.client;
 
 import alluxio.AlluxioURI;
+import alluxio.Configuration;
+import alluxio.PropertyKey;
 import alluxio.client.WriteType;
 import alluxio.client.block.BlockMasterClient;
 import alluxio.client.file.FileSystem;
@@ -30,13 +32,14 @@ import java.util.stream.IntStream;
  * The class is the endpoint to collect and replicate data segments, invoked by master
  */
 public class FRClient {
-    public static final String FR_DIR = "/fr_dir";
+    public final String FR_DIR;
     private FileSystem mFileSystem;
     private FileSystemContext mContext;
 
     public FRClient() {
         mFileSystem = FileSystem.Factory.get();
         mContext = FileSystemContext.get();
+        FR_DIR = Configuration.get(PropertyKey.FR_REPL_DIR);
     }
 
     public void deleteReplicas(List<AlluxioURI> replicaFilePath){
