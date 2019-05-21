@@ -190,6 +190,8 @@ fr_env(){
     sed -i \
         "/alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.TimerPolicy/c\alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.RoundRobinPolicy" \
         $DIR/alluxio/conf/alluxio-site.properties
+
+     ${DIR}/alluxio/bin/restart.sh
 }
 
 get_dir_index(){
