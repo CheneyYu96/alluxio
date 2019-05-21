@@ -182,6 +182,16 @@ nonshuffle_env(){
     ${DIR}/alluxio/bin/restart.sh
 }
 
+fr_env(){
+    sed -i "/alluxio.user.file.passive.cache.enabled=true/c\alluxio.user.file.passive.cache.enabled=false" $DIR/alluxio/conf/alluxio-site.properties
+
+    sed -i "/alluxio.user.file.replication.min=2/c\alluxio.user.file.replication.min=0" $DIR/alluxio/conf/alluxio-site.properties
+
+    sed -i \
+        "/alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.TimerPolicy/c\alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.RoundRobinPolicy" \
+        $DIR/alluxio/conf/alluxio-site.properties
+}
+
 get_dir_index(){
     NAME=$1
 
