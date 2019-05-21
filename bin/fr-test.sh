@@ -71,7 +71,7 @@ trace_test(){
     convert
 
     USE_PARQUER=1
-    NEED_PAR_INFO=0
+    NEED_PAR_INFO=1
 
     from=$query
     to=$query
