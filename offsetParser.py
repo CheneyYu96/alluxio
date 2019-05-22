@@ -13,18 +13,27 @@ def parse(inpath, outpath):
 
     with open(inpath, 'r') as f:
         flag = False
+        offs = []
+        lens = []
         for line in f:
             line_list = line.split(' ')
             line_list = [x for x in line_list if x]
             if (re.match('column', line_list[0])):
                 flag = False
+                act_off = offs[0]
+                act_len = sum(lens)
+                offset_list.append(act_off)
+                length_list.append(act_len)
+
             elif (re.match('offset', line_list[0])):
                 flag = True
             if (flag and re.match('page',line_list[0])):
-                index +=1
-                if (index % 2==0):
-                    offset_list.append(line_list[1])
-                    length_list.append(line_list[2])
+                offs.append(line_list[1])
+                lens.append(line_list[2])
+                # index +=1
+                # if (index % 2==0):
+                #     offset_list.append(line_list[1])
+                #     length_list.append(line_list[2])
 
 
     with open(outpath, 'w') as f:
