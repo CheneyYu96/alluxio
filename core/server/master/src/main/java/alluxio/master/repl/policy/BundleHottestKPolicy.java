@@ -100,6 +100,8 @@ public class BundleHottestKPolicy implements ReplPolicy {
                 .map( o -> new Pair<>(o.getFirst(), fileAccessInfo.getOffsetCount().get(o.getFirst())))
                 .collect(Collectors.toList());
 
+        LOG.info("query_num: {}. sorted pops: {}", fileAccessInfo.getQueryNum(), sortedPops);
+
         List<Double> sortedSizes = sortedPops
                 .stream()
                 .map( o -> o.getFirst().length * 1.0 / totalSize)

@@ -118,10 +118,12 @@ public class ReplManager {
     }
 
     public void recordAccess(AlluxioURI filePath, List<Long> offset, List<Long> length){
-        LOG.info("Receive parquet info for file : ", filePath);
         if (!offsetInfoMap.containsKey(filePath)) {
             if (offset.size() == length.size()) {
-                offsetInfoMap.put(filePath, new FileOffsetInfo(filePath,offset,length));
+                FileOffsetInfo fileOffsetInfo = new FileOffsetInfo(filePath,offset,length);
+                LOG.info("Receive parquet info : {}", fileOffsetInfo.toString());
+
+                offsetInfoMap.put(filePath, fileOffsetInfo);
             } else {
                 LOG.error("File {}'s offset and length does not match", filePath);
             }

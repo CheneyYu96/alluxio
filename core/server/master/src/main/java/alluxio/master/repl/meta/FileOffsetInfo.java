@@ -57,4 +57,11 @@ public class FileOffsetInfo {
         return offLenPairMap.get(offset);
     }
 
+    @Override
+    public String toString() {
+        return "FileOffsetInfo{" +
+                "mFilePath=" + mFilePath +
+                ", offsetList=" + offsetList +
+                '}';
+    }
 }
