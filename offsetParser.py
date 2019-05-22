@@ -26,8 +26,8 @@ def parse(inpath, outpath):
                     offset_list.append(act_off)
                     length_list.append(act_len)
 
-                    offs.clear()
-                    lens.clear()
+                    offs = []
+                    lens = []
 
             elif (re.match('offset', line_list[0])):
                 flag = True
