@@ -183,6 +183,9 @@ nonshuffle_env(){
 }
 
 fr_env(){
+
+    sed -i "/fr.client.translation=false/c\fr.client.translation=true" $DIR/alluxio/conf/alluxio-site.properties
+
     sed -i "/alluxio.user.file.passive.cache.enabled=true/c\alluxio.user.file.passive.cache.enabled=false" $DIR/alluxio/conf/alluxio-site.properties
 
     sed -i "/alluxio.user.file.replication.min=2/c\alluxio.user.file.replication.min=0" $DIR/alluxio/conf/alluxio-site.properties
@@ -190,6 +193,13 @@ fr_env(){
     sed -i \
         "/alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.TimerPolicy/c\alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.RoundRobinPolicy" \
         $DIR/alluxio/conf/alluxio-site.properties
+
+     ${DIR}/alluxio/bin/restart.sh
+}
+
+non_fr_env(){
+
+    sed -i "/fr.client.translation=true/c\fr.client.translation=false" $DIR/alluxio/conf/alluxio-site.properties
 
      ${DIR}/alluxio/bin/restart.sh
 }

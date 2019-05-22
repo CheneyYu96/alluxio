@@ -36,7 +36,7 @@ convert(){
     if [[ `cat ${DATA_SCALE}` == "$SCL" && -d $DIR/tpch_parquet ]]; then
         echo "Parquet exist"
     else
-        shuffle_env
+        non_fr_env
         move_data
 
         $DIR/spark/bin/spark-submit \
