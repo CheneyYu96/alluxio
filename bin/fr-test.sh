@@ -82,12 +82,12 @@ trace_test(){
 
     mkdir -p  $DIR/logs/shuffle
 
-    $DIR/alluxio/bin/alluxio logLevel --logName=alluxio.master.repl.ReplManager --target=master --level=DEBUG
-
     if [[ `cat ${ALLUXIO_ENV}` == "1" ]]; then
         echo 'Alluxio env already prepared'
     else
         fr_env
+        $DIR/alluxio/bin/alluxio logLevel --logName=alluxio.master.repl.ReplManager --target=master --level=DEBUG
+
         move_par_data
         if [[ "${NEED_PAR_INFO}" -eq "1" ]]; then
              send_par_info
@@ -99,6 +99,7 @@ trace_test(){
             #--conf spark.executor.extraJavaOptions="-Dlog4j.configuration=file://$DIR/tpch-spark/log4j.properties" \
             #--conf spark.driver.extraJavaOptions="-Dlog4j.configuration=file://$DIR/tpch-spark/log4j.properties" \
              #--log-trace \
+
     for((q=${from};q<=${to};q++)); do
         $DIR/spark/bin/spark-submit \
             --executor-memory 4g \
