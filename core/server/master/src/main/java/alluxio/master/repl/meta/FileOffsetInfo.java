@@ -15,6 +15,7 @@ public class FileOffsetInfo {
     private AlluxioURI mFilePath;
     private List<OffLenPair> offsetList;
     private Map<Long, OffLenPair> offLenPairMap;
+    private long lastOff;
 
     /**
      * Default Constructor with file path known.
@@ -33,8 +34,17 @@ public class FileOffsetInfo {
      * @param length corresponding length list
      */
     public FileOffsetInfo(AlluxioURI path, List<Long> offset, List<Long> length) {
+        this(path, offset, length, true);
+    }
+
+    public FileOffsetInfo(AlluxioURI path, List<Long> offset, List<Long> length, boolean useParInfo) {
         this(path);
-        genOffsetPair(offset, length);
+        if (useParInfo) {
+            genOffsetPair(offset, length);
+        }
+        else {
+            lastOff = offset.get(offset.size() - 1 ) + length.get(length.size() - 1);
+        }
     }
 
     private void genOffsetPair(List<Long> offsets, List<Long> lengths){
@@ -76,6 +86,12 @@ public class FileOffsetInfo {
 
     public OffLenPair getPairByOffset(long offset){
         return offLenPairMap.get(offset);
+    }
+
+    public void recordOffSet(long offset, long length){
+        if (offset < lastOff) {
+            addNewOff(offset, length);
+        }
     }
 
     @Override

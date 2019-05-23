@@ -3073,18 +3073,25 @@ public final class DefaultFileSystemMaster extends CoreMaster implements FileSys
   @Override
   public List<fileSegmentInfo> recordBlockAccessInfo(String UFSPath, long offset, long length) {
 //    mFileSegmentsAccessRecorder.onAccess(new FileSegmentsInfo(UFSPath, offset, length));
+    if(UFSPath.startsWith("segInfo")){
+      String filePath = UFSPath.substring(UFSPath.indexOf(':') + 1);
+      mReplManager.recordOffset( new AlluxioURI(filePath), offset, length);
+      return new ArrayList<>();
+    }
+    else {
+      return mReplManager
+              .recordAccess(new AlluxioURI(UFSPath), offset, length)
+              .entrySet()
+              .stream()
+              .map( e -> new fileSegmentInfo(e.getKey().getPath(), e.getValue().offset, e.getValue().length))
+              .collect(Collectors.toList());
+    }
 
-    return mReplManager
-            .recordAccess(new AlluxioURI(UFSPath), offset, length)
-            .entrySet()
-            .stream()
-            .map( e -> new fileSegmentInfo(e.getKey().getPath(), e.getValue().offset, e.getValue().length))
-            .collect(Collectors.toList());
   }
 
   @Override
   public void recordOffsetInfo(String UFSPath, List<Long> offset, List<Long> length) {
-    mReplManager.recordAccess(new AlluxioURI(UFSPath), offset, length);
+    mReplManager.recordParInfo(new AlluxioURI(UFSPath), offset, length);
   }
 
   private boolean syncMetadata(RpcContext rpcContext, LockedInodePath inodePath,

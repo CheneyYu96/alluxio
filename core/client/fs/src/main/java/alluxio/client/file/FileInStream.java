@@ -122,11 +122,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
   private long mNewLength;
   private long mNewEndPos;
 
-  private long mThreshold;
-
   private long mNewBlockSize;
-
-  private boolean mUseParInfo;
 
   protected FileInStream(URIStatus status, InStreamOptions options, FileSystemContext context) {
     mStatus = status;
@@ -145,8 +141,6 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     /** FR add*/
     mReplicasInfo = new ReplicasInfo();
 
-    mThreshold = Math.max(2 * mLength / 100000, 20);
-
     mNewStatus = status;
     mNewOptions = options;
     mNewPosition = 0;
@@ -154,8 +148,6 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     mNewEndPos = mNewPosition + mNewLength;
     mNewBlockSize = mNewStatus.getBlockSizeBytes();
     mCurrentSeg = new FileSegmentsInfo(status.getPath(), -1, Long.MIN_VALUE);
-
-    mUseParInfo = Configuration.getBoolean(PropertyKey.FR_PARQUET_INFO);
 
   }
 
@@ -215,6 +207,9 @@ public class FileInStream extends InputStream implements BoundedStream, Position
       throws FileDoesNotExistException, IOException, AlluxioException {
 
     FileSystemMasterClient masterClientResource = mContext.acquireMasterClient();
+
+    List<FileSegmentsInfo> tmpList = masterClientResource
+            .uploadFileSegmentsAccessInfo(new AlluxioURI("segInfo:" + mStatus.getPath()), mCurrentSeg.getOffset(), mCurrentSeg.getLength());
 
     List<FileSegmentsInfo> allSegs = masterClientResource
             .uploadFileSegmentsAccessInfo(new AlluxioURI(mStatus.getPath()), offset, length);
@@ -299,30 +294,21 @@ public class FileInStream extends InputStream implements BoundedStream, Position
   private void checkStreamUpdate(int len) throws IOException {
     // TODO: avoid frequent request
 
-    if (mUseParInfo){
-      if(mCurrentSeg.getOffset() + mCurrentSeg.getLength() == mNewPosition
-            && mNewPosition + len <= mNewEndPos){
-        mCurrentSeg.addLength(len);
-        return;
-      }
+    if(mCurrentSeg.getOffset() + mCurrentSeg.getLength() == mNewPosition
+          && mNewPosition + len <= mNewEndPos){
+      mCurrentSeg.addLength(len);
     }
     else {
-      if (len <= mThreshold){
-        mNewPosition = mPosition;
-//        LOG.debug("checkStreamUpdate. mPos: {}. mNewPos: {}. len: {}", mPosition, mNewPosition, len);
-        return;
+      long startTimeMs = CommonUtils.getCurrentMs();
+      try {
+        changeFileInStream(mPosition, (long) len);
+      } catch (AlluxioException e) {
+        e.printStackTrace();
       }
-    }
+      LOG.info("update file in stream. elapsed:" + (CommonUtils.getCurrentMs() - startTimeMs) + " mPos: " + mPosition + ". mNewPos: " + mNewPosition + ". len: " + len + ". fileToRead: " + mNewStatus.getPath());
 
-    long startTimeMs = CommonUtils.getCurrentMs();
-    try {
-      changeFileInStream(mPosition, (long) len);
-    } catch (AlluxioException e) {
-      e.printStackTrace();
+      mCurrentSeg.setOffset(mNewPosition).setLength(len);
     }
-    LOG.info("update file in stream. elapsed:" + (CommonUtils.getCurrentMs() - startTimeMs) + " mPos: " + mPosition + ". mNewPos: " + mNewPosition + ". len: " + len + ". fileToRead: " + mNewStatus.getPath());
-
-    mCurrentSeg.setOffset(mNewPosition).setLength(len);
 
   }
 

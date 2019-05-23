@@ -71,6 +71,12 @@ public class ReplManager {
         return fileReplicas.get(originFile).getMappedReplicas(replica).get(originPair);
     }
 
+    public void recordOffset(AlluxioURI requestFile, long offset, long length){
+        if (offsetInfoMap.containsKey(requestFile)) {
+            offsetInfoMap.get(requestFile).recordOffSet(offset, length);
+        }
+    }
+
     public Map<AlluxioURI, OffLenPair> recordAccess(AlluxioURI requestFile, long offset, long length){
 
         LOG.debug("Receive request for file {}. offset {} length {}", requestFile.getPath(), offset, length);
@@ -82,7 +88,7 @@ public class ReplManager {
             return ImmutableMap.of(requestFile, pair);
         }
 
-        if (useParuqetInfo){
+//        if (useParuqetInfo){
             FileOffsetInfo offsetInfo = offsetInfoMap.get(requestFile);
             if(offsetInfo == null){
                 return ImmutableMap.of(requestFile, pair);
@@ -95,7 +101,7 @@ public class ReplManager {
                     pair = pairForParquet;
                 }
             }
-        }
+//        }
 
         LOG.info("Record access for file {}. offset {} length {}", requestFile.getPath(), pair.offset, pair.length);
 
@@ -115,10 +121,10 @@ public class ReplManager {
         return mappedOffsets;
     }
 
-    public void recordAccess(AlluxioURI filePath, List<Long> offset, List<Long> length){
+    public void recordParInfo(AlluxioURI filePath, List<Long> offset, List<Long> length){
         if (!offsetInfoMap.containsKey(filePath)) {
             if (offset.size() == length.size()) {
-                FileOffsetInfo fileOffsetInfo = new FileOffsetInfo(filePath,offset,length);
+                FileOffsetInfo fileOffsetInfo = new FileOffsetInfo(filePath,offset,length, useParuqetInfo);
                 LOG.info("Receive parquet info : {}", fileOffsetInfo.toString());
 
                 offsetInfoMap.put(filePath, fileOffsetInfo);
