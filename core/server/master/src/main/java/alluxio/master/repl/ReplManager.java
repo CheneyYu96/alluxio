@@ -72,6 +72,8 @@ public class ReplManager {
     }
 
     public void recordOffset(AlluxioURI requestFile, long offset, long length){
+        LOG.debug("Receive offset record for file {}. offset {} length {}", requestFile.getPath(), offset, length);
+
         if (offsetInfoMap.containsKey(requestFile)) {
             offsetInfoMap.get(requestFile).recordOffSet(offset, length);
         }

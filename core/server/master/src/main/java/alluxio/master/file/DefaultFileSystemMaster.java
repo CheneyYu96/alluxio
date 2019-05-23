@@ -3076,6 +3076,7 @@ public final class DefaultFileSystemMaster extends CoreMaster implements FileSys
     if(UFSPath.startsWith("segInfo")){
       String filePath = UFSPath.substring(UFSPath.indexOf(':') + 1);
       mReplManager.recordOffset( new AlluxioURI(filePath), offset, length);
+
       return new ArrayList<>();
     }
     else {
