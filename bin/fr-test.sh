@@ -190,6 +190,12 @@ clear(){
     remove $DIR/alluxio/logs
 }
 
+complie_job(){
+    cd $DIR/tpch-spark
+    git pull
+    sbt assembly
+}
+
 if [[ "$#" -lt 3 ]]; then
     usage
     exit 1
@@ -204,6 +210,8 @@ else
         all)                    all_test $2 $3
                                 ;;
         clear)                  clear
+                                ;;
+        comp)                   complie_job
                                 ;;
         * )                     usage
     esac
