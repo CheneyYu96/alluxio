@@ -306,7 +306,9 @@ public class FileInStream extends InputStream implements BoundedStream, Position
       } catch (AlluxioException e) {
         e.printStackTrace();
       }
-      LOG.info("update file in stream. elapsed:" + (CommonUtils.getCurrentMs() - startTimeMs) + " mPos: " + mPosition + ". mNewPos: " + mNewPosition + ". len: " + len + ". fileToRead: " + mNewStatus.getPath());
+      LOG.info("update file in stream. elapsed: {}. segs(off={}, len={}). mPos: {}. mNewPos: {}. len: {}. fileToRead: {}",
+              mCurrentSeg.getOffset(), mCurrentSeg.getLength(),
+              (CommonUtils.getCurrentMs() - startTimeMs), mPosition,  mNewPosition, len, mNewStatus.getPath());
 
       mCurrentSeg.setOffset(mPosition).setLength(len);
     }
@@ -522,7 +524,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
 //      }
     }
 
-    LOG.info("seek pos. mPos: " + mPosition + ". mNewPos: " + mNewPosition);
+    LOG.info("seek pos. mPos: " + mPosition + ". mNewPos: " + mNewPosition + ". fileToRead: " + mNewStatus.getPath());
 
   }
 

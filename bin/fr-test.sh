@@ -182,6 +182,12 @@ extract_par_info(){
 
 }
 
+clear(){
+    remove $DIR/logs
+    remove $DIR/alluxio_env
+    remove $DIR/alluxio/logs
+}
+
 if [[ "$#" -lt 3 ]]; then
     usage
     exit 1
@@ -194,6 +200,8 @@ else
         trace-range)            trace_range_test $2 $3
                                 ;;
         all)                    all_test $2 $3
+                                ;;
+        clear)                  clear
                                 ;;
         * )                     usage
     esac

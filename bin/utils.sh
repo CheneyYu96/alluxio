@@ -220,3 +220,15 @@ get_dir_index(){
     echo $DIR/logs/${NAME}${INDEX}
 
 }
+
+remove(){
+    OBJ=$1
+
+    if [[ -d ${OBJ} ]]; then
+        rm -r ${OBJ}
+    fi
+
+    if [[ -f ${OBJ} ]]; then
+        rm ${OBJ}
+    fi
+}
