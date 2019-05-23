@@ -66,11 +66,6 @@ public class ReplManager {
         LOG.info("Create replication manager. check_interval : {}. policy : {}", checkInterval, replPolicy.getClass().getName());
     }
 
-    public OffLenPair getReplicaOffsets(AlluxioURI originFile, AlluxioURI replica, OffLenPair originPair){
-        // TODO: check
-        return fileReplicas.get(originFile).getMappedReplicas(replica).get(originPair);
-    }
-
     public void recordOffset(AlluxioURI requestFile, long offset, long length){
         LOG.debug("Receive offset record for file {}. offset {} length {}", requestFile.getPath(), offset, length);
 

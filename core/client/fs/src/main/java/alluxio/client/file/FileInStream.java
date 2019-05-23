@@ -294,8 +294,9 @@ public class FileInStream extends InputStream implements BoundedStream, Position
   private void checkStreamUpdate(int len) throws IOException {
     // TODO: avoid frequent request
 
-    if(mCurrentSeg.getOffset() + mCurrentSeg.getLength() == mNewPosition
-          && mNewPosition + len <= mNewEndPos){
+//    if(mCurrentSeg.getOffset() + mCurrentSeg.getLength() == mNewPosition
+//          && mNewPosition + len <= mNewEndPos){
+    if(mCurrentSeg.getOffset() + mCurrentSeg.getLength() == mPosition){
       mCurrentSeg.addLength(len);
     }
     else {
@@ -307,7 +308,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
       }
       LOG.info("update file in stream. elapsed:" + (CommonUtils.getCurrentMs() - startTimeMs) + " mPos: " + mPosition + ". mNewPos: " + mNewPosition + ". len: " + len + ". fileToRead: " + mNewStatus.getPath());
 
-      mCurrentSeg.setOffset(mNewPosition).setLength(len);
+      mCurrentSeg.setOffset(mPosition).setLength(len);
     }
 
   }
