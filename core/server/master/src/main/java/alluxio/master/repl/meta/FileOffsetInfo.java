@@ -34,11 +34,30 @@ public class FileOffsetInfo {
      */
     public FileOffsetInfo(AlluxioURI path, List<Long> offset, List<Long> length) {
         this(path);
-        for (int i = 0; i < offset.size(); i++) {
-            OffLenPair newOff = new OffLenPair(offset.get(i), length.get(i));
-            offsetList.add(newOff);
-            offLenPairMap.put(offset.get(i), newOff);
+        genOffsetPair(offset, length);
+    }
+
+    private void genOffsetPair(List<Long> offsets, List<Long> lengths){
+        long startIndex = 4;
+        for (int i = 0; i < offsets.size(); i++) {
+            if (i == 0 && startIndex < offsets.get(i)){
+                addNewOff(startIndex, offsets.get(i) - startIndex);
+            }
+
+            OffLenPair lastOff = offsetList.get(offsetList.size() - 1);
+
+            if (lastOff.offset + lastOff.length < offsets.get(i)){
+                addNewOff(lastOff.offset + lastOff.length, offsets.get(i) - (lastOff.offset + lastOff.length));
+            }
+
+            addNewOff(offsets.get(i), lengths.get(i));
         }
+    }
+
+    private void addNewOff(long offset, long length){
+        OffLenPair newOff = new OffLenPair(offset, length);
+        offsetList.add(newOff);
+        offLenPairMap.put(offset, newOff);
     }
 
     public AlluxioURI getFilePath() {
