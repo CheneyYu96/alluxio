@@ -122,6 +122,8 @@ public class FileInStream extends InputStream implements BoundedStream, Position
   private long mNewLength;
   private long mNewEndPos;
 
+  private long mThreshold;
+
   private long mNewBlockSize;
 
   protected FileInStream(URIStatus status, InStreamOptions options, FileSystemContext context) {
@@ -140,6 +142,8 @@ public class FileInStream extends InputStream implements BoundedStream, Position
 
     /** FR add*/
     mReplicasInfo = new ReplicasInfo();
+
+    mThreshold = 2 * mLength / 100000;
 
     mNewStatus = status;
     mNewOptions = options;
@@ -218,9 +222,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
       // reading orginal table currently
       if (mNewStatus.getPath().equals(mStatus.getPath())){
         mNewPosition = mPosition;
-        if (allSegs.get(0).getLength() != length){
-          mNewEndPos = mNewPosition + allSegs.get(0).getLength();
-        }
+//        mNewEndPos = mNewPosition + allSegs.get(0).getLength();
       }
       else {
         updateMetadata(allSegs.get(0));
@@ -291,9 +293,13 @@ public class FileInStream extends InputStream implements BoundedStream, Position
   }
 
   private void checkStreamUpdate(int len) throws IOException {
-    if(mCurrentSeg.getOffset() + mCurrentSeg.getLength() == mNewPosition
-            && mNewPosition + len <= mNewEndPos){
-      mCurrentSeg.addLength(len);
+    // TODO: avoid frequent request
+//    if(mCurrentSeg.getOffset() + mCurrentSeg.getLength() == mNewPosition
+//            && mNewPosition + len <= mNewEndPos){
+//      mCurrentSeg.addLength(len);
+//    }
+    if (len < mThreshold){
+      LOG.debug("checkStreamUpdate. mPos: {}. mNewPos: {}. len: {}", mPosition, mNewPosition, len);
     }
     else {
       long startTimeMs = CommonUtils.getCurrentMs();
@@ -302,12 +308,10 @@ public class FileInStream extends InputStream implements BoundedStream, Position
       } catch (AlluxioException e) {
         e.printStackTrace();
       }
-      mCurrentSeg.setOffset(mNewPosition).setLength(len);
       LOG.info("update file in stream. elapsed:" + (CommonUtils.getCurrentMs() - startTimeMs) + " mPos: " + mPosition + ". mNewPos: " + mNewPosition + ". len: " + len + ". fileToRead: " + mNewStatus.getPath());
 
+      mCurrentSeg.setOffset(mNewPosition).setLength(len);
     }
-
-//    LOG.info("check seg. pos: " + mCurrentSeg.getOffset() + ". len: " + mCurrentSeg.getLength());
 
   }
 
@@ -363,7 +367,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     if (mPosition == mLength) { // at end of file
       return -1;
     }
-    LOG.info("read to buffer. mPos: {}. mNewPos: {}. len: {}", mPosition, mNewPosition, len);
+//    LOG.info("read to buffer. mPos: {}. mNewPos: {}. len: {}", mPosition, mNewPosition, len);
 
     if(mOptions.getOptions().isRequireTrans()) {
       // continuous access within the new segment

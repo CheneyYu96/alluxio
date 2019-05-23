@@ -96,13 +96,6 @@ public class ReplManager {
                 }
             }
         }
-        else {
-            // skip small segments, i.e., less than 10 bytes, so as to ignore file meta data
-            // TODO: small segment can also happen for some columns
-            if (length < 10){
-                return ImmutableMap.of(requestFile, pair);
-            }
-        }
 
         LOG.info("Record access for file {}. offset {} length {}", requestFile.getPath(), pair.offset, pair.length);
 
