@@ -367,7 +367,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     if (mPosition == mLength) { // at end of file
       return -1;
     }
-//    LOG.info("read to buffer. mPos: {}. mNewPos: {}. len: {}", mPosition, mNewPosition, len);
+    LOG.info("read to buffer. mPos: {}. mNewPos: {}. len: {}. path: {}", mPosition, mNewPosition, len, mNewStatus.getPath());
 
     if(mOptions.getOptions().isRequireTrans()) {
       // continuous access within the new segment
