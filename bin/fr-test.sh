@@ -157,7 +157,7 @@ send_par_info(){
         for sf in $(ls ${DIR}/tpch_parquet/${f}); do
 
             if [[ "${sf}" != "_SUCCESS" ]]; then
-                 extract_par_info ${DIR}/tpch_parquet/${f}/${sf} ${INFO_DIR}/${f}/${IDX}.txt
+                 extract_par_info ${DIR}/tpch_parquet/${f}/${sf} ${INFO_DIR}/${f}/tmp_${IDX}.txt ${INFO_DIR}/${f}/${IDX}.txt
                 java -jar ${DIR}/alluxio/writeparquet/target/writeparquet-2.0.0-SNAPSHOT.jar ${DIR}/tpch_parquet/${f}/${sf} ${INFO_DIR}/${f}/${IDX}.txt
                 ((IDX=IDX+1))
             fi
@@ -170,11 +170,12 @@ send_par_info(){
 
 extract_par_info(){
     PAR_FILE=$1
-    INFO_FILE=$2
+    TMP_FILE=$2
+    INFO_FILE=$3
     hadoop jar ${DIR}/parquet-mr/parquet-cli/target/parquet-cli-1.12.0-SNAPSHOT-runtime.jar \
-        org.apache.parquet.cli.Main column-index ${PAR_FILE} > ${INFO_DIR}/tmp.txt
+        org.apache.parquet.cli.Main column-index ${PAR_FILE} > ${TMP_FILE}
 
-    python ${DIR}/alluxio/offsetParser.py ${INFO_DIR}/tmp.txt ${INFO_FILE}
+    python ${DIR}/alluxio/offsetParser.py ${TMP_FILE} ${INFO_FILE}
 
 }
 

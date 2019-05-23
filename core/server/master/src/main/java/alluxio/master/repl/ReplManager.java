@@ -83,12 +83,17 @@ public class ReplManager {
         }
 
         if (useParuqetInfo){
-            OffLenPair pairForParquet = offsetInfoMap.get(requestFile).getPairByOffset(offset);
-            if(pairForParquet == null){
+            FileOffsetInfo offsetInfo = offsetInfoMap.get(requestFile);
+            if(offsetInfo == null){
                 return ImmutableMap.of(requestFile, pair);
             }
             else {
-                pair = pairForParquet;
+                OffLenPair pairForParquet = offsetInfoMap.get(requestFile).getPairByOffset(offset);
+                if (pairForParquet == null) {
+                    return ImmutableMap.of(requestFile, pair);
+                } else {
+                    pair = pairForParquet;
+                }
             }
         }
         else {
