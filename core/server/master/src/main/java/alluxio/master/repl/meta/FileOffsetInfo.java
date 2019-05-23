@@ -44,10 +44,12 @@ public class FileOffsetInfo {
                 addNewOff(startIndex, offsets.get(i) - startIndex);
             }
 
-            OffLenPair lastOff = offsetList.get(offsetList.size() - 1);
+            if (offsetList.size() > 0){
+                OffLenPair lastOff = offsetList.get(offsetList.size() - 1);
 
-            if (lastOff.offset + lastOff.length < offsets.get(i)){
-                addNewOff(lastOff.offset + lastOff.length, offsets.get(i) - (lastOff.offset + lastOff.length));
+                if (lastOff.offset + lastOff.length < offsets.get(i)){
+                    addNewOff(lastOff.offset + lastOff.length, offsets.get(i) - (lastOff.offset + lastOff.length));
+                }
             }
 
             addNewOff(offsets.get(i), lengths.get(i));

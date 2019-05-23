@@ -82,6 +82,8 @@ trace_test(){
 
     mkdir -p  $DIR/logs/shuffle
 
+    $DIR/alluxio/bin/alluxio logLevel --logName=alluxio.master.repl.ReplManager --target=master --level=DEBUG
+
     if [[ `cat ${ALLUXIO_ENV}` == "1" ]]; then
         echo 'Alluxio env already prepared'
     else
