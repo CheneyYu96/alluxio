@@ -126,6 +126,8 @@ public class FileInStream extends InputStream implements BoundedStream, Position
 
   private long mNewBlockSize;
 
+  private boolean mUseParInfo;
+
   protected FileInStream(URIStatus status, InStreamOptions options, FileSystemContext context) {
     mStatus = status;
     mOptions = options;
@@ -152,6 +154,8 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     mNewEndPos = mNewPosition + mNewLength;
     mNewBlockSize = mNewStatus.getBlockSizeBytes();
     mCurrentSeg = new FileSegmentsInfo(status.getPath(), -1, Long.MIN_VALUE);
+
+    mUseParInfo = Configuration.getBoolean(PropertyKey.FR_PARQUET_INFO);
 
   }
 
@@ -294,24 +298,30 @@ public class FileInStream extends InputStream implements BoundedStream, Position
 
   private void checkStreamUpdate(int len) throws IOException {
     // TODO: avoid frequent request
-//    if(mCurrentSeg.getOffset() + mCurrentSeg.getLength() == mNewPosition
-//            && mNewPosition + len <= mNewEndPos){
-//      mCurrentSeg.addLength(len);
-//    }
-    if (len <= mThreshold){
-      LOG.debug("checkStreamUpdate. mPos: {}. mNewPos: {}. len: {}", mPosition, mNewPosition, len);
+
+    if (mUseParInfo){
+      if(mCurrentSeg.getOffset() + mCurrentSeg.getLength() == mNewPosition
+            && mNewPosition + len <= mNewEndPos){
+        mCurrentSeg.addLength(len);
+        return;
+      }
     }
     else {
-      long startTimeMs = CommonUtils.getCurrentMs();
-      try {
-        changeFileInStream(mPosition, (long) len);
-      } catch (AlluxioException e) {
-        e.printStackTrace();
+      if (len <= mThreshold){
+//        LOG.debug("checkStreamUpdate. mPos: {}. mNewPos: {}. len: {}", mPosition, mNewPosition, len);
+        return;
       }
-      LOG.info("update file in stream. elapsed:" + (CommonUtils.getCurrentMs() - startTimeMs) + " mPos: " + mPosition + ". mNewPos: " + mNewPosition + ". len: " + len + ". fileToRead: " + mNewStatus.getPath());
-
-      mCurrentSeg.setOffset(mNewPosition).setLength(len);
     }
+
+    long startTimeMs = CommonUtils.getCurrentMs();
+    try {
+      changeFileInStream(mPosition, (long) len);
+    } catch (AlluxioException e) {
+      e.printStackTrace();
+    }
+    LOG.info("update file in stream. elapsed:" + (CommonUtils.getCurrentMs() - startTimeMs) + " mPos: " + mPosition + ". mNewPos: " + mNewPosition + ". len: " + len + ". fileToRead: " + mNewStatus.getPath());
+
+    mCurrentSeg.setOffset(mNewPosition).setLength(len);
 
   }
 
