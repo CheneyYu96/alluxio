@@ -308,6 +308,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     }
     else {
       if (len <= mThreshold){
+        mNewPosition = mPosition;
 //        LOG.debug("checkStreamUpdate. mPos: {}. mNewPos: {}. len: {}", mPosition, mNewPosition, len);
         return;
       }
