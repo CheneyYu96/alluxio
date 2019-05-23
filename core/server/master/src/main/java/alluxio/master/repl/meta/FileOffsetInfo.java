@@ -89,7 +89,7 @@ public class FileOffsetInfo {
     }
 
     public void recordOffSet(long offset, long length){
-        if (offset < lastOff) {
+        if (offset > 0 && offset < lastOff) {
             addNewOff(offset, length);
         }
     }

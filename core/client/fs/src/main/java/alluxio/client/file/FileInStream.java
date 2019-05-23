@@ -208,8 +208,8 @@ public class FileInStream extends InputStream implements BoundedStream, Position
 
     FileSystemMasterClient masterClientResource = mContext.acquireMasterClient();
 
-    List<FileSegmentsInfo> tmpList = masterClientResource
-            .uploadFileSegmentsAccessInfo(new AlluxioURI("segInfo:" + mStatus.getPath()), mCurrentSeg.getOffset(), mCurrentSeg.getLength());
+    masterClientResource
+            .uploadFileSegmentsAccessInfo(new AlluxioURI("<segInfo>" + mStatus.getPath()), mCurrentSeg.getOffset(), mCurrentSeg.getLength());
 
     List<FileSegmentsInfo> allSegs = masterClientResource
             .uploadFileSegmentsAccessInfo(new AlluxioURI(mStatus.getPath()), offset, length);
