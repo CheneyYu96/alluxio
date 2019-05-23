@@ -143,7 +143,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     /** FR add*/
     mReplicasInfo = new ReplicasInfo();
 
-    mThreshold = 2 * mLength / 100000;
+    mThreshold = Math.max(2 * mLength / 100000, 20);
 
     mNewStatus = status;
     mNewOptions = options;
@@ -298,7 +298,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
 //            && mNewPosition + len <= mNewEndPos){
 //      mCurrentSeg.addLength(len);
 //    }
-    if (len < mThreshold){
+    if (len <= mThreshold){
       LOG.debug("checkStreamUpdate. mPos: {}. mNewPos: {}. len: {}", mPosition, mNewPosition, len);
     }
     else {
