@@ -218,7 +218,9 @@ public class FileInStream extends InputStream implements BoundedStream, Position
       // reading orginal table currently
       if (mNewStatus.getPath().equals(mStatus.getPath())){
         mNewPosition = mPosition;
-//        mNewEndPos = mNewPosition + allSegs.get(0).getLength();
+        if (allSegs.get(0).getLength() != length){
+          mNewEndPos = mNewPosition + allSegs.get(0).getLength();
+        }
       }
       else {
         updateMetadata(allSegs.get(0));
@@ -347,7 +349,6 @@ public class FileInStream extends InputStream implements BoundedStream, Position
 
   @Override
   public int read(byte[] b) throws IOException {
-    LOG.info("read to buffer. mPos: {}. mNewPos: {}. len: {}", mPosition, mNewPosition, b.length);
     return read(b, 0, b.length);
   }
 
@@ -362,6 +363,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     if (mPosition == mLength) { // at end of file
       return -1;
     }
+    LOG.info("read to buffer. mPos: {}. mNewPos: {}. len: {}", mPosition, mNewPosition, len);
 
     if(mOptions.getOptions().isRequireTrans()) {
       // continuous access within the new segment
