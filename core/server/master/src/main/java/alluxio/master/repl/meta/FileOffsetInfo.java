@@ -34,33 +34,25 @@ public class FileOffsetInfo {
      * @param length corresponding length list
      */
     public FileOffsetInfo(AlluxioURI path, List<Long> offset, List<Long> length) {
-        this(path, offset, length, true);
-    }
-
-    public FileOffsetInfo(AlluxioURI path, List<Long> offset, List<Long> length, boolean useParInfo) {
         this(path);
-        if (useParInfo) {
-            genOffsetPair(offset, length);
-        }
-        else {
-            lastOff = offset.get(offset.size() - 1 ) + length.get(length.size() - 1);
-        }
+        genOffsetPair(offset, length);
+        lastOff = offset.get(offset.size() - 1) + length.get(length.size() - 1);
     }
 
     private void genOffsetPair(List<Long> offsets, List<Long> lengths){
-        long startIndex = 4;
+//        long startIndex = 4;
         for (int i = 0; i < offsets.size(); i++) {
-            if (i == 0 && startIndex < offsets.get(i)){
-                addNewOff(startIndex, offsets.get(i) - startIndex);
-            }
-
-            if (offsetList.size() > 0){
-                OffLenPair lastOff = offsetList.get(offsetList.size() - 1);
-
-                if (lastOff.offset + lastOff.length < offsets.get(i)){
-                    addNewOff(lastOff.offset + lastOff.length, offsets.get(i) - (lastOff.offset + lastOff.length));
-                }
-            }
+//            if (i == 0 && startIndex < offsets.get(i)){
+//                addNewOff(startIndex, offsets.get(i) - startIndex);
+//            }
+//
+//            if (offsetList.size() > 0){
+//                OffLenPair lastOff = offsetList.get(offsetList.size() - 1);
+//
+//                if (lastOff.offset + lastOff.length < offsets.get(i)){
+//                    addNewOff(lastOff.offset + lastOff.length, offsets.get(i) - (lastOff.offset + lastOff.length));
+//                }
+//            }
 
             addNewOff(offsets.get(i), lengths.get(i));
         }

@@ -3072,7 +3072,6 @@ public final class DefaultFileSystemMaster extends CoreMaster implements FileSys
 
   @Override
   public List<fileSegmentInfo> recordBlockAccessInfo(String UFSPath, long offset, long length) {
-//    mFileSegmentsAccessRecorder.onAccess(new FileSegmentsInfo(UFSPath, offset, length));
     if(UFSPath.startsWith("<segInfo>")){
       String filePath = UFSPath.substring(UFSPath.indexOf('>') + 1);
       mReplManager.recordOffset( new AlluxioURI(filePath), offset, length);
