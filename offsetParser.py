@@ -53,42 +53,12 @@ def parse(inpath, outpath):
             infer_offs.append(offset_list[i])
             infer_lens.append(length_list[i])
         else:
-            print(f'Warn: offset < start index')
+            print('Warn: offset < start index')
         start_i = offset_list[i] + length_list[i]
         
     with open(outpath, 'w') as f:
         for i in range(len(infer_offs)):
             f.write(str(infer_offs[i]) + ',' + str(infer_lens[i])+'\n')
 
-@click.command()
-@click.argument('path', type=click.Path(exists=True, resolve_path=True))
-def translate(path):
-    offset_list = []
-    length_list = []
-    with open(path, 'r') as f:
-        for line in f:
-            line_list = line.split(',')
-            offset_list.append(int(line_list[0]))
-            length_list.append(int(line_list[1]))
-    
-    infer_offs = []
-    infer_lens = []
-    start_i = 4
-    for i in range(len(offset_list)):
-        if offset_list[i] > start_i:
-            infer_offs.append(start_i)
-            infer_lens.append(offset_list[i] + length_list[i] - start_i)
-        elif offset_list[i] == start_i:
-            infer_offs.append(offset_list[i])
-            infer_lens.append(length_list[i])
-        else:
-            print(f'Warn: offset < start index')
-        start_i = offset_list[i] + length_list[i]
-
-    pair = list(zip(infer_offs, infer_lens))
-    for o, l in pair:
-        print(f'{l:12} {o:12}')
-
 if __name__ == '__main__':
     parse()
-    # translate()
