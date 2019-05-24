@@ -299,7 +299,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     // TODO: separate record and find new replicas
 
     // read data instead of footer
-    if (mCurrentSeg.getOffset() == -1 && len > 1){
+    if (mCurrentSeg.getOffset() == -1 && len > 10){
       mReadData = true;
     }
 
@@ -320,6 +320,9 @@ public class FileInStream extends InputStream implements BoundedStream, Position
 
         mCurrentSeg.setOffset(mNewPosition).setLength(len);
       }
+    }
+    else {
+      mNewPosition = mPosition;
     }
 
   }
