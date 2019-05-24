@@ -307,8 +307,8 @@ public class FileInStream extends InputStream implements BoundedStream, Position
         e.printStackTrace();
       }
       LOG.info("update file in stream. elapsed: {}. segs(off={}, len={}). mPos: {}. mNewPos: {}. len: {}. fileToRead: {}",
-              mCurrentSeg.getOffset(), mCurrentSeg.getLength(),
-              (CommonUtils.getCurrentMs() - startTimeMs), mPosition,  mNewPosition, len, mNewStatus.getPath());
+              (CommonUtils.getCurrentMs() - startTimeMs), mCurrentSeg.getOffset(), mCurrentSeg.getLength(),
+              mPosition,  mNewPosition, len, mNewStatus.getPath());
 
       mCurrentSeg.setOffset(mPosition).setLength(len);
     }
