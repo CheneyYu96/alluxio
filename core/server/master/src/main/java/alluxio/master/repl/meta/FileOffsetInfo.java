@@ -68,12 +68,21 @@ public class FileOffsetInfo {
         return mFilePath;
     }
 
-    public List<OffLenPair> getOffsetList() {
-        return offsetList;
-    }
+    public List<OffLenPair> getPairsByOffLen(long off, long len){
+        List<OffLenPair> pairs = new ArrayList<>();
+        if(offLenPairMap.containsKey(off)){
+            OffLenPair firstPair = offLenPairMap.get(off);
+            pairs.add(firstPair);
 
-    public OffLenPair getOffset(int i){
-        return offsetList.get(i);
+            OffLenPair nextPair = firstPair;
+
+            while (nextPair.offset + nextPair.length < len){
+                nextPair = offLenPairMap.get(nextPair.offset + nextPair.length);
+                pairs.add(nextPair);
+            }
+        }
+
+        return pairs;
     }
 
     public OffLenPair getPairByOffset(long offset){

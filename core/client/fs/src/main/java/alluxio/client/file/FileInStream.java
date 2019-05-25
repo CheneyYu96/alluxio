@@ -123,6 +123,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
   private long mNewEndPos;
 
   private long mNewBlockSize;
+  private boolean mFirstRead;
   private boolean mReadData;
 
   protected FileInStream(URIStatus status, InStreamOptions options, FileSystemContext context) {
@@ -150,6 +151,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     mNewBlockSize = mNewStatus.getBlockSizeBytes();
     mCurrentSeg = new FileSegmentsInfo(status.getPath(), -1, Long.MIN_VALUE);
     mReadData = false;
+    mFirstRead = true;
 
     LOG.info("Generate file in stream for file: {}", mStatus.getPath());
 
@@ -212,8 +214,8 @@ public class FileInStream extends InputStream implements BoundedStream, Position
 
     FileSystemMasterClient masterClientResource = mContext.acquireMasterClient();
 
-    masterClientResource
-            .uploadFileSegmentsAccessInfo(new AlluxioURI("<segInfo>" + mStatus.getPath()), mCurrentSeg.getOffset(), mCurrentSeg.getLength());
+//    masterClientResource
+//            .uploadFileSegmentsAccessInfo(new AlluxioURI("<segInfo>" + mStatus.getPath()), mCurrentSeg.getOffset(), mCurrentSeg.getLength());
 
     List<FileSegmentsInfo> allSegs = masterClientResource
             .uploadFileSegmentsAccessInfo(new AlluxioURI(mStatus.getPath()), offset, length);
@@ -225,7 +227,6 @@ public class FileInStream extends InputStream implements BoundedStream, Position
       // reading orginal table currently
       if (mNewStatus.getPath().equals(mStatus.getPath())){
         mNewPosition = mPosition;
-//        mNewEndPos = mNewPosition + allSegs.get(0).getLength();
       }
       else {
         updateMetadata(allSegs.get(0));
@@ -299,27 +300,42 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     // TODO: separate record and find new replicas
 
     // read data instead of footer
-    if (mCurrentSeg.getOffset() == -1 && len > 10){
+//    if (mCurrentSeg.getOffset() == -1 && len > 10){
+//      mReadData = true;
+//    }
+
+    if (mFirstRead && len > 10){
+      mFirstRead = false;
       mReadData = true;
     }
 
     if (mReadData) {
-      if (mCurrentSeg.getOffset() + mCurrentSeg.getLength() == mNewPosition
-         && mNewPosition + len <= mNewEndPos){
-        mCurrentSeg.addLength(len);
-      } else {
-        long startTimeMs = CommonUtils.getCurrentMs();
-        try {
-          changeFileInStream(mPosition, (long) len);
-        } catch (AlluxioException e) {
-          e.printStackTrace();
-        }
-        LOG.info("update file in stream. elapsed: {}. segs(off={}, len={}). mPos: {}. mNewPos: {}. len: {}. fileToRead: {}",
-                (CommonUtils.getCurrentMs() - startTimeMs), mCurrentSeg.getOffset(), mCurrentSeg.getLength(),
-                mPosition, mNewPosition, len, mNewStatus.getPath());
+//      if (mCurrentSeg.getOffset() + mCurrentSeg.getLength() == mNewPosition
+//         && mNewPosition + len <= mNewEndPos){
+//        mCurrentSeg.addLength(len);
+//      } else {
+//        long startTimeMs = CommonUtils.getCurrentMs();
+//        try {
+//          changeFileInStream(mPosition, (long) len);
+//        } catch (AlluxioException e) {
+//          e.printStackTrace();
+//        }
+//        LOG.info("update file in stream. elapsed: {}. segs(off={}, len={}). mPos: {}. mNewPos: {}. len: {}. fileToRead: {}",
+//                (CommonUtils.getCurrentMs() - startTimeMs), mCurrentSeg.getOffset(), mCurrentSeg.getLength(),
+//                mPosition, mNewPosition, len, mNewStatus.getPath());
+//
+//        mCurrentSeg.setOffset(mNewPosition).setLength(len);
+//      }
 
-        mCurrentSeg.setOffset(mNewPosition).setLength(len);
+      long startTimeMs = CommonUtils.getCurrentMs();
+      try {
+        changeFileInStream(mPosition, (long) len);
+      } catch (AlluxioException e) {
+        e.printStackTrace();
       }
+      LOG.info("update file in stream. elapsed: {}. mPos: {}. mNewPos: {}. len: {}. fileToRead: {}",
+              (CommonUtils.getCurrentMs() - startTimeMs),
+              mPosition, mNewPosition, len, mNewStatus.getPath());
     }
     else {
       mNewPosition = mPosition;

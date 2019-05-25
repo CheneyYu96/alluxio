@@ -67,6 +67,7 @@ public class ReplManager {
     }
 
     public void recordOffset(AlluxioURI requestFile, long offset, long length){
+        // TODO: unused
         LOG.debug("Receive offset record for file {}. offset {} length {}", requestFile.getPath(), offset, length);
 
         if (offsetInfoMap.containsKey(requestFile)) {
@@ -85,20 +86,25 @@ public class ReplManager {
             return ImmutableMap.of(requestFile, pair);
         }
 
-//        if (useParuqetInfo){
+        if (useParuqetInfo){
             FileOffsetInfo offsetInfo = offsetInfoMap.get(requestFile);
             if(offsetInfo == null){
                 return ImmutableMap.of(requestFile, pair);
             }
             else {
-                OffLenPair pairForParquet = offsetInfoMap.get(requestFile).getPairByOffset(offset);
-                if (pairForParquet == null) {
+//                OffLenPair pairForParquet = offsetInfoMap.get(requestFile).getPairByOffset(offset);
+//                if (pairForParquet == null) {
+//                    return ImmutableMap.of(requestFile, pair);
+//                } else {
+//                    pair = pairForParquet;
+//                }
+                List<OffLenPair> pairs = offsetInfoMap.get(requestFile).getPairsByOffLen(offset, length);
+                // TODO: when exist multiple pairs
+                if(pairs.size() == 0){
                     return ImmutableMap.of(requestFile, pair);
-                } else {
-                    pair = pairForParquet;
                 }
             }
-//        }
+        }
 
         LOG.info("Record access for file {}. offset {} length {}", requestFile.getPath(), pair.offset, pair.length);
 
