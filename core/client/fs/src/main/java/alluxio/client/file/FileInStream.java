@@ -304,9 +304,11 @@ public class FileInStream extends InputStream implements BoundedStream, Position
 //      mReadData = true;
 //    }
 
-    if (mFirstRead && len > 10){
+    if (mFirstRead){
+      if(len > 10) {
+        mReadData = true;
+      }
       mFirstRead = false;
-      mReadData = true;
     }
 
     if (mReadData) {
