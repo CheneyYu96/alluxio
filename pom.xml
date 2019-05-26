@@ -182,6 +182,7 @@
     <module>tests</module>
     <module>underfs</module>
     <module>frclient</module>
+    <module>writeparquet</module>
   </modules>
 
   <dependencyManagement>
@@ -1007,6 +1008,9 @@
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>findbugs-maven-plugin</artifactId>
+          <!--<configuration>-->
+            <!--<skip>true</skip>-->
+          <!--</configuration>-->
           <version>3.0.5</version>
         </plugin>
         <plugin>

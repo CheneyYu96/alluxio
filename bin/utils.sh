@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-set -euxo pipefail
+#set -euxo pipefail
+set -x
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )"  && pwd )"
 DIR="$( cd "$DIR/../.." && pwd )"
@@ -181,6 +182,32 @@ nonshuffle_env(){
     ${DIR}/alluxio/bin/restart.sh
 }
 
+fr_env(){
+
+    sed -i "/fr.client.translation=false/c\fr.client.translation=true" $DIR/alluxio/conf/alluxio-site.properties
+
+    sed -i "/alluxio.user.file.passive.cache.enabled=true/c\alluxio.user.file.passive.cache.enabled=false" $DIR/alluxio/conf/alluxio-site.properties
+
+    sed -i "/alluxio.user.file.replication.min=2/c\alluxio.user.file.replication.min=0" $DIR/alluxio/conf/alluxio-site.properties
+
+#    sed -i \
+#        "/alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.TimerPolicy/c\alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.RoundRobinPolicy" \
+#        $DIR/alluxio/conf/alluxio-site.properties
+
+    sed -i \
+        "/alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.RoundRobinPolicy/c\alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.TimerPolicy" \
+        $DIR/alluxio/conf/alluxio-site.properties
+
+     ${DIR}/alluxio/bin/restart.sh
+}
+
+non_fr_env(){
+
+    sed -i "/fr.client.translation=true/c\fr.client.translation=false" $DIR/alluxio/conf/alluxio-site.properties
+
+     ${DIR}/alluxio/bin/restart.sh
+}
+
 get_dir_index(){
     NAME=$1
 
@@ -192,4 +219,16 @@ get_dir_index(){
 
     echo $DIR/logs/${NAME}${INDEX}
 
+}
+
+remove(){
+    OBJ=$1
+
+    if [[ -d ${OBJ} ]]; then
+        rm -r ${OBJ}
+    fi
+
+    if [[ -f ${OBJ} ]]; then
+        rm ${OBJ}
+    fi
 }

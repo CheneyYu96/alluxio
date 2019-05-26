@@ -4089,10 +4089,12 @@ public final class PropertyKey implements Comparable<PropertyKey> {
     // TODO: FR parameters
     public static final String FR_REPL_INTERVAL = "fr.repl.interval";
     public static final String FR_REPL_POLICY = "fr.repl.policy.class";
+    public static final String FR_REPL_DIR = "fr.repl.dir";
     public static final String FR_REPL_WEIGHT = "fr.repl.weight";
     public static final String FR_RECORD_INTERVAL = "fr.record.interval";
 
     public static final String FR_CLIENT_TRANS = "fr.client.translation";
+    public static final String FR_PARQUET_INFO = "fr.parquet.info";
 
     private Name() {} // prevent instantiation
   }
@@ -4590,6 +4592,11 @@ public final class PropertyKey implements Comparable<PropertyKey> {
                   .setDescription("The default replication policy for replication")
                   .build();
 
+  public static final PropertyKey FR_REPL_DIR =
+          new Builder(Name.FR_REPL_DIR)
+                  .setDefaultValue("/fr_dir")
+                  .build();
+
   public static final PropertyKey FR_REPL_WEIGHT =
           new Builder(Name.FR_REPL_WEIGHT)
                   .setDefaultValue(1.0)
@@ -4602,6 +4609,11 @@ public final class PropertyKey implements Comparable<PropertyKey> {
 
   public static final PropertyKey FR_CLIENT_TRANS =
           new Builder(Name.FR_CLIENT_TRANS)
+                  .setDefaultValue(true)
+                  .build();
+
+  public static final PropertyKey FR_PARQUET_INFO =
+          new Builder(Name.FR_PARQUET_INFO)
                   .setDefaultValue(true)
                   .build();
 }

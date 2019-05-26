@@ -123,6 +123,8 @@ public class FileInStream extends InputStream implements BoundedStream, Position
   private long mNewEndPos;
 
   private long mNewBlockSize;
+  private boolean mFirstRead;
+  private boolean mReadData;
 
   protected FileInStream(URIStatus status, InStreamOptions options, FileSystemContext context) {
     mStatus = status;
@@ -147,7 +149,11 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     mNewLength = mNewStatus.getLength();
     mNewEndPos = mNewPosition + mNewLength;
     mNewBlockSize = mNewStatus.getBlockSizeBytes();
-    mCurrentSeg = new FileSegmentsInfo(status.getPath(), -1, 0);
+    mCurrentSeg = new FileSegmentsInfo(status.getPath(), -1, Long.MIN_VALUE);
+    mReadData = false;
+    mFirstRead = true;
+
+    LOG.info("Generate file in stream for file: {}", mStatus.getPath());
 
   }
 
@@ -208,6 +214,9 @@ public class FileInStream extends InputStream implements BoundedStream, Position
 
     FileSystemMasterClient masterClientResource = mContext.acquireMasterClient();
 
+//    masterClientResource
+//            .uploadFileSegmentsAccessInfo(new AlluxioURI("<segInfo>" + mStatus.getPath()), mCurrentSeg.getOffset(), mCurrentSeg.getLength());
+
     List<FileSegmentsInfo> allSegs = masterClientResource
             .uploadFileSegmentsAccessInfo(new AlluxioURI(mStatus.getPath()), offset, length);
 
@@ -215,11 +224,25 @@ public class FileInStream extends InputStream implements BoundedStream, Position
 
     // no replicas
     if(allSegs.size() == 1){
-      mNewPosition = allSegs.get(0).getOffset();
+      // reading orginal table currently
+      if (mNewStatus.getPath().equals(mStatus.getPath())){
+        mNewPosition = mPosition;
+      }
+      else {
+        updateMetadata(allSegs.get(0));
+      }
+      return;
     }
 
     // decide segment to read
     WorkerNetAddress localWorker = mContext.getLocalWorker();
+
+    // no local worker, usually in master
+    if (localWorker == null){
+      int index = new Random().nextInt(allSegs.size());
+      updateMetadata(allSegs.get(index));
+      return;
+    }
 
     List<Pair<FileSegmentsInfo, WorkerNetAddress>> allSegWithLoc = allSegs
             .stream()
@@ -252,6 +275,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
 
       if (sameSegToRead != null){
         mNewPosition = sameSegToRead.getFirst().getOffset();
+        mNewEndPos = mNewPosition + sameSegToRead.getFirst().getLength();
       }
       else {
         // select seg randomly
@@ -268,28 +292,56 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     mNewPosition = segToRead.getOffset();
     mNewBlockSize = mNewStatus.getBlockSizeBytes();
     mNewLength = mNewStatus.getLength();
-    mNewEndPos = mNewLength + mNewPosition;
+    mNewEndPos = mNewPosition + segToRead.getLength();
     mBlockInStream = null;
   }
 
   private void checkStreamUpdate(int len) throws IOException {
-    if(mCurrentSeg.getOffset() + mCurrentSeg.getLength() == mNewPosition
-            && mNewPosition + len <= mNewEndPos){
-      mCurrentSeg.addLength(len);
+    // TODO: separate record and find new replicas
+
+    // read data instead of footer
+//    if (mCurrentSeg.getOffset() == -1 && len > 10){
+//      mReadData = true;
+//    }
+
+    if (mFirstRead){
+      if(len > 10) {
+        mReadData = true;
+      }
+      mFirstRead = false;
     }
-    else {
+
+    if (mReadData) {
+//      if (mCurrentSeg.getOffset() + mCurrentSeg.getLength() == mNewPosition
+//         && mNewPosition + len <= mNewEndPos){
+//        mCurrentSeg.addLength(len);
+//      } else {
+//        long startTimeMs = CommonUtils.getCurrentMs();
+//        try {
+//          changeFileInStream(mPosition, (long) len);
+//        } catch (AlluxioException e) {
+//          e.printStackTrace();
+//        }
+//        LOG.info("update file in stream. elapsed: {}. segs(off={}, len={}). mPos: {}. mNewPos: {}. len: {}. fileToRead: {}",
+//                (CommonUtils.getCurrentMs() - startTimeMs), mCurrentSeg.getOffset(), mCurrentSeg.getLength(),
+//                mPosition, mNewPosition, len, mNewStatus.getPath());
+//
+//        mCurrentSeg.setOffset(mNewPosition).setLength(len);
+//      }
+
       long startTimeMs = CommonUtils.getCurrentMs();
       try {
         changeFileInStream(mPosition, (long) len);
       } catch (AlluxioException e) {
         e.printStackTrace();
       }
-      mCurrentSeg.setOffset(mNewPosition).setLength(len);
-      LOG.info("update file in stream. elapsed:" + (CommonUtils.getCurrentMs() - startTimeMs) + " mPos: " + mPosition + ". mNewPos: " + mNewPosition + ". len: " + len);
-
+      LOG.info("update file in stream. elapsed: {}. mPos: {}. mNewPos: {}. len: {}. fileToRead: {}",
+              (CommonUtils.getCurrentMs() - startTimeMs),
+              mPosition, mNewPosition, len, mNewStatus.getPath());
     }
-
-//    LOG.info("check seg. pos: " + mCurrentSeg.getOffset() + ". len: " + mCurrentSeg.getLength());
+    else {
+      mNewPosition = mPosition;
+    }
 
   }
 
@@ -302,8 +354,8 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     CountingRetry retry = new CountingRetry(MAX_WORKERS_TO_RETRY);
     IOException lastException = null;
 
-    // TODO: change in stream in read()
     if(mOptions.getOptions().isRequireTrans()) {
+//      mNewPosition = mPosition;
       checkStreamUpdate(1);
     }
 //    LOG.info("read no parameter. mPos: " + mPosition + ". mNewPos: " + mNewPosition);
@@ -345,6 +397,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     if (mPosition == mLength) { // at end of file
       return -1;
     }
+    LOG.info("read to buffer. mPos: {}. mNewPos: {}. len: {}. path: {}", mPosition, mNewPosition, len, mNewStatus.getPath());
 
     if(mOptions.getOptions().isRequireTrans()) {
       // continuous access within the new segment
@@ -493,14 +546,15 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     mPosition += delta;
 
     if(mOptions.getOptions().isRequireTrans()) {
-      try {
-        changeFileInStream(mPosition, (long) 0);
-      } catch (AlluxioException e) {
-        e.printStackTrace();
-      }
+      mNewPosition = -1; // refresh file in stream
+//      try {
+//        changeFileInStream(mPosition, (long) 0);
+//      } catch (AlluxioException e) {
+//        e.printStackTrace();
+//      }
     }
 
-    LOG.info("seek pos. mPos: " + mPosition + ". mNewPos: " + mNewPosition);
+    LOG.info("seek pos. mPos: " + mPosition + ". mNewPos: " + mNewPosition + ". fileToRead: " + mNewStatus.getPath());
 
   }
 

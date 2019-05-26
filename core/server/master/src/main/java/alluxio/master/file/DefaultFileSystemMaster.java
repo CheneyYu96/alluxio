@@ -716,11 +716,7 @@ public final class DefaultFileSystemMaster extends CoreMaster implements FileSys
   public FileInfo getFileInfo(AlluxioURI path, GetStatusOptions options)
       throws FileDoesNotExistException, InvalidPathException, AccessControlException, IOException {
     Metrics.GET_FILE_INFO_OPS.inc();
-    /*
-     * 1. record access in stats
-     * 2. get translated file path
-     * TODO: record &translate original file to replicas, if needed
-     */
+
     LockingScheme lockingScheme =
         createLockingScheme(path, options.getCommonOptions(), LockPattern.READ);
     try (RpcContext rpcContext = createRpcContext();
@@ -3076,14 +3072,26 @@ public final class DefaultFileSystemMaster extends CoreMaster implements FileSys
 
   @Override
   public List<fileSegmentInfo> recordBlockAccessInfo(String UFSPath, long offset, long length) {
-//    mFileSegmentsAccessRecorder.onAccess(new FileSegmentsInfo(UFSPath, offset, length));
+    if(UFSPath.startsWith("<segInfo>")){
+      String filePath = UFSPath.substring(UFSPath.indexOf('>') + 1);
+      mReplManager.recordOffset( new AlluxioURI(filePath), offset, length);
 
-    return mReplManager
-            .recordAccess(new AlluxioURI(UFSPath), offset, length)
-            .entrySet()
-            .stream()
-            .map( e -> new fileSegmentInfo(e.getKey().getPath(), e.getValue().offset, e.getValue().length))
-            .collect(Collectors.toList());
+      return new ArrayList<>();
+    }
+    else {
+      return mReplManager
+              .recordAccess(new AlluxioURI(UFSPath), offset, length)
+              .entrySet()
+              .stream()
+              .map( e -> new fileSegmentInfo(e.getKey().getPath(), e.getValue().offset, e.getValue().length))
+              .collect(Collectors.toList());
+    }
+
+  }
+
+  @Override
+  public void recordOffsetInfo(String UFSPath, List<Long> offset, List<Long> length) {
+    mReplManager.recordParInfo(new AlluxioURI(UFSPath), offset, length);
   }
 
   private boolean syncMetadata(RpcContext rpcContext, LockedInodePath inodePath,

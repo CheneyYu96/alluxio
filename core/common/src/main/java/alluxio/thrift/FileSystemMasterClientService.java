@@ -208,6 +208,18 @@ public class FileSystemMasterClientService {
     public SetAttributeTResponse setAttribute(String path, SetAttributeTOptions options) throws alluxio.thrift.AlluxioTException, org.apache.thrift.TException;
 
     /**
+     * Send Parquet Information
+     * 
+     * 
+     * @param path the path of the file or directory
+     * 
+     * @param offset the offsets of the parquet file
+     * 
+     * @param length the offset length of the parquet file
+     */
+    public SendParquetInfoTResponse sendParquetInfo(String path, List<Long> offset, List<Long> length) throws alluxio.thrift.AlluxioTException, org.apache.thrift.TException;
+
+    /**
      * Start the active syncing of the directory or file
      * 
      * @param path the path of the file or directory
@@ -293,6 +305,8 @@ public class FileSystemMasterClientService {
     public void setAcl(String path, TSetAclAction action, List<TAclEntry> entries, SetAclTOptions options, org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException;
 
     public void setAttribute(String path, SetAttributeTOptions options, org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException;
+
+    public void sendParquetInfo(String path, List<Long> offset, List<Long> length, org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException;
 
     public void startSync(String path, StartSyncTOptions options, org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException;
 
@@ -786,6 +800,34 @@ public class FileSystemMasterClientService {
         throw result.e;
       }
       throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "setAttribute failed: unknown result");
+    }
+
+    public SendParquetInfoTResponse sendParquetInfo(String path, List<Long> offset, List<Long> length) throws alluxio.thrift.AlluxioTException, org.apache.thrift.TException
+    {
+      send_sendParquetInfo(path, offset, length);
+      return recv_sendParquetInfo();
+    }
+
+    public void send_sendParquetInfo(String path, List<Long> offset, List<Long> length) throws org.apache.thrift.TException
+    {
+      sendParquetInfo_args args = new sendParquetInfo_args();
+      args.setPath(path);
+      args.setOffset(offset);
+      args.setLength(length);
+      sendBase("sendParquetInfo", args);
+    }
+
+    public SendParquetInfoTResponse recv_sendParquetInfo() throws alluxio.thrift.AlluxioTException, org.apache.thrift.TException
+    {
+      sendParquetInfo_result result = new sendParquetInfo_result();
+      receiveBase(result, "sendParquetInfo");
+      if (result.isSetSuccess()) {
+        return result.success;
+      }
+      if (result.e != null) {
+        throw result.e;
+      }
+      throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "sendParquetInfo failed: unknown result");
     }
 
     public StartSyncTResponse startSync(String path, StartSyncTOptions options) throws alluxio.thrift.AlluxioTException, org.apache.thrift.TException
@@ -1546,6 +1588,44 @@ public class FileSystemMasterClientService {
       }
     }
 
+    public void sendParquetInfo(String path, List<Long> offset, List<Long> length, org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException {
+      checkReady();
+      sendParquetInfo_call method_call = new sendParquetInfo_call(path, offset, length, resultHandler, this, ___protocolFactory, ___transport);
+      this.___currentMethod = method_call;
+      ___manager.call(method_call);
+    }
+
+    public static class sendParquetInfo_call extends org.apache.thrift.async.TAsyncMethodCall {
+      private String path;
+      private List<Long> offset;
+      private List<Long> length;
+      public sendParquetInfo_call(String path, List<Long> offset, List<Long> length, org.apache.thrift.async.AsyncMethodCallback resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+        super(client, protocolFactory, transport, resultHandler, false);
+        this.path = path;
+        this.offset = offset;
+        this.length = length;
+      }
+
+      public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
+        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("sendParquetInfo", org.apache.thrift.protocol.TMessageType.CALL, 0));
+        sendParquetInfo_args args = new sendParquetInfo_args();
+        args.setPath(path);
+        args.setOffset(offset);
+        args.setLength(length);
+        args.write(prot);
+        prot.writeMessageEnd();
+      }
+
+      public SendParquetInfoTResponse getResult() throws alluxio.thrift.AlluxioTException, org.apache.thrift.TException {
+        if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
+          throw new IllegalStateException("Method call not finished!");
+        }
+        org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(getFrameBuffer().array());
+        org.apache.thrift.protocol.TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
+        return (new Client(prot)).recv_sendParquetInfo();
+      }
+    }
+
     public void startSync(String path, StartSyncTOptions options, org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException {
       checkReady();
       startSync_call method_call = new startSync_call(path, options, resultHandler, this, ___protocolFactory, ___transport);
@@ -1754,6 +1834,7 @@ public class FileSystemMasterClientService {
       processMap.put("scheduleAsyncPersistence", new scheduleAsyncPersistence());
       processMap.put("setAcl", new setAcl());
       processMap.put("setAttribute", new setAttribute());
+      processMap.put("sendParquetInfo", new sendParquetInfo());
       processMap.put("startSync", new startSync());
       processMap.put("stopSync", new stopSync());
       processMap.put("unmount", new unmount());
@@ -2170,6 +2251,30 @@ public class FileSystemMasterClientService {
       }
     }
 
+    public static class sendParquetInfo<I extends Iface> extends org.apache.thrift.ProcessFunction<I, sendParquetInfo_args> {
+      public sendParquetInfo() {
+        super("sendParquetInfo");
+      }
+
+      public sendParquetInfo_args getEmptyArgsInstance() {
+        return new sendParquetInfo_args();
+      }
+
+      protected boolean isOneway() {
+        return false;
+      }
+
+      public sendParquetInfo_result getResult(I iface, sendParquetInfo_args args) throws org.apache.thrift.TException {
+        sendParquetInfo_result result = new sendParquetInfo_result();
+        try {
+          result.success = iface.sendParquetInfo(args.path, args.offset, args.length);
+        } catch (alluxio.thrift.AlluxioTException e) {
+          result.e = e;
+        }
+        return result;
+      }
+    }
+
     public static class startSync<I extends Iface> extends org.apache.thrift.ProcessFunction<I, startSync_args> {
       public startSync() {
         super("startSync");
@@ -2320,6 +2425,7 @@ public class FileSystemMasterClientService {
       processMap.put("scheduleAsyncPersistence", new scheduleAsyncPersistence());
       processMap.put("setAcl", new setAcl());
       processMap.put("setAttribute", new setAttribute());
+      processMap.put("sendParquetInfo", new sendParquetInfo());
       processMap.put("startSync", new startSync());
       processMap.put("stopSync", new stopSync());
       processMap.put("unmount", new unmount());
@@ -3294,6 +3400,63 @@ public class FileSystemMasterClientService {
 
       public void start(I iface, setAttribute_args args, org.apache.thrift.async.AsyncMethodCallback<SetAttributeTResponse> resultHandler) throws TException {
         iface.setAttribute(args.path, args.options,resultHandler);
+      }
+    }
+
+    public static class sendParquetInfo<I extends AsyncIface> extends org.apache.thrift.AsyncProcessFunction<I, sendParquetInfo_args, SendParquetInfoTResponse> {
+      public sendParquetInfo() {
+        super("sendParquetInfo");
+      }
+
+      public sendParquetInfo_args getEmptyArgsInstance() {
+        return new sendParquetInfo_args();
+      }
+
+      public AsyncMethodCallback<SendParquetInfoTResponse> getResultHandler(final AsyncFrameBuffer fb, final int seqid) {
+        final org.apache.thrift.AsyncProcessFunction fcall = this;
+        return new AsyncMethodCallback<SendParquetInfoTResponse>() { 
+          public void onComplete(SendParquetInfoTResponse o) {
+            sendParquetInfo_result result = new sendParquetInfo_result();
+            result.success = o;
+            try {
+              fcall.sendResponse(fb,result, org.apache.thrift.protocol.TMessageType.REPLY,seqid);
+              return;
+            } catch (Exception e) {
+              LOGGER.error("Exception writing to internal frame buffer", e);
+            }
+            fb.close();
+          }
+          public void onError(Exception e) {
+            byte msgType = org.apache.thrift.protocol.TMessageType.REPLY;
+            org.apache.thrift.TBase msg;
+            sendParquetInfo_result result = new sendParquetInfo_result();
+            if (e instanceof alluxio.thrift.AlluxioTException) {
+                        result.e = (alluxio.thrift.AlluxioTException) e;
+                        result.setEIsSet(true);
+                        msg = result;
+            }
+             else 
+            {
+              msgType = org.apache.thrift.protocol.TMessageType.EXCEPTION;
+              msg = (org.apache.thrift.TBase)new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.INTERNAL_ERROR, e.getMessage());
+            }
+            try {
+              fcall.sendResponse(fb,msg,msgType,seqid);
+              return;
+            } catch (Exception ex) {
+              LOGGER.error("Exception writing to internal frame buffer", ex);
+            }
+            fb.close();
+          }
+        };
+      }
+
+      protected boolean isOneway() {
+        return false;
+      }
+
+      public void start(I iface, sendParquetInfo_args args, org.apache.thrift.async.AsyncMethodCallback<SendParquetInfoTResponse> resultHandler) throws TException {
+        iface.sendParquetInfo(args.path, args.offset, args.length,resultHandler);
       }
     }
 
@@ -20295,6 +20458,1175 @@ public class FileSystemMasterClientService {
         BitSet incoming = iprot.readBitSet(2);
         if (incoming.get(0)) {
           struct.success = new SetAttributeTResponse();
+          struct.success.read(iprot);
+          struct.setSuccessIsSet(true);
+        }
+        if (incoming.get(1)) {
+          struct.e = new alluxio.thrift.AlluxioTException();
+          struct.e.read(iprot);
+          struct.setEIsSet(true);
+        }
+      }
+    }
+
+  }
+
+  public static class sendParquetInfo_args implements org.apache.thrift.TBase<sendParquetInfo_args, sendParquetInfo_args._Fields>, java.io.Serializable, Cloneable, Comparable<sendParquetInfo_args>   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("sendParquetInfo_args");
+
+    private static final org.apache.thrift.protocol.TField PATH_FIELD_DESC = new org.apache.thrift.protocol.TField("path", org.apache.thrift.protocol.TType.STRING, (short)1);
+    private static final org.apache.thrift.protocol.TField OFFSET_FIELD_DESC = new org.apache.thrift.protocol.TField("offset", org.apache.thrift.protocol.TType.LIST, (short)2);
+    private static final org.apache.thrift.protocol.TField LENGTH_FIELD_DESC = new org.apache.thrift.protocol.TField("length", org.apache.thrift.protocol.TType.LIST, (short)3);
+
+    private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
+    static {
+      schemes.put(StandardScheme.class, new sendParquetInfo_argsStandardSchemeFactory());
+      schemes.put(TupleScheme.class, new sendParquetInfo_argsTupleSchemeFactory());
+    }
+
+    private String path; // required
+    private List<Long> offset; // required
+    private List<Long> length; // required
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+      /**
+       * the path of the file or directory
+       */
+      PATH((short)1, "path"),
+      /**
+       * the offsets of the parquet file
+       */
+      OFFSET((short)2, "offset"),
+      /**
+       * the offset length of the parquet file
+       */
+      LENGTH((short)3, "length");
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          case 1: // PATH
+            return PATH;
+          case 2: // OFFSET
+            return OFFSET;
+          case 3: // LENGTH
+            return LENGTH;
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+
+    // isset id assignments
+    public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.PATH, new org.apache.thrift.meta_data.FieldMetaData("path", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+      tmpMap.put(_Fields.OFFSET, new org.apache.thrift.meta_data.FieldMetaData("offset", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.ListMetaData(org.apache.thrift.protocol.TType.LIST, 
+              new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64))));
+      tmpMap.put(_Fields.LENGTH, new org.apache.thrift.meta_data.FieldMetaData("length", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.ListMetaData(org.apache.thrift.protocol.TType.LIST, 
+              new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64))));
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(sendParquetInfo_args.class, metaDataMap);
+    }
+
+    public sendParquetInfo_args() {
+    }
+
+    public sendParquetInfo_args(
+      String path,
+      List<Long> offset,
+      List<Long> length)
+    {
+      this();
+      this.path = path;
+      this.offset = offset;
+      this.length = length;
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public sendParquetInfo_args(sendParquetInfo_args other) {
+      if (other.isSetPath()) {
+        this.path = other.path;
+      }
+      if (other.isSetOffset()) {
+        List<Long> __this__offset = new ArrayList<Long>(other.offset);
+        this.offset = __this__offset;
+      }
+      if (other.isSetLength()) {
+        List<Long> __this__length = new ArrayList<Long>(other.length);
+        this.length = __this__length;
+      }
+    }
+
+    public sendParquetInfo_args deepCopy() {
+      return new sendParquetInfo_args(this);
+    }
+
+    @Override
+    public void clear() {
+      this.path = null;
+      this.offset = null;
+      this.length = null;
+    }
+
+    /**
+     * the path of the file or directory
+     */
+    public String getPath() {
+      return this.path;
+    }
+
+    /**
+     * the path of the file or directory
+     */
+    public sendParquetInfo_args setPath(String path) {
+      this.path = path;
+      return this;
+    }
+
+    public void unsetPath() {
+      this.path = null;
+    }
+
+    /** Returns true if field path is set (has been assigned a value) and false otherwise */
+    public boolean isSetPath() {
+      return this.path != null;
+    }
+
+    public void setPathIsSet(boolean value) {
+      if (!value) {
+        this.path = null;
+      }
+    }
+
+    public int getOffsetSize() {
+      return (this.offset == null) ? 0 : this.offset.size();
+    }
+
+    public java.util.Iterator<Long> getOffsetIterator() {
+      return (this.offset == null) ? null : this.offset.iterator();
+    }
+
+    public void addToOffset(long elem) {
+      if (this.offset == null) {
+        this.offset = new ArrayList<Long>();
+      }
+      this.offset.add(elem);
+    }
+
+    /**
+     * the offsets of the parquet file
+     */
+    public List<Long> getOffset() {
+      return this.offset;
+    }
+
+    /**
+     * the offsets of the parquet file
+     */
+    public sendParquetInfo_args setOffset(List<Long> offset) {
+      this.offset = offset;
+      return this;
+    }
+
+    public void unsetOffset() {
+      this.offset = null;
+    }
+
+    /** Returns true if field offset is set (has been assigned a value) and false otherwise */
+    public boolean isSetOffset() {
+      return this.offset != null;
+    }
+
+    public void setOffsetIsSet(boolean value) {
+      if (!value) {
+        this.offset = null;
+      }
+    }
+
+    public int getLengthSize() {
+      return (this.length == null) ? 0 : this.length.size();
+    }
+
+    public java.util.Iterator<Long> getLengthIterator() {
+      return (this.length == null) ? null : this.length.iterator();
+    }
+
+    public void addToLength(long elem) {
+      if (this.length == null) {
+        this.length = new ArrayList<Long>();
+      }
+      this.length.add(elem);
+    }
+
+    /**
+     * the offset length of the parquet file
+     */
+    public List<Long> getLength() {
+      return this.length;
+    }
+
+    /**
+     * the offset length of the parquet file
+     */
+    public sendParquetInfo_args setLength(List<Long> length) {
+      this.length = length;
+      return this;
+    }
+
+    public void unsetLength() {
+      this.length = null;
+    }
+
+    /** Returns true if field length is set (has been assigned a value) and false otherwise */
+    public boolean isSetLength() {
+      return this.length != null;
+    }
+
+    public void setLengthIsSet(boolean value) {
+      if (!value) {
+        this.length = null;
+      }
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      case PATH:
+        if (value == null) {
+          unsetPath();
+        } else {
+          setPath((String)value);
+        }
+        break;
+
+      case OFFSET:
+        if (value == null) {
+          unsetOffset();
+        } else {
+          setOffset((List<Long>)value);
+        }
+        break;
+
+      case LENGTH:
+        if (value == null) {
+          unsetLength();
+        } else {
+          setLength((List<Long>)value);
+        }
+        break;
+
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      case PATH:
+        return getPath();
+
+      case OFFSET:
+        return getOffset();
+
+      case LENGTH:
+        return getLength();
+
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      case PATH:
+        return isSetPath();
+      case OFFSET:
+        return isSetOffset();
+      case LENGTH:
+        return isSetLength();
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof sendParquetInfo_args)
+        return this.equals((sendParquetInfo_args)that);
+      return false;
+    }
+
+    public boolean equals(sendParquetInfo_args that) {
+      if (that == null)
+        return false;
+
+      boolean this_present_path = true && this.isSetPath();
+      boolean that_present_path = true && that.isSetPath();
+      if (this_present_path || that_present_path) {
+        if (!(this_present_path && that_present_path))
+          return false;
+        if (!this.path.equals(that.path))
+          return false;
+      }
+
+      boolean this_present_offset = true && this.isSetOffset();
+      boolean that_present_offset = true && that.isSetOffset();
+      if (this_present_offset || that_present_offset) {
+        if (!(this_present_offset && that_present_offset))
+          return false;
+        if (!this.offset.equals(that.offset))
+          return false;
+      }
+
+      boolean this_present_length = true && this.isSetLength();
+      boolean that_present_length = true && that.isSetLength();
+      if (this_present_length || that_present_length) {
+        if (!(this_present_length && that_present_length))
+          return false;
+        if (!this.length.equals(that.length))
+          return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      List<Object> list = new ArrayList<Object>();
+
+      boolean present_path = true && (isSetPath());
+      list.add(present_path);
+      if (present_path)
+        list.add(path);
+
+      boolean present_offset = true && (isSetOffset());
+      list.add(present_offset);
+      if (present_offset)
+        list.add(offset);
+
+      boolean present_length = true && (isSetLength());
+      list.add(present_length);
+      if (present_length)
+        list.add(length);
+
+      return list.hashCode();
+    }
+
+    @Override
+    public int compareTo(sendParquetInfo_args other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+
+      lastComparison = Boolean.valueOf(isSetPath()).compareTo(other.isSetPath());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetPath()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.path, other.path);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      lastComparison = Boolean.valueOf(isSetOffset()).compareTo(other.isSetOffset());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetOffset()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.offset, other.offset);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      lastComparison = Boolean.valueOf(isSetLength()).compareTo(other.isSetLength());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetLength()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.length, other.length);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(org.apache.thrift.protocol.TProtocol iprot) throws org.apache.thrift.TException {
+      schemes.get(iprot.getScheme()).getScheme().read(iprot, this);
+    }
+
+    public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
+      schemes.get(oprot.getScheme()).getScheme().write(oprot, this);
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("sendParquetInfo_args(");
+      boolean first = true;
+
+      sb.append("path:");
+      if (this.path == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.path);
+      }
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("offset:");
+      if (this.offset == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.offset);
+      }
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("length:");
+      if (this.length == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.length);
+      }
+      first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws org.apache.thrift.TException {
+      // check for required fields
+      // check for sub-struct validity
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      try {
+        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
+      try {
+        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private static class sendParquetInfo_argsStandardSchemeFactory implements SchemeFactory {
+      public sendParquetInfo_argsStandardScheme getScheme() {
+        return new sendParquetInfo_argsStandardScheme();
+      }
+    }
+
+    private static class sendParquetInfo_argsStandardScheme extends StandardScheme<sendParquetInfo_args> {
+
+      public void read(org.apache.thrift.protocol.TProtocol iprot, sendParquetInfo_args struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TField schemeField;
+        iprot.readStructBegin();
+        while (true)
+        {
+          schemeField = iprot.readFieldBegin();
+          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) { 
+            break;
+          }
+          switch (schemeField.id) {
+            case 1: // PATH
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
+                struct.path = iprot.readString();
+                struct.setPathIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            case 2: // OFFSET
+              if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
+                {
+                  org.apache.thrift.protocol.TList _list150 = iprot.readListBegin();
+                  struct.offset = new ArrayList<Long>(_list150.size);
+                  long _elem151;
+                  for (int _i152 = 0; _i152 < _list150.size; ++_i152)
+                  {
+                    _elem151 = iprot.readI64();
+                    struct.offset.add(_elem151);
+                  }
+                  iprot.readListEnd();
+                }
+                struct.setOffsetIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            case 3: // LENGTH
+              if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
+                {
+                  org.apache.thrift.protocol.TList _list153 = iprot.readListBegin();
+                  struct.length = new ArrayList<Long>(_list153.size);
+                  long _elem154;
+                  for (int _i155 = 0; _i155 < _list153.size; ++_i155)
+                  {
+                    _elem154 = iprot.readI64();
+                    struct.length.add(_elem154);
+                  }
+                  iprot.readListEnd();
+                }
+                struct.setLengthIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            default:
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+          }
+          iprot.readFieldEnd();
+        }
+        iprot.readStructEnd();
+
+        // check for required fields of primitive type, which can't be checked in the validate method
+        struct.validate();
+      }
+
+      public void write(org.apache.thrift.protocol.TProtocol oprot, sendParquetInfo_args struct) throws org.apache.thrift.TException {
+        struct.validate();
+
+        oprot.writeStructBegin(STRUCT_DESC);
+        if (struct.path != null) {
+          oprot.writeFieldBegin(PATH_FIELD_DESC);
+          oprot.writeString(struct.path);
+          oprot.writeFieldEnd();
+        }
+        if (struct.offset != null) {
+          oprot.writeFieldBegin(OFFSET_FIELD_DESC);
+          {
+            oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.I64, struct.offset.size()));
+            for (long _iter156 : struct.offset)
+            {
+              oprot.writeI64(_iter156);
+            }
+            oprot.writeListEnd();
+          }
+          oprot.writeFieldEnd();
+        }
+        if (struct.length != null) {
+          oprot.writeFieldBegin(LENGTH_FIELD_DESC);
+          {
+            oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.I64, struct.length.size()));
+            for (long _iter157 : struct.length)
+            {
+              oprot.writeI64(_iter157);
+            }
+            oprot.writeListEnd();
+          }
+          oprot.writeFieldEnd();
+        }
+        oprot.writeFieldStop();
+        oprot.writeStructEnd();
+      }
+
+    }
+
+    private static class sendParquetInfo_argsTupleSchemeFactory implements SchemeFactory {
+      public sendParquetInfo_argsTupleScheme getScheme() {
+        return new sendParquetInfo_argsTupleScheme();
+      }
+    }
+
+    private static class sendParquetInfo_argsTupleScheme extends TupleScheme<sendParquetInfo_args> {
+
+      @Override
+      public void write(org.apache.thrift.protocol.TProtocol prot, sendParquetInfo_args struct) throws org.apache.thrift.TException {
+        TTupleProtocol oprot = (TTupleProtocol) prot;
+        BitSet optionals = new BitSet();
+        if (struct.isSetPath()) {
+          optionals.set(0);
+        }
+        if (struct.isSetOffset()) {
+          optionals.set(1);
+        }
+        if (struct.isSetLength()) {
+          optionals.set(2);
+        }
+        oprot.writeBitSet(optionals, 3);
+        if (struct.isSetPath()) {
+          oprot.writeString(struct.path);
+        }
+        if (struct.isSetOffset()) {
+          {
+            oprot.writeI32(struct.offset.size());
+            for (long _iter158 : struct.offset)
+            {
+              oprot.writeI64(_iter158);
+            }
+          }
+        }
+        if (struct.isSetLength()) {
+          {
+            oprot.writeI32(struct.length.size());
+            for (long _iter159 : struct.length)
+            {
+              oprot.writeI64(_iter159);
+            }
+          }
+        }
+      }
+
+      @Override
+      public void read(org.apache.thrift.protocol.TProtocol prot, sendParquetInfo_args struct) throws org.apache.thrift.TException {
+        TTupleProtocol iprot = (TTupleProtocol) prot;
+        BitSet incoming = iprot.readBitSet(3);
+        if (incoming.get(0)) {
+          struct.path = iprot.readString();
+          struct.setPathIsSet(true);
+        }
+        if (incoming.get(1)) {
+          {
+            org.apache.thrift.protocol.TList _list160 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.I64, iprot.readI32());
+            struct.offset = new ArrayList<Long>(_list160.size);
+            long _elem161;
+            for (int _i162 = 0; _i162 < _list160.size; ++_i162)
+            {
+              _elem161 = iprot.readI64();
+              struct.offset.add(_elem161);
+            }
+          }
+          struct.setOffsetIsSet(true);
+        }
+        if (incoming.get(2)) {
+          {
+            org.apache.thrift.protocol.TList _list163 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.I64, iprot.readI32());
+            struct.length = new ArrayList<Long>(_list163.size);
+            long _elem164;
+            for (int _i165 = 0; _i165 < _list163.size; ++_i165)
+            {
+              _elem164 = iprot.readI64();
+              struct.length.add(_elem164);
+            }
+          }
+          struct.setLengthIsSet(true);
+        }
+      }
+    }
+
+  }
+
+  public static class sendParquetInfo_result implements org.apache.thrift.TBase<sendParquetInfo_result, sendParquetInfo_result._Fields>, java.io.Serializable, Cloneable, Comparable<sendParquetInfo_result>   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("sendParquetInfo_result");
+
+    private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.STRUCT, (short)0);
+    private static final org.apache.thrift.protocol.TField E_FIELD_DESC = new org.apache.thrift.protocol.TField("e", org.apache.thrift.protocol.TType.STRUCT, (short)1);
+
+    private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
+    static {
+      schemes.put(StandardScheme.class, new sendParquetInfo_resultStandardSchemeFactory());
+      schemes.put(TupleScheme.class, new sendParquetInfo_resultTupleSchemeFactory());
+    }
+
+    private SendParquetInfoTResponse success; // required
+    private alluxio.thrift.AlluxioTException e; // required
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+      SUCCESS((short)0, "success"),
+      E((short)1, "e");
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          case 0: // SUCCESS
+            return SUCCESS;
+          case 1: // E
+            return E;
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+
+    // isset id assignments
+    public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.SUCCESS, new org.apache.thrift.meta_data.FieldMetaData("success", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, SendParquetInfoTResponse.class)));
+      tmpMap.put(_Fields.E, new org.apache.thrift.meta_data.FieldMetaData("e", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRUCT)));
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(sendParquetInfo_result.class, metaDataMap);
+    }
+
+    public sendParquetInfo_result() {
+    }
+
+    public sendParquetInfo_result(
+      SendParquetInfoTResponse success,
+      alluxio.thrift.AlluxioTException e)
+    {
+      this();
+      this.success = success;
+      this.e = e;
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public sendParquetInfo_result(sendParquetInfo_result other) {
+      if (other.isSetSuccess()) {
+        this.success = new SendParquetInfoTResponse(other.success);
+      }
+      if (other.isSetE()) {
+        this.e = new alluxio.thrift.AlluxioTException(other.e);
+      }
+    }
+
+    public sendParquetInfo_result deepCopy() {
+      return new sendParquetInfo_result(this);
+    }
+
+    @Override
+    public void clear() {
+      this.success = null;
+      this.e = null;
+    }
+
+    public SendParquetInfoTResponse getSuccess() {
+      return this.success;
+    }
+
+    public sendParquetInfo_result setSuccess(SendParquetInfoTResponse success) {
+      this.success = success;
+      return this;
+    }
+
+    public void unsetSuccess() {
+      this.success = null;
+    }
+
+    /** Returns true if field success is set (has been assigned a value) and false otherwise */
+    public boolean isSetSuccess() {
+      return this.success != null;
+    }
+
+    public void setSuccessIsSet(boolean value) {
+      if (!value) {
+        this.success = null;
+      }
+    }
+
+    public alluxio.thrift.AlluxioTException getE() {
+      return this.e;
+    }
+
+    public sendParquetInfo_result setE(alluxio.thrift.AlluxioTException e) {
+      this.e = e;
+      return this;
+    }
+
+    public void unsetE() {
+      this.e = null;
+    }
+
+    /** Returns true if field e is set (has been assigned a value) and false otherwise */
+    public boolean isSetE() {
+      return this.e != null;
+    }
+
+    public void setEIsSet(boolean value) {
+      if (!value) {
+        this.e = null;
+      }
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      case SUCCESS:
+        if (value == null) {
+          unsetSuccess();
+        } else {
+          setSuccess((SendParquetInfoTResponse)value);
+        }
+        break;
+
+      case E:
+        if (value == null) {
+          unsetE();
+        } else {
+          setE((alluxio.thrift.AlluxioTException)value);
+        }
+        break;
+
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      case SUCCESS:
+        return getSuccess();
+
+      case E:
+        return getE();
+
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      case SUCCESS:
+        return isSetSuccess();
+      case E:
+        return isSetE();
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof sendParquetInfo_result)
+        return this.equals((sendParquetInfo_result)that);
+      return false;
+    }
+
+    public boolean equals(sendParquetInfo_result that) {
+      if (that == null)
+        return false;
+
+      boolean this_present_success = true && this.isSetSuccess();
+      boolean that_present_success = true && that.isSetSuccess();
+      if (this_present_success || that_present_success) {
+        if (!(this_present_success && that_present_success))
+          return false;
+        if (!this.success.equals(that.success))
+          return false;
+      }
+
+      boolean this_present_e = true && this.isSetE();
+      boolean that_present_e = true && that.isSetE();
+      if (this_present_e || that_present_e) {
+        if (!(this_present_e && that_present_e))
+          return false;
+        if (!this.e.equals(that.e))
+          return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      List<Object> list = new ArrayList<Object>();
+
+      boolean present_success = true && (isSetSuccess());
+      list.add(present_success);
+      if (present_success)
+        list.add(success);
+
+      boolean present_e = true && (isSetE());
+      list.add(present_e);
+      if (present_e)
+        list.add(e);
+
+      return list.hashCode();
+    }
+
+    @Override
+    public int compareTo(sendParquetInfo_result other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+
+      lastComparison = Boolean.valueOf(isSetSuccess()).compareTo(other.isSetSuccess());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetSuccess()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.success, other.success);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      lastComparison = Boolean.valueOf(isSetE()).compareTo(other.isSetE());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetE()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.e, other.e);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(org.apache.thrift.protocol.TProtocol iprot) throws org.apache.thrift.TException {
+      schemes.get(iprot.getScheme()).getScheme().read(iprot, this);
+    }
+
+    public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
+      schemes.get(oprot.getScheme()).getScheme().write(oprot, this);
+      }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("sendParquetInfo_result(");
+      boolean first = true;
+
+      sb.append("success:");
+      if (this.success == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.success);
+      }
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("e:");
+      if (this.e == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.e);
+      }
+      first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws org.apache.thrift.TException {
+      // check for required fields
+      // check for sub-struct validity
+      if (success != null) {
+        success.validate();
+      }
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      try {
+        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
+      try {
+        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private static class sendParquetInfo_resultStandardSchemeFactory implements SchemeFactory {
+      public sendParquetInfo_resultStandardScheme getScheme() {
+        return new sendParquetInfo_resultStandardScheme();
+      }
+    }
+
+    private static class sendParquetInfo_resultStandardScheme extends StandardScheme<sendParquetInfo_result> {
+
+      public void read(org.apache.thrift.protocol.TProtocol iprot, sendParquetInfo_result struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TField schemeField;
+        iprot.readStructBegin();
+        while (true)
+        {
+          schemeField = iprot.readFieldBegin();
+          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) { 
+            break;
+          }
+          switch (schemeField.id) {
+            case 0: // SUCCESS
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+                struct.success = new SendParquetInfoTResponse();
+                struct.success.read(iprot);
+                struct.setSuccessIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            case 1: // E
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+                struct.e = new alluxio.thrift.AlluxioTException();
+                struct.e.read(iprot);
+                struct.setEIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            default:
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+          }
+          iprot.readFieldEnd();
+        }
+        iprot.readStructEnd();
+
+        // check for required fields of primitive type, which can't be checked in the validate method
+        struct.validate();
+      }
+
+      public void write(org.apache.thrift.protocol.TProtocol oprot, sendParquetInfo_result struct) throws org.apache.thrift.TException {
+        struct.validate();
+
+        oprot.writeStructBegin(STRUCT_DESC);
+        if (struct.success != null) {
+          oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
+          struct.success.write(oprot);
+          oprot.writeFieldEnd();
+        }
+        if (struct.e != null) {
+          oprot.writeFieldBegin(E_FIELD_DESC);
+          struct.e.write(oprot);
+          oprot.writeFieldEnd();
+        }
+        oprot.writeFieldStop();
+        oprot.writeStructEnd();
+      }
+
+    }
+
+    private static class sendParquetInfo_resultTupleSchemeFactory implements SchemeFactory {
+      public sendParquetInfo_resultTupleScheme getScheme() {
+        return new sendParquetInfo_resultTupleScheme();
+      }
+    }
+
+    private static class sendParquetInfo_resultTupleScheme extends TupleScheme<sendParquetInfo_result> {
+
+      @Override
+      public void write(org.apache.thrift.protocol.TProtocol prot, sendParquetInfo_result struct) throws org.apache.thrift.TException {
+        TTupleProtocol oprot = (TTupleProtocol) prot;
+        BitSet optionals = new BitSet();
+        if (struct.isSetSuccess()) {
+          optionals.set(0);
+        }
+        if (struct.isSetE()) {
+          optionals.set(1);
+        }
+        oprot.writeBitSet(optionals, 2);
+        if (struct.isSetSuccess()) {
+          struct.success.write(oprot);
+        }
+        if (struct.isSetE()) {
+          struct.e.write(oprot);
+        }
+      }
+
+      @Override
+      public void read(org.apache.thrift.protocol.TProtocol prot, sendParquetInfo_result struct) throws org.apache.thrift.TException {
+        TTupleProtocol iprot = (TTupleProtocol) prot;
+        BitSet incoming = iprot.readBitSet(2);
+        if (incoming.get(0)) {
+          struct.success = new SendParquetInfoTResponse();
           struct.success.read(iprot);
           struct.setSuccessIsSet(true);
         }

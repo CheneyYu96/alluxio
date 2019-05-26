@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-set -euxo pipefail
+#set -euxo pipefail
+set -x
 
 LOCAL_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )"  && pwd )"
 
@@ -311,15 +312,15 @@ trace_test(){
         echo '1' > ${ALLUXIO_ENV}
     fi
 
+            #--conf spark.executor.extraJavaOptions="-Dlog4j.configuration=file://$DIR/tpch-spark/log4j.properties" \
+            #--conf spark.driver.extraJavaOptions="-Dlog4j.configuration=file://$DIR/tpch-spark/log4j.properties" \
+             #--log-trace \
     for((q=${from};q<=${to};q++)); do
         $DIR/spark/bin/spark-submit \
             --executor-memory 4g \
             --driver-memory 4g \
-            --conf spark.executor.extraJavaOptions="-Dlog4j.configuration=file://$DIR/tpch-spark/log4j.properties" \
-            --conf spark.driver.extraJavaOptions="-Dlog4j.configuration=file://$DIR/tpch-spark/log4j.properties" \
             --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar \
                 --query ${q} \
-                --log-trace \
                 $(check_parquet) \
                 --app-name "TPCH shuffle: scale${scl} query${q}" \
                 > $DIR/logs/shuffle/scale${scl}_query${q}.log 2>&1
