@@ -22,7 +22,7 @@ public class FileAccessInfo {
 
     private long queryNum;
     private long lastAccessTime; /* estimate query based on interval */
-    private long recordInterval;
+    private double recordInterval;
     private Set<OffLenPair> offsetWithinQuery;
 
     public FileAccessInfo(AlluxioURI filePath) {
@@ -31,7 +31,7 @@ public class FileAccessInfo {
 
         queryNum = 0;
         lastAccessTime = 0;
-        recordInterval = Configuration.getLong(PropertyKey.FR_RECORD_INTERVAL);
+        recordInterval = Configuration.getDouble(PropertyKey.FR_RECORD_INTERVAL);
 
         offsetWithinQuery = new ConcurrentHashSet<>();
     }
