@@ -218,6 +218,8 @@ else
                                 ;;
         comp)                   complie_job
                                 ;;
+        send)                   send_par_info
+                                ;;
         * )                     usage
     esac
 fi
