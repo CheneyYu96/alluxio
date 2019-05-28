@@ -125,7 +125,7 @@ trace_test(){
 
         mkdir -p $DIR/logs/shuffle/query${q}
         collect_worker_logs shuffle/query${q} ${appid}
-        mv $DIR/alluxio/log/master.log $DIR/logs/shuffle/query${q}/master.log
+        mv $DIR/alluxio/logs/master.log $DIR/logs/shuffle/query${q}/master.log
     done
 
     mv $DIR/logs/shuffle ${dir_name}
