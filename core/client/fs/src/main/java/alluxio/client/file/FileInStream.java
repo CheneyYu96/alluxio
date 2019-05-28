@@ -125,7 +125,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
   private long mNewBlockSize;
   private boolean mFirstRead;
   private boolean mReadData;
-  private long time = System.currentTimeMillis();
+  private long time;
 
   protected FileInStream(URIStatus status, InStreamOptions options, FileSystemContext context) {
     mStatus = status;
@@ -153,6 +153,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     mCurrentSeg = new FileSegmentsInfo(status.getPath(), -1, Long.MIN_VALUE);
     mReadData = false;
     mFirstRead = true;
+    time = 0;
 
     LOG.info("Generate file in stream for file: {}", mStatus.getPath());
 
@@ -339,7 +340,10 @@ public class FileInStream extends InputStream implements BoundedStream, Position
       LOG.info("update file in stream. elapsed: {}. mPos: {}. mNewPos: {}. len: {}. fileToRead: {}",
               (CommonUtils.getCurrentMs() - startTimeMs),
               mPosition, mNewPosition, len, mNewStatus.getPath());
-      LOG.info("time after last update file in stream {}", System.currentTimeMillis()-time);
+      if (time == 0)
+        LOG.info("first update stream.");
+      else
+        LOG.info("time after last update file in stream {}", System.currentTimeMillis()-time);
       time = System.currentTimeMillis();
     }
     else {
