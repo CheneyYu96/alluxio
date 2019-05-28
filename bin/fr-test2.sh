@@ -88,10 +88,10 @@ trace_test(){
         fr_env
         $DIR/alluxio/bin/alluxio logLevel --logName=alluxio.master.repl.ReplManager --target=master --level=DEBUG
 
-        $DIR/alluxio/bin/alluxio logLevel \
-        --logName=alluxio.client.block.stream.BlockInStream \
-        --target=master,workers \
-        --level=DEBUG
+        # $DIR/alluxio/bin/alluxio logLevel \
+        # --logName=alluxio.client.block.stream.BlockInStream \
+        # --target=master,workers \
+        # --level=DEBUG
 
         move_par_data
         if [[ "${NEED_PAR_INFO}" -eq "1" ]]; then
