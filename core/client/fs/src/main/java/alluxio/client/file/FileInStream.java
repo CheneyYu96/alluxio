@@ -358,7 +358,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
 //      mNewPosition = mPosition;
       checkStreamUpdate(1);
     }
-//    LOG.info("read no parameter. mPos: " + mPosition + ". mNewPos: " + mNewPosition);
+    LOG.info("read no parameter. mPos: " + mPosition + ". mNewPos: " + mNewPosition);
 
     while (retry.attempt()) {
       try {
