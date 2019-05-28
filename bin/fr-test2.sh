@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-#set -euxo pipefail
-set -x
+set -euxo pipefail
+# set -x
 
 LOCAL_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )"  && pwd )"
 
@@ -88,10 +88,10 @@ trace_test(){
         fr_env
         $DIR/alluxio/bin/alluxio logLevel --logName=alluxio.master.repl.ReplManager --target=master --level=DEBUG
 
-        # $DIR/alluxio/bin/alluxio logLevel \
-        # --logName=alluxio.client.block.stream.BlockInStream \
-        # --target=master,workers \
-        # --level=DEBUG
+        $DIR/alluxio/bin/alluxio logLevel \
+        --logName=alluxio.client.block.stream.BlockInStream \
+        --target=master,workers \
+        --level=DEBUG
 
         move_par_data
         if [[ "${NEED_PAR_INFO}" -eq "1" ]]; then
@@ -125,12 +125,14 @@ trace_test(){
 
         mkdir -p $DIR/logs/shuffle/query${q}
         collect_worker_logs shuffle/query${q} ${appid}
-        mv $DIR/alluxio/logs/master.log $DIR/logs/shuffle/query${q}/master.log
+        collect_alluxio_log $DIR/logs/shuffle/query${q}
     done
 
     mv $DIR/logs/shuffle ${dir_name}
 
 }
+
+
 
 trace_range_test(){
     scl=$(cat $DATA_SCALE)

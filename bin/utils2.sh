@@ -116,11 +116,18 @@ collect_worker_logs(){
 
     workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
 
-    worker0_id=$(check_executor_id ${workers[0]} ${appid})
-    scp -o StrictHostKeyChecking=no ec2-user@${workers[0]}:/home/ec2-user/spark/work/${appid}/${worker0_id}/stderr /home/ec2-user/logs/${worker_log_dir}/${worker0_id}.log
+    i=0
+    for w in $workers; do
+        worker_id=$(check_executor_id $w ${appid})
+        scp -o StrictHostKeyChecking=no ec2-user@$w:/home/ec2-user/spark/work/${appid}/${worker_id}/stderr /home/ec2-user/logs/${worker_log_dir}/${worker_id}.log
 
-    worker1_id=$(check_executor_id ${workers[1]} ${appid})
-    scp -o StrictHostKeyChecking=no ec2-user@${workers[1]}:/home/ec2-user/spark/work/${appid}/${worker1_id}/stderr /home/ec2-user/logs/${worker_log_dir}/${worker1_id}.log
+        i=$(($i+1))
+    done
+    # worker0_id=$(check_executor_id ${workers[0]} ${appid})
+    # scp -o StrictHostKeyChecking=no ec2-user@${workers[0]}:/home/ec2-user/spark/work/${appid}/${worker0_id}/stderr /home/ec2-user/logs/${worker_log_dir}/${worker0_id}.log
+
+    # worker1_id=$(check_executor_id ${workers[1]} ${appid})
+    # scp -o StrictHostKeyChecking=no ec2-user@${workers[1]}:/home/ec2-user/spark/work/${appid}/${worker1_id}/stderr /home/ec2-user/logs/${worker_log_dir}/${worker1_id}.log
 }
 
 check_executor_id(){
@@ -136,29 +143,65 @@ collect_workerloads(){
     name=$2
 
     workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
+    
+    i=0
+    for w in $workers; do
+        if ssh ec2-user@$w -o StrictHostKeyChecking=no test -e /home/ec2-user/logs/workerLoads.txt; then
+        scp -o StrictHostKeyChecking=no ec2-user@$w:/home/ec2-user/logs/workerLoads.txt /home/ec2-user/logs/${worker_log_dir}/workerLoads${}_${name}.txt
+        ssh ec2-user@$w -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/workerLoads.txt"
+        fi
+        i=$(($i+1))
+    done
+    # if ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no test -e /home/ec2-user/logs/workerLoads.txt; then
+    #     scp -o StrictHostKeyChecking=no ec2-user@${workers[0]}:/home/ec2-user/logs/workerLoads.txt /home/ec2-user/logs/${worker_log_dir}/workerLoads0_${name}.txt
+    #     ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/workerLoads.txt"
+    # fi
 
-    if ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no test -e /home/ec2-user/logs/workerLoads.txt; then
-        scp -o StrictHostKeyChecking=no ec2-user@${workers[0]}:/home/ec2-user/logs/workerLoads.txt /home/ec2-user/logs/${worker_log_dir}/workerLoads0_${name}.txt
-        ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/workerLoads.txt"
-    fi
-
-    if ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no test -e /home/ec2-user/logs/workerLoads.txt; then
-        scp -o StrictHostKeyChecking=no ec2-user@${workers[1]}:/home/ec2-user/logs/workerLoads.txt /home/ec2-user/logs/${worker_log_dir}/workerLoads1_${name}.txt
-        ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/workerLoads.txt"
-    fi
+    # if ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no test -e /home/ec2-user/logs/workerLoads.txt; then
+    #     scp -o StrictHostKeyChecking=no ec2-user@${workers[1]}:/home/ec2-user/logs/workerLoads.txt /home/ec2-user/logs/${worker_log_dir}/workerLoads1_${name}.txt
+    #     ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/workerLoads.txt"
+    # fi
 }
 
 clear_workerloads(){
     workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
+    
+    
+    for i in $workers; do
+        if ssh ec2-user@$i -o StrictHostKeyChecking=no test -e /home/ec2-user/logs/workerLoads.txt; then
+        ssh ec2-user@$i -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/workerLoads.txt"
+        fi
+    done
+    # i=0
+    # i=$(($i+1))
+    # if ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no test -e /home/ec2-user/logs/workerLoads.txt; then
+    #     ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/workerLoads.txt"
+    # fi
 
-    if ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no test -e /home/ec2-user/logs/workerLoads.txt; then
-        ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/workerLoads.txt"
-    fi
-
-    if ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no test -e /home/ec2-user/logs/workerLoads.txt; then
-        ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/workerLoads.txt"
-    fi
+    # if ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no test -e /home/ec2-user/logs/workerLoads.txt; then
+    #     ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/workerLoads.txt"
+    # fi
 }
+
+collect_alluxio_log(){
+    G_DIR=$1
+    mkdir $G_DIR/alluxio_master_log
+    mkdir $G_DIR/alluxio_worker_log
+    mv $DIR/alluxio/logs/* $G_DIR/alluxio_master_log/
+    
+    workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
+    i=0
+    for w in $workers; do
+        scp -o StrictHostKeyChecking=no -r ec2-user@$w:/home/ec2-user/alluxio/logs $G_DIR/alluxio_worker_log/${i}_logs
+        
+        ssh -o StrictHostKeyChecking=no ec2-user@$w 'rm /home/ec2-user/alluxio/logs/*'
+
+        i=$(($i+1))
+    done
+}
+
+
+
 
 shuffle_env(){
     sed -i \
