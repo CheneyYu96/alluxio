@@ -187,14 +187,22 @@ collect_alluxio_log(){
     G_DIR=$1
     mkdir $G_DIR/alluxio_master_log
     mkdir $G_DIR/alluxio_worker_log
-    mv $DIR/alluxio/logs/* $G_DIR/alluxio_master_log/
+    cp $DIR/alluxio/logs/* $G_DIR/alluxio_master_log/
     
+    files=(`ls $DIR/alluxio/logs`)
+    for i in $files; do
+	    rm $DIR/alluxio/logs/$i
+    done
+    for i in $files; do
+	    touch $DIR/alluxio/logs/$i
+    done 
+
     workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
     i=0
     for w in $workers; do
         scp -o StrictHostKeyChecking=no -r ec2-user@$w:/home/ec2-user/alluxio/logs $G_DIR/alluxio_worker_log/${i}_logs
         
-        ssh -o StrictHostKeyChecking=no ec2-user@$w 'rm /home/ec2-user/alluxio/logs/*'
+        ssh -o StrictHostKeyChecking=no ec2-user@$w 'files=(`ls /home/ec2-user/alluxio/logs`); for i in $files; do; rm /home/ec2-user/alluxio/logs/$i; done; for i in $files; do; touch /home/ec2-user/alluxio/logs/$i; done;'
 
         i=$(($i+1))
     done
