@@ -202,7 +202,7 @@ collect_alluxio_log(){
     for w in $workers; do
         scp -o StrictHostKeyChecking=no -r ec2-user@$w:/home/ec2-user/alluxio/logs $G_DIR/alluxio_worker_log/${i}_logs
         
-        ssh -o StrictHostKeyChecking=no ec2-user@$w 'files=(`ls /home/ec2-user/alluxio/logs`); for i in $files; do; rm /home/ec2-user/alluxio/logs/$i; done; for i in $files; do; touch /home/ec2-user/alluxio/logs/$i; done;'
+        ssh -o StrictHostKeyChecking=no ec2-user@$w 'files=(`ls /home/ec2-user/alluxio/logs`); for i in $files; do rm /home/ec2-user/alluxio/logs/$i; done; for i in $files; do touch /home/ec2-user/alluxio/logs/$i; done;'
 
         i=$(($i+1))
     done
