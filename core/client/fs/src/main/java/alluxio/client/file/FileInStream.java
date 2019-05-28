@@ -337,13 +337,9 @@ public class FileInStream extends InputStream implements BoundedStream, Position
       } catch (AlluxioException e) {
         e.printStackTrace();
       }
-      LOG.info("update file in stream. elapsed: {}. mPos: {}. mNewPos: {}. len: {}. fileToRead: {}",
+      LOG.info("update file in stream. elapsed: {}. mPos: {}. mNewPos: {}. len: {}. fileToRead: {}. lastRetrievalDuration: {}",
               (CommonUtils.getCurrentMs() - startTimeMs),
-              mPosition, mNewPosition, len, mNewStatus.getPath());
-      if (time == 0)
-        LOG.info("first update stream.");
-      else
-        LOG.info("time after last update file in stream {}", System.currentTimeMillis()-time);
+              mPosition, mNewPosition, len, mNewStatus.getPath(), time==0?0:System.currentTimeMillis()-time);
       time = System.currentTimeMillis();
     }
     else {
