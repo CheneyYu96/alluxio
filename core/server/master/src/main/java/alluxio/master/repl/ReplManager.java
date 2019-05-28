@@ -49,6 +49,8 @@ public class ReplManager {
     private String frDir;
 
     private boolean useParuqetInfo;
+    private boolean repeatRepl;
+
     public ReplManager() {
         frClient = new FRClient();
         accessRecords = new ConcurrentHashMap<>();
@@ -60,6 +62,7 @@ public class ReplManager {
                 PropertyKey.FR_REPL_POLICY), new Class[] {}, new Object[] {});
         checkInterval = Configuration.getInt(PropertyKey.FR_REPL_INTERVAL);
         useParuqetInfo = Configuration.getBoolean(PropertyKey.FR_PARQUET_INFO);
+        repeatRepl = Configuration.getBoolean(PropertyKey.FR_REPL_REPEAT);
 
         frDir = Configuration.get(PropertyKey.FR_REPL_DIR);
 
@@ -150,12 +153,19 @@ public class ReplManager {
                     if (replUnits != null && replUnits.size() > 0){
                         LOG.info("Make replication decision for file : {} ", filePath.getName());
 
-                        // delete old replicas
 
                         if (fileReplicas.containsKey(filePath)) {
-                            FileRepInfo oldRepInfo = fileReplicas.remove(filePath);
-                            frClient.deleteReplicas(oldRepInfo.getReplicasURI());
-                            LOG.info("Delete replicas for file: {}.", filePath.getPath());
+                            if (repeatRepl){
+                                // TODO: delay deletion
+                                // delete old replicas
+                                FileRepInfo oldRepInfo = fileReplicas.remove(filePath);
+                                frClient.deleteReplicas(oldRepInfo.getReplicasURI());
+                                LOG.info("Delete replicas for file: {}.", filePath.getPath());
+                            }
+                            else {
+                                // just replica once
+                                return;
+                            }
                         }
 
                         FileRepInfo repInfo = new FileRepInfo(filePath);

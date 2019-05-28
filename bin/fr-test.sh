@@ -86,7 +86,7 @@ trace_test(){
         echo 'Alluxio env already prepared'
     else
         fr_env
-        $DIR/alluxio/bin/alluxio logLevel --logName=alluxio.master.repl.ReplManager --target=master --level=DEBUG
+#        $DIR/alluxio/bin/alluxio logLevel --logName=alluxio.master.repl.ReplManager --target=master --level=DEBUG
 
         move_par_data
         if [[ "${NEED_PAR_INFO}" -eq "1" ]]; then

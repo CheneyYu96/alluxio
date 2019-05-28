@@ -4088,6 +4088,7 @@ public final class PropertyKey implements Comparable<PropertyKey> {
 
     // TODO: FR parameters
     public static final String FR_REPL_INTERVAL = "fr.repl.interval";
+    public static final String FR_REPL_REPEAT = "fr.repl.repeat";
     public static final String FR_REPL_POLICY = "fr.repl.policy.class";
     public static final String FR_REPL_DIR = "fr.repl.dir";
     public static final String FR_REPL_WEIGHT = "fr.repl.weight";
@@ -4584,6 +4585,12 @@ public final class PropertyKey implements Comparable<PropertyKey> {
   public static final PropertyKey FR_REPL_INTERVAL =
           new Builder(Name.FR_REPL_INTERVAL)
                   .setDefaultValue(60 /* in seconds */)
+                  .build();
+
+
+  public static final PropertyKey FR_REPL_REPEAT =
+          new Builder(Name.FR_REPL_REPEAT)
+                  .setDefaultValue(true)
                   .build();
 
   public static final PropertyKey FR_REPL_POLICY =
