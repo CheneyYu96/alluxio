@@ -149,29 +149,30 @@ public class ReplManager {
 
                 // TODO: allow bundling offsets from different tables
                 accessRecords.forEach((filePath, accessInfo) -> {
+
+                    if (fileReplicas.containsKey(filePath)) {
+                        if (repeatRepl){
+                            // TODO: delay deletion
+                            // delete old replicas
+                            FileRepInfo oldRepInfo = fileReplicas.remove(filePath);
+                            frClient.deleteReplicas(oldRepInfo.getReplicasURI());
+                            LOG.info("Delete replicas for file: {}.", filePath.getPath());
+                        }
+                        else {
+                            // just replica once
+                            return;
+                        }
+                    }
+
                     List<ReplUnit> replUnits = replPolicy.calcReplicas(accessInfo);
                     if (replUnits != null && replUnits.size() > 0){
-                        LOG.info("Make replication decision for file : {} ", filePath.getName());
+                        LOG.info("Make replication decision for file : {} ", filePath.getPath());
 
-
-                        if (fileReplicas.containsKey(filePath)) {
-                            if (repeatRepl){
-                                // TODO: delay deletion
-                                // delete old replicas
-                                FileRepInfo oldRepInfo = fileReplicas.remove(filePath);
-                                frClient.deleteReplicas(oldRepInfo.getReplicasURI());
-                                LOG.info("Delete replicas for file: {}.", filePath.getPath());
-                            }
-                            else {
-                                // just replica once
-                                return;
-                            }
-                        }
 
                         FileRepInfo repInfo = new FileRepInfo(filePath);
 
                         replUnits.forEach(unit -> {
-                            LOG.info("File : {}. Replication : {}", filePath.getName(), unit);
+                            LOG.info("File : {}. Replication : {}", filePath.getPath(), unit);
 
                             if(unit.getReplicas() > 0) {
 
