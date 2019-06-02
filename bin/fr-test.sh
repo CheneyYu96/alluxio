@@ -172,7 +172,6 @@ send_par_info(){
 
 }
 
-
 extract_par_info(){
     PAR_FILE=$1
     TMP_FILE=$2
@@ -196,6 +195,10 @@ complie_job(){
     sbt assembly
 }
 
+bandwidth_test(){
+    test_bandwidth $DIR/logs
+}
+
 if [[ "$#" -lt 3 ]]; then
     usage
     exit 1
@@ -212,6 +215,8 @@ else
         clear)                  clear
                                 ;;
         comp)                   complie_job
+                                ;;
+        band)                   bandwidth_test
                                 ;;
         * )                     usage
     esac
