@@ -197,9 +197,14 @@ complie_job(){
 
 bandwidth_test(){
     limit=$1
+    times=$2
+
+    scl=`cat ${DATA_SCALE}`
+
     limit_bandwidth $limit
 
     test_bandwidth $DIR/logs
+    all_test $scl $times
 
     free_limit
 }
@@ -221,7 +226,7 @@ else
                                 ;;
         comp)                   complie_job
                                 ;;
-        band)                   bandwidth_test $2
+        band)                   bandwidth_test $2 $3
                                 ;;
         * )                     usage
     esac
