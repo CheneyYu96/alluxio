@@ -58,6 +58,8 @@ public class ColReplPolicy implements ReplPolicy{
                 .sorted((e1, e2) -> e1 > e2 ? 1 : -1)
                 .collect(Collectors.toList());
 
+        LOG.info("All loads: {}", sortedLoads);
+
         double optAlpha = 0;
         // TODO binary search
         for (int i = 0; i < sortedLoads.size(); i++){
