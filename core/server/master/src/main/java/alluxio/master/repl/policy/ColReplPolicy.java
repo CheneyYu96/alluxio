@@ -8,6 +8,8 @@ import alluxio.master.repl.meta.FileAccessInfo;
 import fr.client.utils.MultiReplUnit;
 import fr.client.utils.OffLenPair;
 import fr.client.utils.ReplUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -16,6 +18,7 @@ import java.util.stream.Collectors;
  *
  */
 public class ColReplPolicy implements ReplPolicy{
+    private static final Logger LOG = LoggerFactory.getLogger(ReplPolicy.class);
 
     private double budget;
 
@@ -67,9 +70,11 @@ public class ColReplPolicy implements ReplPolicy{
             double cost = calcReplCost(1 / coldLoad, allLoadSize);
             if (cost <= budget){
                 optAlpha = 1 / coldLoad;
+                LOG.info("Optimal alpha: {}; cost: {}", optAlpha, cost);
                 break;
             }
         }
+
 
         double finalOptAlpha = optAlpha;
 
@@ -99,6 +104,7 @@ public class ColReplPolicy implements ReplPolicy{
                                     (int) Math.ceil(finalOptAlpha * l)));
                         }
                     }
+
                     return replUnits;
                 })
                 .flatMap(Collection::stream)
