@@ -4092,6 +4092,9 @@ public final class PropertyKey implements Comparable<PropertyKey> {
     public static final String FR_REPL_POLICY = "fr.repl.policy.class";
     public static final String FR_REPL_DIR = "fr.repl.dir";
     public static final String FR_REPL_WEIGHT = "fr.repl.weight";
+    public static final String FR_REPL_GLOBAL = "fr.repl.global";
+    public static final String FR_REPL_BUDGET = "fr.repl.budget";
+
     public static final String FR_RECORD_INTERVAL = "fr.record.interval";
 
     public static final String FR_CLIENT_TRANS = "fr.client.translation";
@@ -4587,7 +4590,6 @@ public final class PropertyKey implements Comparable<PropertyKey> {
                   .setDefaultValue(60 /* in seconds */)
                   .build();
 
-
   public static final PropertyKey FR_REPL_REPEAT =
           new Builder(Name.FR_REPL_REPEAT)
                   .setDefaultValue(true)
@@ -4606,6 +4608,16 @@ public final class PropertyKey implements Comparable<PropertyKey> {
 
   public static final PropertyKey FR_REPL_WEIGHT =
           new Builder(Name.FR_REPL_WEIGHT)
+                  .setDefaultValue(1.0)
+                  .build();
+
+  public static final PropertyKey FR_REPL_GLOBAL =
+          new Builder(Name.FR_REPL_GLOBAL)
+                  .setDefaultValue(false)
+                  .build();
+
+  public static final PropertyKey FR_REPL_BUDGET =
+          new Builder(Name.FR_REPL_BUDGET)
                   .setDefaultValue(1.0)
                   .build();
 
