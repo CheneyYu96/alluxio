@@ -68,8 +68,11 @@ public class ColReplPolicy implements ReplPolicy{
                     .reduce(0.0, Double::sum);
 
             double cost = calcReplCost(1 / coldLoad, allLoadSize);
+            optAlpha = 1 / coldLoad;
+
+            LOG.info("Test alpha: {}; cost: {}", optAlpha, cost);
+
             if (cost <= budget){
-                optAlpha = 1 / coldLoad;
                 LOG.info("Optimal alpha: {}; cost: {}", optAlpha, cost);
                 break;
             }

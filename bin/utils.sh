@@ -116,11 +116,10 @@ collect_worker_logs(){
 
     workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
 
-    worker0_id=$(check_executor_id ${workers[0]} ${appid})
-    scp -o StrictHostKeyChecking=no ec2-user@${workers[0]}:/home/ec2-user/spark/work/${appid}/${worker0_id}/stderr /home/ec2-user/logs/${worker_log_dir}/${worker0_id}.log
-
-    worker1_id=$(check_executor_id ${workers[1]} ${appid})
-    scp -o StrictHostKeyChecking=no ec2-user@${workers[1]}:/home/ec2-user/spark/work/${appid}/${worker1_id}/stderr /home/ec2-user/logs/${worker_log_dir}/${worker1_id}.log
+    for w in $workers; do
+        worker_id=$(check_executor_id $w ${appid})
+        scp -o StrictHostKeyChecking=no ec2-user@$w:/home/ec2-user/spark/work/${appid}/${worker_id}/stderr /home/ec2-user/logs/${worker_log_dir}/${worker_id}.log
+    done
 }
 
 check_executor_id(){
