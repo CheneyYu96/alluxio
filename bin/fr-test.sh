@@ -196,7 +196,12 @@ complie_job(){
 }
 
 bandwidth_test(){
+    limit=$1
+    limit_bandwidth $limit
+
     test_bandwidth $DIR/logs
+
+    free_limit
 }
 
 if [[ "$#" -lt 3 ]]; then
@@ -216,7 +221,7 @@ else
                                 ;;
         comp)                   complie_job
                                 ;;
-        band)                   bandwidth_test
+        band)                   bandwidth_test $2
                                 ;;
         * )                     usage
     esac
