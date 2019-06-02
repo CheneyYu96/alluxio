@@ -112,7 +112,7 @@ trace_test(){
                 --app-name "TPCH shuffle: scale${scl} query${q}" \
                 > $DIR/logs/shuffle/scale${scl}_query${q}.log 2>&1
 
-        collect_workerloads shuffle query${q}
+#        collect_workerloads shuffle query${q}
 
         line=$(cat $DIR/logs/shuffle/scale${scl}_query${q}.log | grep 'Got application ID')
         appid=${line##*ID: }

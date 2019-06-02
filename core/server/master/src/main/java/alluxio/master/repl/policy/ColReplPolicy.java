@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
  *
  */
 public class ColReplPolicy implements ReplPolicy{
-    private static final Logger LOG = LoggerFactory.getLogger(ReplPolicy.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ColReplPolicy.class);
 
     private double budget;
 
