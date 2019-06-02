@@ -86,15 +86,25 @@ clean_data(){
 
 free_limit(){
     workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
-    ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no "sudo wondershaper -c -a eth0; echo test"
-    ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no "sudo wondershaper -c -a eth0; echo test"
+
+    worker_num=(`cat /home/ec2-user/hadoop/conf/slaves | wc -l`)
+    worker_num=$(($worker_num-2))
+
+    for i in `seq 0 ${worker_num}`; do
+        ssh ec2-user@${workers[$i]} -o StrictHostKeyChecking=no "sudo wondershaper -c -a eth0; echo test"
+    done
 }
 
 limit_bandwidth(){
     workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
     limit=$1
-    ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no "sudo wondershaper -c -a eth0; sudo wondershaper -a eth0 -d $limit -u $limit"
-    ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no "sudo wondershaper -c -a eth0; sudo wondershaper -a eth0 -d $limit -u $limit"
+
+    worker_num=(`cat /home/ec2-user/hadoop/conf/slaves | wc -l`)
+    worker_num=$(($worker_num-2))
+
+    for i in `seq 0 ${worker_num}`; do
+        ssh ec2-user@${workers[$i]} -o StrictHostKeyChecking=no "sudo wondershaper -c -a eth0; sudo wondershaper -a eth0 -d $limit -u $limit"
+    done
 }
 
 test_bandwidth() {
