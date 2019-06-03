@@ -120,7 +120,6 @@ public class FileInStream extends InputStream implements BoundedStream, Position
   private long mNewPosition;
 
   private long mNewLength;
-  private long mNewEndPos;
 
   private long mNewBlockSize;
   private boolean mFirstRead;
@@ -147,7 +146,6 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     mNewOptions = options;
     mNewPosition = 0;
     mNewLength = mNewStatus.getLength();
-    mNewEndPos = mNewPosition + mNewLength;
     mNewBlockSize = mNewStatus.getBlockSizeBytes();
     mCurrentSeg = new FileSegmentsInfo(status.getPath(), -1, Long.MIN_VALUE);
     mReadData = false;
@@ -227,6 +225,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
       // reading orginal table currently
       if (mNewStatus.getPath().equals(mStatus.getPath())){
         mNewPosition = mPosition;
+        updateNewBlockStream();
       }
       else {
         updateMetadata(allSegs.get(0));
@@ -261,6 +260,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
 
       if(segToRead.getFilePath().equals(mNewStatus.getPath())){
         mNewPosition = segToReadWithLoc.getFirst().getOffset();
+        updateNewBlockStream();
       }
       else {
         updateMetadata(segToRead);
@@ -275,7 +275,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
 
       if (sameSegToRead != null){
         mNewPosition = sameSegToRead.getFirst().getOffset();
-        mNewEndPos = mNewPosition + sameSegToRead.getFirst().getLength();
+        updateNewBlockStream();
       }
       else {
         // select seg randomly
@@ -286,14 +286,13 @@ public class FileInStream extends InputStream implements BoundedStream, Position
 
   }
 
-  private void updateMetadata(FileSegmentsInfo segToRead){
+  private void updateMetadata(FileSegmentsInfo segToRead) throws IOException {
     mNewStatus = mReplicasInfo.getReplicaStatus(segToRead);
     mNewOptions = OpenFileOptions.defaults().toInStreamOptions(mNewStatus);
     mNewPosition = segToRead.getOffset();
     mNewBlockSize = mNewStatus.getBlockSizeBytes();
     mNewLength = mNewStatus.getLength();
-    mNewEndPos = mNewPosition + segToRead.getLength();
-    mBlockInStream = null;
+    updateNewBlockStream();
   }
 
   private void checkStreamUpdate(int len) throws IOException {
@@ -538,21 +537,18 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     }
 
     long delta = pos - mPosition;
-    if (delta <= mBlockInStream.remaining() && delta >= -mBlockInStream.getPos()) { // within block
-      mBlockInStream.seek(mBlockInStream.getPos() + delta);
-    } else { // close the underlying stream as the new position is no longer in bounds
-      closeBlockInStream(mBlockInStream);
-    }
-    mPosition += delta;
 
     if(mOptions.getOptions().isRequireTrans()) {
       mNewPosition = -1; // refresh file in stream
-//      try {
-//        changeFileInStream(mPosition, (long) 0);
-//      } catch (AlluxioException e) {
-//        e.printStackTrace();
-//      }
     }
+    else {
+      if (delta <= mBlockInStream.remaining() && delta >= -mBlockInStream.getPos()) { // within block
+        mBlockInStream.seek(mBlockInStream.getPos() + delta);
+      } else { // close the underlying stream as the new position is no longer in bounds
+        closeBlockInStream(mBlockInStream);
+      }
+    }
+    mPosition += delta;
 
     LOG.info("seek pos. mPos: " + mPosition + ". mNewPos: " + mNewPosition + ". fileToRead: " + mNewStatus.getPath());
 
@@ -575,13 +571,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     // Calculate block id.
 
     if(mOptions.getOptions().isRequireTrans()) {
-      long blockId = mNewStatus.getBlockIds().get(Math.toIntExact(mNewPosition / mNewBlockSize));
-      mBlockInStream = mBlockStore.getInStream(blockId, mNewOptions, mFailedWorkers);
-      long offset = mNewPosition % mNewBlockSize;
-      mBlockInStream.seek(offset);
-
-      LOG.info("update block stream. mNewPos: {}. blockSize: {}. blockId: {}. offset: {}. file: {}",
-              mNewPosition, mNewBlockSize, blockId, offset, mNewStatus.getPath());
+      updateNewBlockStream();
     }
     else{
       long blockId = mStatus.getBlockIds().get(Math.toIntExact(mPosition / mBlockSize));
@@ -591,6 +581,16 @@ public class FileInStream extends InputStream implements BoundedStream, Position
       long offset = mPosition % mBlockSize;
       mBlockInStream.seek(offset);
     }
+  }
+
+  private void updateNewBlockStream() throws IOException {
+    long blockId = mNewStatus.getBlockIds().get(Math.toIntExact(mNewPosition / mNewBlockSize));
+    mBlockInStream = mBlockStore.getInStream(blockId, mNewOptions, mFailedWorkers);
+    long offset = mNewPosition % mNewBlockSize;
+    mBlockInStream.seek(offset);
+
+    LOG.info("update block stream. mPos: {}. mNewPos: {}. blockSize: {}. blockId: {}. offset: {}. file: {}",
+            mPosition, mNewPosition, mNewBlockSize, blockId, offset, mNewStatus.getPath());
   }
 
   private void closeBlockInStream(BlockInStream stream) throws IOException {
