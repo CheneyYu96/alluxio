@@ -203,12 +203,17 @@ bandwidth_test(){
 
     scl=`cat ${DATA_SCALE}`
 
+    qry=9
+
     mkdir -p  $DIR/logs
 
     limit_bandwidth $limit
 
     test_bandwidth $DIR/logs
-    trace_test $scl $times
+
+    for((t=0;t<${times};t++)); do
+        trace_test $scl $qry
+    done
 
     free_limit
 }
