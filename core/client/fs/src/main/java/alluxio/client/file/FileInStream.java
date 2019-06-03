@@ -580,7 +580,8 @@ public class FileInStream extends InputStream implements BoundedStream, Position
       long offset = mNewPosition % mNewBlockSize;
       mBlockInStream.seek(offset);
 
-      LOG.info("update block stream. blockId: {}. offset: {}. file: {}", blockId, offset, mNewStatus.getPath());
+      LOG.info("update block stream. mNewPos: {}. blockSize: {}. blockId: {}. offset: {}. file: {}",
+              mNewPosition, mNewBlockSize, blockId, offset, mNewStatus.getPath());
     }
     else{
       long blockId = mStatus.getBlockIds().get(Math.toIntExact(mPosition / mBlockSize));
