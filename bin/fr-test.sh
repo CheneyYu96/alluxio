@@ -87,6 +87,9 @@ trace_test(){
     if [[ `cat ${ALLUXIO_ENV}` == "1" ]]; then
         echo 'Alluxio env already prepared'
     else
+        per_col_env
+#        bundle_env
+
         fr_env
 #        $DIR/alluxio/bin/alluxio logLevel --logName=alluxio.master.repl.ReplManager --target=master --level=DEBUG
 
