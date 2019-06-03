@@ -213,6 +213,23 @@ bandwidth_test(){
     free_limit
 }
 
+
+bandwidth_test_all(){
+    limit=$1
+    times=$2
+
+    scl=`cat ${DATA_SCALE}`
+
+    mkdir -p  $DIR/logs
+
+    limit_bandwidth $limit
+
+    test_bandwidth $DIR/logs
+    all_test $scl $times
+
+    free_limit
+}
+
 if [[ "$#" -lt 3 ]]; then
     usage
     exit 1
@@ -231,6 +248,8 @@ else
         comp)                   complie_job
                                 ;;
         band)                   bandwidth_test $2 $3
+                                ;;
+        band-all)               bandwidth_test_all $2 $3
                                 ;;
         * )                     usage
     esac
