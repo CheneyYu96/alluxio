@@ -26,6 +26,7 @@ convert_test(){
     gen_data $scl
 
     convert
+
 }
 
 convert(){
@@ -55,6 +56,7 @@ convert(){
 #            $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar \
 #                --convert-table \
 #                $(check_from_hdfs ${FROM_HDFS})
+        clean_data
 
         save_par_data
     fi
