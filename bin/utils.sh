@@ -20,8 +20,8 @@ gen_data(){
         touch ${ALLUXIO_ENV}
     fi
 
-    if [[ `cat ${DATA_SCALE}` == "$SCL" && -d ${DIR}/data ]]; then
-        echo "Data exist"
+    if [[ `cat ${DATA_SCALE}` == "$SCL" && -d ${DIR}/tpch_parquet ]]; then
+        echo "Parquet data exist. don't need to generate raw data"
     else
         clean_data
         cd $DIR/tpch-spark/dbgen
