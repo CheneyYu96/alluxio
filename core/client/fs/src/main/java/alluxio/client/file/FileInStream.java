@@ -220,6 +220,9 @@ public class FileInStream extends InputStream implements BoundedStream, Position
 
     mContext.releaseMasterClient(masterClientResource);
 
+    // decide segment to read
+    WorkerNetAddress localWorker = mContext.getLocalWorker();
+
     // no replicas
     if(allSegs.size() == 1){
       // reading orginal table currently
@@ -230,11 +233,16 @@ public class FileInStream extends InputStream implements BoundedStream, Position
       else {
         updateMetadata(allSegs.get(0));
       }
+
+      if (localWorker != null && localWorker.getHost()
+              .equals(mReplicasInfo.getFileSegLocation(allSegs.get(0)).getHost())){
+        LOG.info("Read local worker. original file: {}", mNewStatus.getPath());
+      }
+      else {
+        LOG.info("Read nonlocal worker. original file: {}", mNewStatus.getPath());
+      }
       return;
     }
-
-    // decide segment to read
-    WorkerNetAddress localWorker = mContext.getLocalWorker();
 
     // no local worker, usually in master
     if (localWorker == null){
@@ -265,6 +273,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
       else {
         updateMetadata(segToRead);
       }
+      LOG.info("Read local worker. newFile: {}", mNewStatus.getPath());
     }
     else {
       Pair<FileSegmentsInfo, WorkerNetAddress> sameSegToRead = allSegWithLoc
@@ -282,6 +291,8 @@ public class FileInStream extends InputStream implements BoundedStream, Position
         int index = new Random().nextInt(allSegWithLoc.size());
         updateMetadata(allSegWithLoc.get(index).getFirst());
       }
+      LOG.info("Read nonlocal worker. newFile: {}", mNewStatus.getPath());
+
     }
 
   }
