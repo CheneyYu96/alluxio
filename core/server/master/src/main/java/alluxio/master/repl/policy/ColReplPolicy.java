@@ -33,60 +33,14 @@ public class ColReplPolicy implements ReplPolicy{
 
     @Override
     public List<MultiReplUnit> calcMultiReplicas(List<FileAccessInfo> fileAccessInfos) {
-        long allSize = fileAccessInfos
-                .stream()
-                .map(o -> o.getOffsetCount().keySet())
-                .flatMap(Collection::stream)
-                .mapToLong( o -> o.length)
-                .reduce(0, Long::sum);
+        long allSize = ReplPolicyUtils.calcAllSize(fileAccessInfos);
 
-        Map<AlluxioURI, List<Pair<Double, Double>>> allLoadSize = fileAccessInfos
-                .stream()
-                .collect(Collectors.toMap(
-                        FileAccessInfo::getFilePath,
-                        info -> calcLoad(allSize, info.getOffsetCount())
-                                .stream()
-                                .map(p -> new Pair<>(p.getFirst(), p.getSecond().length * 1.0 / allSize))
-                                .collect(Collectors.toList())
-                ));
-        // ascending order
-        List<Double> sortedLoads = allLoadSize
-                .values()
-                .stream()
-                .flatMap(Collection::stream)
-                .map(Pair::getFirst)
-                .sorted((e1, e2) -> e1 > e2 ? 1 : -1)
-                .collect(Collectors.toList());
-
-        LOG.info("All loads: {}", sortedLoads);
-
-        double optAlpha = 0;
-        // TODO binary search
-        for (int i = 0; i < sortedLoads.size(); i++){
-
-            double coldLoad = sortedLoads
-                    .stream()
-                    .limit(i + 1)
-                    .reduce(0.0, Double::sum);
-
-            double cost = calcReplCost(1 / coldLoad, allLoadSize);
-            optAlpha = 1 / coldLoad;
-
-            LOG.info("Test alpha: {}; cost: {}", optAlpha, cost);
-
-            if (cost <= budget){
-                LOG.info("Optimal alpha: {}; cost: {}", optAlpha, cost);
-                break;
-            }
-        }
-
-
-        double finalOptAlpha = optAlpha;
+        double finalOptAlpha = ReplPolicyUtils.calcGlobalAlpha(fileAccessInfos, budget, this::calcReplCost);
 
         return fileAccessInfos
                 .stream()
                 .map(info -> {
-                    List<Pair<Double, OffLenPair>> loads = calcLoad(allSize, info.getOffsetCount());
+                    List<Pair<Double, OffLenPair>> loads = ReplPolicyUtils.calcLoad(allSize, info.getOffsetCount());
                     List<MultiReplUnit> replUnits = new ArrayList<>();
 
                     boolean isCold = true;
@@ -103,25 +57,22 @@ public class ColReplPolicy implements ReplPolicy{
                         }
 
                         if(!isCold){
+                            int replicas = (int) Math.ceil(finalOptAlpha * l);
                             replUnits.add(new MultiReplUnit(
                                     info.getFilePath(),
                                     Collections.singletonList(p.getSecond()),
-                                    (int) Math.ceil(finalOptAlpha * l)));
+                                    replicas));
+
+                            LOG.info("File: {}. replicas: {}. off: {}",
+                                    info.getFilePath().getPath(),
+                                    replicas,
+                                    p.getSecond());
                         }
                     }
 
                     return replUnits;
                 })
                 .flatMap(Collection::stream)
-                .collect(Collectors.toList());
-    }
-
-    private List<Pair<Double, OffLenPair>> calcLoad(long allSize, Map<OffLenPair, Long> offsets){
-        return offsets
-                .entrySet()
-                .stream()
-                .map(e -> new Pair<>(e.getValue() * e.getKey().length * 1.0 /allSize, e.getKey()))
-                .sorted((e1, e2) -> e1.getFirst() > e2.getFirst() ? 1 : -1)
                 .collect(Collectors.toList());
     }
 
