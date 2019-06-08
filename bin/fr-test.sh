@@ -72,8 +72,9 @@ trace_test(){
     dir_name=$(get_dir_index scale${scl}_query${query}_trace)
     mkdir -p ${dir_name}
 
-    gen_data $scl
-    convert
+    if [[ ! -d $DIR/tpch_parquet ]]; then
+        convert_test $scl
+    fi
 
     USE_PARQUER=1
 #    NEED_PAR_INFO=1
