@@ -27,6 +27,7 @@ import alluxio.collections.Pair;
 import alluxio.exception.AlluxioException;
 import alluxio.exception.FileDoesNotExistException;
 import alluxio.exception.PreconditionMessage;
+import alluxio.exception.status.AlluxioStatusException;
 import alluxio.exception.status.DeadlineExceededException;
 import alluxio.exception.status.UnavailableException;
 import alluxio.network.netty.NettyRPC;
@@ -212,9 +213,6 @@ public class FileInStream extends InputStream implements BoundedStream, Position
 
     FileSystemMasterClient masterClientResource = mContext.acquireMasterClient();
 
-//    masterClientResource
-//            .uploadFileSegmentsAccessInfo(new AlluxioURI("<segInfo>" + mStatus.getPath()), mCurrentSeg.getOffset(), mCurrentSeg.getLength());
-
     List<FileSegmentsInfo> allSegs = masterClientResource
             .uploadFileSegmentsAccessInfo(new AlluxioURI(mStatus.getPath()), offset, length);
 
@@ -312,12 +310,27 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     updateNewBlockStream();
   }
 
+  private boolean checkReadData(long offset, long len) throws AlluxioStatusException {
+
+    FileSystemMasterClient masterClientResource = mContext.acquireMasterClient();
+
+    long checkReadData = masterClientResource
+            .uploadFileSegmentsAccessInfo(
+                    new AlluxioURI("<segInfo>" + mStatus.getPath()), offset, len)
+            .get(0)
+            .getOffset();
+
+    mContext.releaseMasterClient(masterClientResource);
+
+    return checkReadData == 1;
+  }
+
   private void checkStreamUpdate(int len) throws IOException {
     if (mFirstRead){
-      if(len > 10) {
+      if(checkReadData(mPosition, len)) {
         mReadData = true;
+        LOG.info("Find reading data. mPos: {}. mNewPos: {}. len: {}", mPosition, mNewPosition, len);
       }
-      LOG.info("First read. mPos: {}. mNewPos: {}. len: {}", mPosition, mNewPosition, len);
       mFirstRead = false;
     }
 

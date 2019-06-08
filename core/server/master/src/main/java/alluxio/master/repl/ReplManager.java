@@ -74,13 +74,22 @@ public class ReplManager {
         LOG.info("Create replication manager. check_interval : {}. policy : {}", checkInterval, replPolicy.getClass().getName());
     }
 
-    public void recordOffset(AlluxioURI requestFile, long offset, long length){
-        // TODO: unused
-        LOG.debug("Receive offset record for file {}. offset {} length {}", requestFile.getPath(), offset, length);
+    public OffLenPair recordOffset(AlluxioURI requestFile, long offset, long length){
+        LOG.debug("Receive offset check for file {}. offset {} length {}", requestFile.getPath(), offset, length);
 
-        if (offsetInfoMap.containsKey(requestFile)) {
-            offsetInfoMap.get(requestFile).recordOffSet(offset, length);
+        FileOffsetInfo offsetInfo = offsetInfoMap.get(requestFile);
+
+        if(offsetInfo == null){
+            return new OffLenPair(0, 0);
         }
+        else {
+            List<OffLenPair> pairs = offsetInfoMap.get(requestFile).getPairsByOffLen(offset, length);
+            if(pairs.size() == 0){
+                return new OffLenPair(0, 0);
+            }
+        }
+
+        return new OffLenPair(1, 0);
     }
 
     public Map<AlluxioURI, OffLenPair> recordAccess(AlluxioURI requestFile, long offset, long length){

@@ -76,6 +76,7 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Sets;
+import fr.client.utils.OffLenPair;
 import org.apache.commons.lang.StringUtils;
 import org.apache.thrift.TProcessor;
 import org.slf4j.Logger;
@@ -3074,9 +3075,9 @@ public final class DefaultFileSystemMaster extends CoreMaster implements FileSys
   public List<fileSegmentInfo> recordBlockAccessInfo(String UFSPath, long offset, long length) {
     if(UFSPath.startsWith("<segInfo>")){
       String filePath = UFSPath.substring(UFSPath.indexOf('>') + 1);
-      mReplManager.recordOffset( new AlluxioURI(filePath), offset, length);
+      OffLenPair checkRes = mReplManager.recordOffset( new AlluxioURI(filePath), offset, length);
 
-      return new ArrayList<>();
+      return Collections.singletonList(new fileSegmentInfo(UFSPath, checkRes.offset, checkRes.length));
     }
     else {
       return mReplManager
