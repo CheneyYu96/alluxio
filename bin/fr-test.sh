@@ -224,8 +224,11 @@ bandwidth_test(){
 
     for((t=0;t<${times};t++)); do
         trace_test $scl $qry
-        dname=${tmp_dir}
-        mv ${dname} ${upname}
+        dname[${t}]=${tmp_dir}
+    done
+
+    for((t=0;t<${times};t++)); do
+        mv ${dname[t]} ${upname}
     done
 
     free_limit
@@ -262,12 +265,8 @@ compare_test(){
         PER_COL=$useper
 
         bandwidth_test $limit $qry
-        bname=${tmp_dir}
-        mv ${bname} ${cname}
         sleep 120
         bandwidth_test $limit $qry
-        bname=${tmp_dir}
-        mv ${bname} ${cname}
 
         clear
     done
