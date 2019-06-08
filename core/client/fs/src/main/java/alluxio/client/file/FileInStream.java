@@ -334,7 +334,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
       mFirstRead = false;
     }
 
-    if (mReadData) {
+    if (mReadData && len > 10) {
 
       long startTimeMs = CommonUtils.getCurrentMs();
       try {
