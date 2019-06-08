@@ -201,7 +201,13 @@ nonshuffle_env(){
     ${DIR}/alluxio/bin/restart.sh
 }
 
+conv_env(){
+    sed -i "/alluxio.user.block.size.bytes.default=1GB/c\alluxio.user.block.size.bytes.default=900MB" $DIR/alluxio/conf/alluxio-site.properties
+     ${DIR}/alluxio/bin/restart.sh
+}
+
 fr_env(){
+    sed -i "/alluxio.user.block.size.bytes.default=900MB/c\alluxio.user.block.size.bytes.default=1GB" $DIR/alluxio/conf/alluxio-site.properties
 
     sed -i "/fr.client.translation=false/c\fr.client.translation=true" $DIR/alluxio/conf/alluxio-site.properties
 
@@ -229,12 +235,12 @@ non_fr_env(){
 
 bundle_env(){
     sed -i "/fr.repl.policy.class=alluxio.master.repl.policy.ColReplPolicy/c\fr.repl.policy.class=alluxio.master.repl.policy.BundleHottestKPolicy" $DIR/alluxio/conf/alluxio-site.properties
-    sed -i "/fr.repl.global=true/c\fr.repl.global=false" $DIR/alluxio/conf/alluxio-site.properties
+#    sed -i "/fr.repl.global=true/c\fr.repl.global=false" $DIR/alluxio/conf/alluxio-site.properties
 }
 
 per_col_env(){
     sed -i "/fr.repl.policy.class=alluxio.master.repl.policy.BundleHottestKPolicy/c\fr.repl.policy.class=alluxio.master.repl.policy.ColReplPolicy" $DIR/alluxio/conf/alluxio-site.properties
-    sed -i "/fr.repl.global=false/c\fr.repl.global=true" $DIR/alluxio/conf/alluxio-site.properties
+#    sed -i "/fr.repl.global=false/c\fr.repl.global=true" $DIR/alluxio/conf/alluxio-site.properties
 }
 
 get_dir_index(){

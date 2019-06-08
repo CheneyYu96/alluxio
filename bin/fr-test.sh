@@ -8,6 +8,8 @@ source ${LOCAL_DIR}/utils.sh
 
 USE_PARQUER=0
 FROM_HDFS=0
+NEED_PAR_INFO=0
+PER_COL=0
 
 check_parquet(){
     if [[ "${USE_PARQUER}" -eq "1" ]]; then
@@ -37,7 +39,7 @@ convert(){
     if [[ `cat ${DATA_SCALE}` == "$SCL" && -d $DIR/tpch_parquet ]]; then
         echo "Parquet exist"
     else
-        non_fr_env
+        conv_env
         move_data
 
         $DIR/spark/bin/spark-submit \
@@ -73,7 +75,7 @@ trace_test(){
     convert
 
     USE_PARQUER=1
-    NEED_PAR_INFO=1
+#    NEED_PAR_INFO=1
 
     from=$query
     to=$query
@@ -87,8 +89,11 @@ trace_test(){
     if [[ `cat ${ALLUXIO_ENV}` == "1" ]]; then
         echo 'Alluxio env already prepared'
     else
-        per_col_env
-#        bundle_env
+        if [[ "${PER_COL}" -eq "1" ]]; then
+            per_col_env
+        else
+            bundle_env
+        fi
 
         fr_env
 #        $DIR/alluxio/bin/alluxio logLevel --logName=alluxio.master.repl.ReplManager --target=master --level=DEBUG
@@ -128,6 +133,7 @@ trace_test(){
     done
 
     mv $DIR/logs/shuffle ${dir_name}
+    echo ${dir_name}
 
 }
 
@@ -202,23 +208,26 @@ complie_job(){
 
 bandwidth_test(){
     limit=$1
-    times=$2
+    qry=$2
 
     scl=`cat ${DATA_SCALE}`
 
-    qry=9
-
-    mkdir -p  $DIR/logs
+    times=9
+    upname=$(get_dir_index band${limit}_qry${qry}_)
+    mkdir -p ${upname}
 
     limit_bandwidth $limit
 
     test_bandwidth $DIR/logs
 
     for((t=0;t<${times};t++)); do
-        trace_test $scl $qry
+        dname=$(trace_test $scl $qry)
+        mv ${dname} ${upname}
     done
 
     free_limit
+
+    echo ${upname}
 }
 
 
@@ -238,6 +247,29 @@ bandwidth_test_all(){
     free_limit
 }
 
+
+compare_test(){
+    limit=$1
+    qry=$2
+
+    cname=$(get_dir_index compare_qry${qry}_)
+    mkdir -p ${cname}
+
+    PER_COL=0
+    bname=$(bandwidth_test $limit $qry)
+    mv ${bname} ${cname}
+    sleep 120
+    bname=$(bandwidth_test $limit $qry)
+    mv ${bname} ${cname}
+
+    PER_COL=1
+    bname=$(bandwidth_test $limit $qry)
+    mv ${bname} ${cname}
+    sleep 120
+    bname=$(bandwidth_test $limit $qry)
+    mv ${bname} ${cname}
+}
+
 if [[ "$#" -lt 3 ]]; then
     usage
     exit 1
@@ -253,11 +285,13 @@ else
                                 ;;
         clear)                  clear
                                 ;;
-        comp)                   complie_job
+        cpjob)                   complie_job
                                 ;;
         band)                   bandwidth_test $2 $3
                                 ;;
         band-all)               bandwidth_test_all $2 $3
+                                ;;
+        cmpr)                   compare_test $2 $3
                                 ;;
         * )                     usage
     esac
