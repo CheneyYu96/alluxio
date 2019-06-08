@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#set -euxo pipefail
+set -euxo pipefail
 set -x
 
 LOCAL_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )"  && pwd )"
@@ -11,6 +11,7 @@ FROM_HDFS=0
 NEED_PAR_INFO=0
 PER_COL=0
 
+tmp_dir=
 check_parquet(){
     if [[ "${USE_PARQUER}" -eq "1" ]]; then
         echo --run-parquet
@@ -133,7 +134,7 @@ trace_test(){
     done
 
     mv $DIR/logs/shuffle ${dir_name}
-    echo ${dir_name}
+    tmp_dir=${dir_name}
 
 }
 
@@ -221,13 +222,14 @@ bandwidth_test(){
     test_bandwidth $DIR/logs
 
     for((t=0;t<${times};t++)); do
-        dname=$(trace_test $scl $qry)
+        trace_test $scl $qry
+        dname=${tmp_dir}
         mv ${dname} ${upname}
     done
 
     free_limit
 
-    echo ${upname}
+    tmp_dir=${upname}
 }
 
 
@@ -255,19 +257,19 @@ compare_test(){
     cname=$(get_dir_index compare_qry${qry}_)
     mkdir -p ${cname}
 
-    PER_COL=0
-    bname=$(bandwidth_test $limit $qry)
-    mv ${bname} ${cname}
-    sleep 120
-    bname=$(bandwidth_test $limit $qry)
-    mv ${bname} ${cname}
+    for useper in `seq 0 1`; do
+        PER_COL=$useper
 
-    PER_COL=1
-    bname=$(bandwidth_test $limit $qry)
-    mv ${bname} ${cname}
-    sleep 120
-    bname=$(bandwidth_test $limit $qry)
-    mv ${bname} ${cname}
+        bandwidth_test $limit $qry
+        bname=${tmp_dir}
+        mv ${bname} ${cname}
+        sleep 120
+        bandwidth_test $limit $qry
+        bname=${tmp_dir}
+        mv ${bname} ${cname}
+
+        clear
+    done
 }
 
 if [[ "$#" -lt 3 ]]; then
