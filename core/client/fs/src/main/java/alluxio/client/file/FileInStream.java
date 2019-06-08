@@ -236,10 +236,10 @@ public class FileInStream extends InputStream implements BoundedStream, Position
 
       WorkerNetAddress workerToRead = mReplicasInfo.getFileSegLocation(allSegs.get(0));
       if (localWorker != null && localWorker.getHost().equals(workerToRead.getHost())){
-        LOG.info("Read local worker. addr: {}. len: {}. originalFile: {}", localWorker.getHost(), length, mNewStatus.getPath());
+        LOG.info("Read local worker. addr: {}; len: {}; originalFile: {}", localWorker.getHost(), length, mNewStatus.getPath());
       }
       else {
-        LOG.info("Read nonlocal worker. addr: {}. len: {}. originalFile: {}", workerToRead.getHost(), length, mNewStatus.getPath());
+        LOG.info("Read nonlocal worker. addr: {}; len: {}; originalFile: {}", workerToRead.getHost(), length, mNewStatus.getPath());
       }
       return;
     }
@@ -273,7 +273,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
       else {
         updateMetadata(segToRead);
       }
-      LOG.info("Read local worker. addr: {}. len: {}. newFile: {}", localWorker.getHost(), length, mNewStatus.getPath());
+      LOG.info("Read local worker. addr: {}; len: {}; newFile: {}", localWorker.getHost(), length, mNewStatus.getPath());
     }
     else {
       Pair<FileSegmentsInfo, WorkerNetAddress> sameSegToRead = allSegWithLoc
@@ -297,7 +297,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
         updateMetadata(allSegWithLoc.get(index).getFirst());
       }
 
-      LOG.info("Read nonlocal worker. addr: {}. len: {}. newFile: {}", workerToRead.getHost(), length, mNewStatus.getPath());
+      LOG.info("Read nonlocal worker. addr: {}; len: {}; newFile: {}", workerToRead.getHost(), length, mNewStatus.getPath());
 
     }
 
@@ -334,7 +334,9 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     }
     else {
       mNewPosition = mPosition;
-      updateNewBlockStream();
+      if(len > 100){
+        LOG.info("Attemtion. pos: {}. len: {}. file: {}", mNewPosition, len, mNewStatus.getPath());
+      }
     }
 
   }
