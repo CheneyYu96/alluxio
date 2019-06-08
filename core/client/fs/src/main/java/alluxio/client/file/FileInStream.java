@@ -234,12 +234,12 @@ public class FileInStream extends InputStream implements BoundedStream, Position
         updateMetadata(allSegs.get(0));
       }
 
-      if (localWorker != null && localWorker.getHost()
-              .equals(mReplicasInfo.getFileSegLocation(allSegs.get(0)).getHost())){
-        LOG.info("Read local worker. original file: {}", mNewStatus.getPath());
+      WorkerNetAddress workerToRead = mReplicasInfo.getFileSegLocation(allSegs.get(0));
+      if (localWorker != null && localWorker.getHost().equals(workerToRead.getHost())){
+        LOG.info("Read local worker. addr: {}. len: {}. originalFile: {}", localWorker.getHost(), length, mNewStatus.getPath());
       }
       else {
-        LOG.info("Read nonlocal worker. original file: {}", mNewStatus.getPath());
+        LOG.info("Read nonlocal worker. addr: {}. len: {}. originalFile: {}", workerToRead.getHost(), length, mNewStatus.getPath());
       }
       return;
     }
@@ -273,7 +273,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
       else {
         updateMetadata(segToRead);
       }
-      LOG.info("Read local worker. newFile: {}", mNewStatus.getPath());
+      LOG.info("Read local worker. addr: {}. len: {}. newFile: {}", localWorker.getHost(), length, mNewStatus.getPath());
     }
     else {
       Pair<FileSegmentsInfo, WorkerNetAddress> sameSegToRead = allSegWithLoc
@@ -282,16 +282,22 @@ public class FileInStream extends InputStream implements BoundedStream, Position
               .findFirst()
               .orElse(null);
 
+      WorkerNetAddress workerToRead;
+
       if (sameSegToRead != null){
+        // choose the same seg
         mNewPosition = sameSegToRead.getFirst().getOffset();
+        workerToRead = sameSegToRead.getSecond();
         updateNewBlockStream();
       }
       else {
         // select seg randomly
         int index = new Random().nextInt(allSegWithLoc.size());
+        workerToRead = allSegWithLoc.get(index).getSecond();
         updateMetadata(allSegWithLoc.get(index).getFirst());
       }
-      LOG.info("Read nonlocal worker. newFile: {}", mNewStatus.getPath());
+
+      LOG.info("Read nonlocal worker. addr: {}. len: {}. newFile: {}", workerToRead.getHost(), length, mNewStatus.getPath());
 
     }
 
