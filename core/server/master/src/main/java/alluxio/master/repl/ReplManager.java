@@ -120,6 +120,9 @@ public class ReplManager {
                 if(pairs.size() == 0){
                     return ImmutableMap.of(requestFile, pair);
                 }
+                else if(pairs.size() == 1){
+                    pair = pairs.get(0);
+                }
             }
         }
 
