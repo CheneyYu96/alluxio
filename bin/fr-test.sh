@@ -268,7 +268,7 @@ compare_test(){
         sleep 120
         bandwidth_test $limit $qry
 
-        clear
+        remove $DIR/alluxio_env
     done
 }
 
