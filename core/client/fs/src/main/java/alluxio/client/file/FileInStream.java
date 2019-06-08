@@ -317,6 +317,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
       if(len > 10) {
         mReadData = true;
       }
+      LOG.info("First read. mPos: {}. mNewPos: {}. len: {}", mPosition, mNewPosition, len);
       mFirstRead = false;
     }
 
