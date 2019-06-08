@@ -94,8 +94,7 @@ free_limit(){
         ssh ec2-user@${workers[$i]} -o StrictHostKeyChecking=no "sudo wondershaper -c -a eth0; echo test"
     done
 
-    sudo wondershaper -c -a eth0
-    echo "free master"
+    sudo wondershaper -c -a eth0; echo "free master"
 }
 
 limit_bandwidth(){
@@ -109,8 +108,7 @@ limit_bandwidth(){
         ssh ec2-user@${workers[$i]} -o StrictHostKeyChecking=no "sudo wondershaper -c -a eth0; sudo wondershaper -a eth0 -d $limit -u $limit"
     done
 
-    sudo wondershaper -c -a eth0
-    sudo wondershaper -a eth0 -d $limit -u $limit
+    sudo wondershaper -c -a eth0; sudo wondershaper -a eth0 -d $limit -u $limit
 
 }
 
