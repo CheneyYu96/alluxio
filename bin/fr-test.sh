@@ -169,15 +169,17 @@ send_par_info(){
     mkdir -p $INFO_DIR
 
      for f in $(ls $DIR/tpch_parquet); do
-         mkdir -p $INFO_DIR/$f
 
-        IDX=0
+        mkdir -p $INFO_DIR/$f
+
         for sf in $(ls ${DIR}/tpch_parquet/${f}); do
 
             if [[ "${sf}" != "_SUCCESS" ]]; then
-                 extract_par_info ${DIR}/tpch_parquet/${f}/${sf} ${INFO_DIR}/${f}/tmp_${IDX}.txt ${INFO_DIR}/${f}/${IDX}.txt
-                java -jar ${DIR}/alluxio/writeparquet/target/writeparquet-2.0.0-SNAPSHOT.jar ${DIR}/tpch_parquet/${f}/${sf} ${INFO_DIR}/${f}/${IDX}.txt
-                ((IDX=IDX+1))
+                if [[ ! -f ${INFO_DIR}/${f}/${sf}.txt ]]; then
+                    extract_par_info ${DIR}/tpch_parquet/${f}/${sf} ${INFO_DIR}/${f}/tmp_${sf}.txt ${INFO_DIR}/${f}/${sf}.txt
+                fi
+
+                java -jar ${DIR}/alluxio/writeparquet/target/writeparquet-2.0.0-SNAPSHOT.jar ${DIR}/tpch_parquet/${f}/${sf} ${INFO_DIR}/${f}/${sf}.txt
             fi
 
         done
@@ -257,9 +259,6 @@ bandwidth_test_all(){
 compare_test(){
     limit=$1
     qry=$2
-
-    cname=$(get_dir_index compare_qry${qry}_)
-    mkdir -p ${cname}
 
     for useper in `seq 0 1`; do
         PER_COL=$useper
