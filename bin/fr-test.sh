@@ -306,7 +306,7 @@ all_policy_test(){
 
     for((qr=1;qr<=22;qr++)); do
         policy_test ${limit} ${qr}
-        clear
+        remove $DIR/alluxio_env
     done
 
 }
