@@ -311,6 +311,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
   }
 
   private boolean checkReadData(long offset, long len) throws AlluxioStatusException {
+    long startTimeMs = CommonUtils.getCurrentMs();
 
     FileSystemMasterClient masterClientResource = mContext.acquireMasterClient();
 
@@ -321,6 +322,10 @@ public class FileInStream extends InputStream implements BoundedStream, Position
             .getOffset();
 
     mContext.releaseMasterClient(masterClientResource);
+
+    LOG.info("Check read data. elapsed: {}. mPos: {}. len: {}.",
+            (CommonUtils.getCurrentMs() - startTimeMs),
+            offset, len);
 
     return checkReadData == 1;
   }

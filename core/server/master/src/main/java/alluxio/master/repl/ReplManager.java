@@ -109,20 +109,14 @@ public class ReplManager {
                 return ImmutableMap.of(requestFile, pair);
             }
             else {
-//                OffLenPair pairForParquet = offsetInfoMap.get(requestFile).getPairByOffset(offset);
-//                if (pairForParquet == null) {
-//                    return ImmutableMap.of(requestFile, pair);
-//                } else {
-//                    pair = pairForParquet;
-//                }
                 List<OffLenPair> pairs = offsetInfoMap.get(requestFile).getPairsByOffLen(offset, length);
                 // TODO: when exist multiple pairs
                 if(pairs.size() == 0){
                     return ImmutableMap.of(requestFile, pair);
                 }
-                else if(pairs.size() == 1){
-                    pair = pairs.get(0);
-                }
+//                else if(pairs.size() == 1){
+//                    pair = pairs.get(0);
+//                }
             }
         }
 
