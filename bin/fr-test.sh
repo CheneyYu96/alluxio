@@ -263,12 +263,27 @@ compare_test(){
     for useper in `seq 0 1`; do
         PER_COL=$useper
 
-        bandwidth_test $limit $qry
-        sleep 120
-        bandwidth_test $limit $qry
-
-        remove $DIR/alluxio_env
+        policy_test $limit $qry
     done
+}
+
+policy_test(){
+    limit=$1
+    qry=$2
+
+    start=$(date "+%s")
+    bandwidth_test $limit $qry
+    now=$(date "+%s")
+    time=$((now-start))
+
+    interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
+
+    sleep_time=$((interval+300-time))
+
+    sleep ${sleep_time}
+
+    bandwidth_test $limit $qry
+    remove $DIR/alluxio_env
 }
 
 if [[ "$#" -lt 3 ]]; then
@@ -293,6 +308,8 @@ else
         band-all)               bandwidth_test_all $2 $3
                                 ;;
         cmpr)                   compare_test $2 $3
+                                ;;
+        policy)                 policy_test $2 $3
                                 ;;
         * )                     usage
     esac
