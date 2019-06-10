@@ -210,13 +210,14 @@ complie_job(){
     sbt assembly
 }
 
+times=9
+
 bandwidth_test(){
     limit=$1
     qry=$2
 
     scl=`cat ${DATA_SCALE}`
 
-    times=9
     upname=$(get_dir_index band${limit}_qry${qry}_)
     mkdir -p ${upname}
 
@@ -262,8 +263,9 @@ compare_test(){
 
     for useper in `seq 0 1`; do
         PER_COL=$useper
-
         policy_test $limit $qry
+        remove $DIR/alluxio_env
+
     done
 }
 
@@ -271,34 +273,41 @@ policy_test(){
     limit=$1
     qry=$2
 
-    start=$(date "+%s")
-    bandwidth_test $limit $qry
-    now=$(date "+%s")
-    time=$((now-start))
+    bdgt=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.budget' | cut -d "=" -f 2)
 
+    p_dir=$(get_dir_index q${qry}b${bdgt}_)
+    mkdir -p ${p_dir}
+
+
+    start=$(date "+%s")
+
+    bandwidth_test ${limit} ${qry}
+    first_dir=${tmp_dir}
+
+    now=$(date "+%s")
+    tm=$((now-start))
     interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
 
-    sleep_time=$((interval+300-time))
+    sleep_time=$((interval+300-tm))
 
     sleep ${sleep_time}
 
-    bandwidth_test $limit $qry
-    remove $DIR/alluxio_env
+    bandwidth_test ${limit} ${qry}
+    second_dir=${tmp_dir}
+
+    mv ${first_dir} ${p_dir}
+    mv ${second_dir} ${p_dir}
+
 }
 
 all_policy_test(){
     limit=$1
     times=$2
 
-    start=$(date "+%s")
-    bandwidth_test_all $limit $times
-    now=$(date "+%s")
-
-    time=$((now-start))
-    interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
-    sleep_time=$((interval+300-time))
-
-    sleep ${sleep_time}
+    for((qr=1;qr<=22;qr++)); do
+        policy_test ${limit} ${qr}
+        clear
+    done
 
 }
 
