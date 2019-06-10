@@ -286,6 +286,22 @@ policy_test(){
     remove $DIR/alluxio_env
 }
 
+all_policy_test(){
+    limit=$1
+    times=$2
+
+    start=$(date "+%s")
+    bandwidth_test_all $limit $times
+    now=$(date "+%s")
+
+    time=$((now-start))
+    interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
+    sleep_time=$((interval+300-time))
+
+    sleep ${sleep_time}
+
+}
+
 if [[ "$#" -lt 3 ]]; then
     usage
     exit 1
@@ -310,6 +326,8 @@ else
         cmpr)                   compare_test $2 $3
                                 ;;
         policy)                 policy_test $2 $3
+                                ;;
+        policy-all)             all_policy_test $2 $3
                                 ;;
         * )                     usage
     esac
