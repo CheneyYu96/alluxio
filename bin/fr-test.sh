@@ -265,7 +265,6 @@ compare_test(){
         PER_COL=$useper
         policy_test $limit $qry
         remove $DIR/alluxio_env
-
     done
 }
 
@@ -275,7 +274,7 @@ policy_test(){
 
     bdgt=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.budget' | cut -d "=" -f 2)
 
-    p_dir=$(get_dir_index q${qry}b${bdgt}_)
+    p_dir=$(get_dir_index q_${qry}b${bdgt}_)
     mkdir -p ${p_dir}
 
 
@@ -288,7 +287,7 @@ policy_test(){
     tm=$((now-start))
     interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
 
-    sleep_time=$((interval+300-tm))
+    sleep_time=$((interval+180-tm))
 
     sleep ${sleep_time}
 
