@@ -244,16 +244,7 @@ bandwidth_test_all(){
     limit=$1
     times=$2
 
-    scl=`cat ${DATA_SCALE}`
-
-    mkdir -p  $DIR/logs
-
-    limit_bandwidth $limit
-
-    test_bandwidth $DIR/logs
-    all_test $scl $times
-
-    free_limit
+    bandwidth_test ${limit} 0
 }
 
 
