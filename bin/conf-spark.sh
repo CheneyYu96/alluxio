@@ -29,7 +29,9 @@ add_name(){
 #        ssh ec2-user@${w_ip} -o StrictHostKeyChecking=no "echo 'export SPARK_LOCAL_HOSTNAME=\"${w_ip}\"' >>  /home/ec2-user/spark/conf/spark-env.sh"
 
         master_url=$(cat /home/ec2-user/hadoop/conf/masters)
-        ssh ec2-user@${w_ip} -o StrictHostKeyChecking=no "/home/ec2-user/spark/sbin/start-slave.sh -h ${w_ip} spark://${master_url}:7077"
+
+        ssh ec2-user@${w_ip} -o StrictHostKeyChecking=no "/home/ec2-user/spark/sbin/stop-slave.sh"
+        ssh ec2-user@${w_ip} -o StrictHostKeyChecking=no "/home/ec2-user/spark/sbin/start-slave.sh -h ${name} spark://${master_url}:7077"
     done
 
 }
