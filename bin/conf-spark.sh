@@ -21,13 +21,12 @@ add_name(){
 
     for i in `seq 0 ${worker_num}`; do
         w_ip=(`echo ${workers[$((i*2))]} | cut -d ':' -f 1`)
-#        w_ip=${w_ip:3}
 
         echo ${w_ip}
 
         name=(`echo ${workers[$((i*2+1))]} | cut -d '(' -f 2 | cut -d ')' -f 1`)
         echo ${name}
-#        ssh ec2-user@${workers[$i]} -o StrictHostKeyChecking=no "echo 'export SPARK_LOCAL_HOSTNAME=\"${workers[$i]}\"' >>  /home/ec2-user/spark/conf/spark-env.sh"
+        ssh ec2-user@${w_ip} -o StrictHostKeyChecking=no "echo 'export SPARK_LOCAL_HOSTNAME=\"${name}\"' >>  /home/ec2-user/spark/conf/spark-env.sh"
     done
 }
 
