@@ -210,7 +210,7 @@ complie_job(){
     sbt assembly
 }
 
-times=9
+times=1
 
 bandwidth_test(){
     limit=$1
@@ -265,7 +265,7 @@ policy_test(){
 
     bdgt=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.budget' | cut -d "=" -f 2)
 
-    p_dir=$(get_dir_index q_${qry}b${bdgt}_)
+    p_dir=$(get_dir_index q${qry}_b${bdgt}_)
     mkdir -p ${p_dir}
 
 
