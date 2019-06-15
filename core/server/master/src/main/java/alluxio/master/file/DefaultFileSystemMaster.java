@@ -3074,12 +3074,23 @@ public final class DefaultFileSystemMaster extends CoreMaster implements FileSys
   @Override
   public List<fileSegmentInfo> recordBlockAccessInfo(String UFSPath, long offset, long length) {
     if(UFSPath.startsWith("<segInfo>")){
+      // check reading column data
       String filePath = UFSPath.substring(UFSPath.indexOf('>') + 1);
       OffLenPair checkRes = mReplManager.recordOffset( new AlluxioURI(filePath), offset, length);
 
       return Collections.singletonList(new fileSegmentInfo(UFSPath, checkRes.offset, checkRes.length));
     }
+    else if(UFSPath.startsWith("<repInfo>")){
+      // request replica info
+      String filePath = UFSPath.substring(UFSPath.indexOf('>') + 1);
+      return mReplManager
+              .getReplicaInfo(new AlluxioURI(filePath))
+              .stream()
+              .map( o -> new fileSegmentInfo(o.getFirst().getPath(), o.getSecond().offset, o.getSecond().length))
+              .collect(Collectors.toList());
+    }
     else {
+      // request segment access
       return mReplManager
               .recordAccess(new AlluxioURI(UFSPath), offset, length)
               .entrySet()

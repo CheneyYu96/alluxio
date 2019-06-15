@@ -3,6 +3,7 @@ package alluxio.master.repl;
 import alluxio.AlluxioURI;
 import alluxio.Configuration;
 import alluxio.PropertyKey;
+import alluxio.collections.Pair;
 import alluxio.exception.status.UnavailableException;
 import alluxio.master.block.BlockMasterFactory;
 import alluxio.master.repl.meta.FileAccessInfo;
@@ -72,6 +73,10 @@ public class ReplManager {
         frDir = Configuration.get(PropertyKey.FR_REPL_DIR);
 
         LOG.info("Create replication manager. check_interval : {}. policy : {}", checkInterval, replPolicy.getClass().getName());
+    }
+
+    public List<Pair<AlluxioURI, OffLenPair>> getReplicaInfo(AlluxioURI originFile){
+        return fileReplicas.get(originFile).getMappedReplicas();
     }
 
     public OffLenPair recordOffset(AlluxioURI requestFile, long offset, long length){

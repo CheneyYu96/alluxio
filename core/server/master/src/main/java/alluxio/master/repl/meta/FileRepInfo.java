@@ -1,12 +1,15 @@
 package alluxio.master.repl.meta;
 
 import alluxio.AlluxioURI;
+import alluxio.collections.Pair;
 import fr.client.utils.OffLenPair;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -28,8 +31,18 @@ public class FileRepInfo {
         return new ArrayList<>(mappedReplicas.keySet());
     }
 
-    public Map<OffLenPair, OffLenPair> getMappedReplicas(AlluxioURI replica){
-        return mappedReplicas.getOrDefault(replica, new ConcurrentHashMap<>());
+    public List<Pair<AlluxioURI, OffLenPair>> getMappedReplicas(){
+        return mappedReplicas
+                .entrySet()
+                .stream()
+                .map( e -> {
+                    List<Pair<AlluxioURI, OffLenPair>> ret = new ArrayList<>();
+
+                    AlluxioURI replica = e.getKey();
+                    return e.getValue().keySet().stream().map( o -> new Pair<>(replica, o)).collect(Collectors.toList());
+                })
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList());
     }
 
     public Map<AlluxioURI, OffLenPair> getMappedPairs(OffLenPair pair){

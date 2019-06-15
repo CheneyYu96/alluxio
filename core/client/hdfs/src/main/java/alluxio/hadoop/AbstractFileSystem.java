@@ -17,10 +17,8 @@ import alluxio.Configuration;
 import alluxio.PropertyKey;
 import alluxio.client.block.AlluxioBlockStore;
 import alluxio.client.block.BlockWorkerInfo;
-import alluxio.client.file.FileOutStream;
+import alluxio.client.file.*;
 import alluxio.client.file.FileSystem;
-import alluxio.client.file.FileSystemContext;
-import alluxio.client.file.URIStatus;
 import alluxio.client.file.options.CreateDirectoryOptions;
 import alluxio.client.file.options.CreateFileOptions;
 import alluxio.client.file.options.DeleteOptions;
@@ -35,11 +33,13 @@ import alluxio.security.User;
 import alluxio.security.authorization.Mode;
 import alluxio.uri.*;
 import alluxio.wire.FileBlockInfo;
+import alluxio.wire.FileSegmentsInfo;
 import alluxio.wire.WorkerNetAddress;
 import com.google.common.base.Preconditions;
 import com.google.common.net.HostAndPort;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.hadoop.fs.*;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.Progressable;
@@ -88,6 +88,8 @@ abstract class AbstractFileSystem extends org.apache.hadoop.fs.FileSystem {
   private Statistics mStatistics = null;
   private String mAlluxioHeader = null;
 
+  private boolean hasFrReplica = false;
+
   /**
    * Constructs a new {@link AbstractFileSystem} instance with specified a {@link FileSystem}
    * handler for tests.
@@ -98,6 +100,7 @@ abstract class AbstractFileSystem extends org.apache.hadoop.fs.FileSystem {
   AbstractFileSystem(FileSystem fileSystem) {
     mFileSystem = fileSystem;
     sInitialized = true;
+    hasFrReplica = Configuration.getBoolean(PropertyKey.FR_CLIENT_BLOCK_LOC);
   }
 
   /**
@@ -301,6 +304,32 @@ abstract class AbstractFileSystem extends org.apache.hadoop.fs.FileSystem {
             new BlockLocation(names, hosts, offset, fileBlockInfo.getBlockInfo().getLength()));
       }
     }
+
+    if(hasFrReplica){
+      FileSystemMasterClient masterClientResource = mContext.acquireMasterClient();
+      String pathStr = "<repInfo>" + path.getPath();
+      List<FileSegmentsInfo> replInfos = masterClientResource
+              .uploadFileSegmentsAccessInfo(new AlluxioURI(pathStr), 0, 0);
+
+      mContext.releaseMasterClient(masterClientResource);
+
+      // TODO: try finer/coarser grained locations
+
+      for(FileSegmentsInfo info: replInfos){
+        AlluxioURI replica = new AlluxioURI(info.getFilePath());
+        FileBlockInfo block = getFileBlocks(replica).get(0);
+
+        WorkerNetAddress addr = block.getBlockInfo().getLocations().get(0).getWorkerAddress();
+        HostAndPort hostAndPort = HostAndPort.fromParts(addr.getHost(), addr.getDataPort());
+        String[] names = new String[]{hostAndPort.toString()};
+        String[] hosts = new String[]{hostAndPort.getHostText()};
+
+        blockLocations.add(
+                new BlockLocation(names, hosts, info.getOffset(), info.getLength()));
+      }
+
+    }
+
     LOG.debug("getFileBlockLocations(path={}, start={}, len={}, ret={})", file.getPath(), start, len, blockLocations);
 
     BlockLocation[] ret = new BlockLocation[blockLocations.size()];
