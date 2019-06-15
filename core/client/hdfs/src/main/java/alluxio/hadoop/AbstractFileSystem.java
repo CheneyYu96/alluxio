@@ -508,6 +508,8 @@ abstract class AbstractFileSystem extends org.apache.hadoop.fs.FileSystem {
 
     Map<String, Object> uriConfProperties = getConfigurationFromUri(uri);
 
+    hasFrReplica = Configuration.getBoolean(PropertyKey.FR_CLIENT_BLOCK_LOC);
+
     synchronized (INIT_LOCK) {
       if (sInitialized) {
         if (!connectDetailsMatch(uriConfProperties, conf)) {
