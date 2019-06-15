@@ -265,7 +265,6 @@ abstract class AbstractFileSystem extends org.apache.hadoop.fs.FileSystem {
     if (mStatistics != null) {
       mStatistics.incrementReadOps(1);
     }
-    LOG.debug("getFileBlockLocations({}, {}, {})", file.getPath(), start, len);
 
     AlluxioURI path = new AlluxioURI(HadoopUtils.getPathWithoutScheme(file.getPath()));
     List<FileBlockInfo> blocks = getFileBlocks(path);
@@ -302,6 +301,7 @@ abstract class AbstractFileSystem extends org.apache.hadoop.fs.FileSystem {
             new BlockLocation(names, hosts, offset, fileBlockInfo.getBlockInfo().getLength()));
       }
     }
+    LOG.debug("getFileBlockLocations(path={}, start={}, len={}, ret={})", file.getPath(), start, len, blockLocations);
 
     BlockLocation[] ret = new BlockLocation[blockLocations.size()];
     blockLocations.toArray(ret);
