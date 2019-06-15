@@ -76,7 +76,12 @@ public class ReplManager {
     }
 
     public List<Pair<AlluxioURI, OffLenPair>> getReplicaInfo(AlluxioURI originFile){
-        return fileReplicas.get(originFile).getMappedReplicas();
+        if (fileReplicas.containsKey(originFile)){
+            return fileReplicas.get(originFile).getMappedReplicas();
+        }
+        else {
+            return new ArrayList<>();
+        }
     }
 
     public OffLenPair recordOffset(AlluxioURI requestFile, long offset, long length){
