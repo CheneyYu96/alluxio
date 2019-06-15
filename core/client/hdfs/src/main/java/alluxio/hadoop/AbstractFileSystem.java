@@ -312,6 +312,9 @@ abstract class AbstractFileSystem extends org.apache.hadoop.fs.FileSystem {
 
       mContext.releaseMasterClient(masterClientResource);
 
+      LOG.debug("request replica info. path={}, replInfos={}", path.getPath(), replInfos);
+
+
       // TODO: try finer/coarser grained locations
 
       for(FileSegmentsInfo info: replInfos){
