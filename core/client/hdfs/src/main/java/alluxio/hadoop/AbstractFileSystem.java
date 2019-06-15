@@ -11,9 +11,6 @@
 
 package alluxio.hadoop;
 
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
-
 import alluxio.AlluxioConfiguration;
 import alluxio.AlluxioURI;
 import alluxio.Configuration;
@@ -30,53 +27,37 @@ import alluxio.client.file.options.DeleteOptions;
 import alluxio.client.file.options.SetAttributeOptions;
 import alluxio.conf.InstancedConfiguration;
 import alluxio.conf.Source;
-import alluxio.exception.AlluxioException;
-import alluxio.exception.ExceptionMessage;
-import alluxio.exception.FileDoesNotExistException;
 import alluxio.exception.InvalidPathException;
-import alluxio.exception.PreconditionMessage;
+import alluxio.exception.*;
 import alluxio.master.MasterInquireClient.ConnectDetails;
 import alluxio.master.MasterInquireClient.Factory;
 import alluxio.security.User;
 import alluxio.security.authorization.Mode;
-import alluxio.uri.Authority;
-import alluxio.uri.MultiMasterAuthority;
-import alluxio.uri.SingleMasterAuthority;
-import alluxio.uri.UnknownAuthority;
-import alluxio.uri.ZookeeperAuthority;
+import alluxio.uri.*;
 import alluxio.wire.FileBlockInfo;
 import alluxio.wire.WorkerNetAddress;
-
 import com.google.common.base.Preconditions;
 import com.google.common.net.HostAndPort;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import org.apache.hadoop.fs.BlockLocation;
-import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.*;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.Progressable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.net.URI;
-import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
 import javax.annotation.concurrent.NotThreadSafe;
 import javax.security.auth.Subject;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.URI;
+import java.security.Principal;
+import java.util.*;
+
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 
 /**
  * Base class for Apache Hadoop based Alluxio {@link org.apache.hadoop.fs.FileSystem}. This class
@@ -284,6 +265,7 @@ abstract class AbstractFileSystem extends org.apache.hadoop.fs.FileSystem {
     if (mStatistics != null) {
       mStatistics.incrementReadOps(1);
     }
+    LOG.debug("getFileBlockLocations({}, {}, {})", file.getPath(), start, len);
 
     AlluxioURI path = new AlluxioURI(HadoopUtils.getPathWithoutScheme(file.getPath()));
     List<FileBlockInfo> blocks = getFileBlocks(path);
