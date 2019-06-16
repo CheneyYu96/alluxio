@@ -317,6 +317,9 @@ abstract class AbstractFileSystem extends org.apache.hadoop.fs.FileSystem {
 
       // TODO: try finer/coarser grained locations
 
+      long originOffset = blockLocations.get(0).getOffset();
+      long originLen = blockLocations.get(0).getLength();
+
       for(FileSegmentsInfo info: replInfos){
         AlluxioURI replica = new AlluxioURI(info.getFilePath());
         FileBlockInfo block = getFileBlocks(replica).get(0);
@@ -326,8 +329,14 @@ abstract class AbstractFileSystem extends org.apache.hadoop.fs.FileSystem {
         String[] names = new String[]{hostAndPort.toString()};
         String[] hosts = new String[]{hostAndPort.getHostText()};
 
+        // finer grained
+//        blockLocations.add(
+//                new BlockLocation(names, hosts, info.getOffset(), info.getLength()));
+
+        // coarser grained
         blockLocations.add(
-                new BlockLocation(names, hosts, info.getOffset(), info.getLength()));
+                new BlockLocation(names, hosts, originOffset, originLen));
+
       }
 
     }
