@@ -36,6 +36,7 @@ import alluxio.wire.FileBlockInfo;
 import alluxio.wire.FileSegmentsInfo;
 import alluxio.wire.WorkerNetAddress;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ObjectArrays;
 import com.google.common.net.HostAndPort;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.hadoop.fs.*;
@@ -317,27 +318,38 @@ abstract class AbstractFileSystem extends org.apache.hadoop.fs.FileSystem {
 
       // TODO: try finer/coarser grained locations
 
-      long originOffset = blockLocations.get(0).getOffset();
-      long originLen = blockLocations.get(0).getLength();
-
-      for(FileSegmentsInfo info: replInfos){
-        AlluxioURI replica = new AlluxioURI(info.getFilePath());
-        FileBlockInfo block = getFileBlocks(replica).get(0);
-
-        WorkerNetAddress addr = block.getBlockInfo().getLocations().get(0).getWorkerAddress();
-        HostAndPort hostAndPort = HostAndPort.fromParts(addr.getHost(), addr.getDataPort());
-        String[] names = new String[]{hostAndPort.toString()};
-        String[] hosts = new String[]{hostAndPort.getHostText()};
-
-        // finer grained
+      // finer grained
+//      for(FileSegmentsInfo info: replInfos){
+//
+//        HostAndPort hostAndPort = getAddrByPath(info.getFilePath());
+//        String[] names = new String[]{hostAndPort.toString()};
+//        String[] hosts = new String[]{hostAndPort.getHostText()};
+//
+//        // finer grained
 //        blockLocations.add(
 //                new BlockLocation(names, hosts, info.getOffset(), info.getLength()));
+//
+//      }
 
-        // coarser grained
-        blockLocations.add(
-                new BlockLocation(names, hosts, originOffset, originLen));
+      // coarser grained
+      List<HostAndPort> replAddresses = replInfos.stream()
+              .map(FileSegmentsInfo::getFilePath)
+              .distinct()
+              .map(this::getAddrByPath)
+              .collect(toList());
+      String[] replNames = replAddresses.stream().map(HostAndPort::toString).toArray(String[]::new);
+      String[] replHosts = replAddresses.stream().map(HostAndPort::getHostText).toArray(String[]::new);
 
+      List<BlockLocation> newBlockLocations = new ArrayList<>();
+
+      for (BlockLocation location : blockLocations) {
+        String[] newNames = ObjectArrays.concat(location.getNames(), replNames, String.class);
+        String[] newHosts = ObjectArrays.concat(location.getHosts(), replHosts, String.class);
+        newBlockLocations.add(
+                new BlockLocation(newNames, newHosts, location.getOffset(), location.getLength()));
       }
+
+      blockLocations = newBlockLocations;
 
     }
 
@@ -346,6 +358,19 @@ abstract class AbstractFileSystem extends org.apache.hadoop.fs.FileSystem {
     BlockLocation[] ret = new BlockLocation[blockLocations.size()];
     blockLocations.toArray(ret);
     return ret;
+  }
+
+  private HostAndPort getAddrByPath(String filePath){
+    AlluxioURI replica = new AlluxioURI(filePath);
+    FileBlockInfo block = null;
+    try {
+      block = getFileBlocks(replica).get(0);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+    WorkerNetAddress addr = block.getBlockInfo().getLocations().get(0).getWorkerAddress();
+    return HostAndPort.fromParts(addr.getHost(), addr.getDataPort());
   }
 
   @Override
