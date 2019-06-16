@@ -318,7 +318,7 @@ wait_test(){
     times=$2
 
 #    for wt in 0 5 10 50 100 500 1000 3000 5000 10000; do
-    for wt in 50000; do
+    for wt in 5; do
         loc_wait=${wt}
         bandwidth_test 1000000 ${qry}
     done
