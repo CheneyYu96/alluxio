@@ -317,8 +317,20 @@ wait_test(){
     qry=$1
     times=$2
 
-    for wt in 5000 10000; do
+    for wt in 0 10 100 500 1000 3000 5000 10000; do
         loc_wait=${wt}
+        bandwidth_test 1000000 ${qry}
+    done
+}
+
+core_test(){
+    qry=$1
+    times=$2
+
+    loc_wait=0
+
+    for cr in 1 2 4 8; do
+        core=${cr}
         bandwidth_test 1000000 ${qry}
     done
 }
@@ -351,6 +363,8 @@ else
         policy-all)             all_policy_test $2 $3
                                 ;;
         wait)                   wait_test $2 $3
+                                ;;
+        core)                   core_test $2 $3
                                 ;;
         * )                     usage
     esac
