@@ -317,11 +317,17 @@ wait_test(){
     qry=$1
     times=$2
 
-#    for wt in 0 5 10 50 100 500 1000 3000 5000 10000; do
-    for wt in 5; do
+    for wt in 0 5 10 50 100 500 1000 3000 5000 10000; do
         loc_wait=${wt}
         bandwidth_test 1000000 ${qry}
     done
+}
+
+wait_time_test(){
+    qry=$1
+    loc_wait=$2
+
+    bandwidth_test 1000000 ${qry}
 }
 
 core_test(){
@@ -364,6 +370,8 @@ else
         policy-all)             all_policy_test $2 $3
                                 ;;
         wait)                   wait_test $2 $3
+                                ;;
+        wait-time)              wait_time_test $2 $3
                                 ;;
         core)                   core_test $2 $3
                                 ;;

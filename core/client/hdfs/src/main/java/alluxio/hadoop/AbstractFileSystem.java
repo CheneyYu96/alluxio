@@ -356,6 +356,7 @@ abstract class AbstractFileSystem extends org.apache.hadoop.fs.FileSystem {
                         new BlockLocation(originNames, originHosts, currentOffset, seg.getFirst() - currentOffset));
             }
 
+            // TODO: segment overlap
             List<HostAndPort> addresses = sortedSegs
                     .get(seg)
                     .stream()
