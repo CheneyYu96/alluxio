@@ -215,7 +215,7 @@ complie_job(){
     sbt assembly
 }
 
-times=2
+times=1
 
 bandwidth_test(){
     limit=$1
