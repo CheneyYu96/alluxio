@@ -23,6 +23,7 @@ import alluxio.client.file.options.CreateDirectoryOptions;
 import alluxio.client.file.options.CreateFileOptions;
 import alluxio.client.file.options.DeleteOptions;
 import alluxio.client.file.options.SetAttributeOptions;
+import alluxio.collections.Pair;
 import alluxio.conf.InstancedConfiguration;
 import alluxio.conf.Source;
 import alluxio.exception.InvalidPathException;
@@ -55,6 +56,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.security.Principal;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
@@ -306,50 +308,91 @@ abstract class AbstractFileSystem extends org.apache.hadoop.fs.FileSystem {
     }
 
     if(hasFrReplica){
-      FileSystemMasterClient masterClientResource = mContext.acquireMasterClient();
-      String pathStr = "<repInfo>" + path.getPath();
-      List<FileSegmentsInfo> replInfos = masterClientResource
+        FileSystemMasterClient masterClientResource = mContext.acquireMasterClient();
+        String pathStr = "<repInfo>" + path.getPath();
+        List<FileSegmentsInfo> replInfos = masterClientResource
               .uploadFileSegmentsAccessInfo(new AlluxioURI(pathStr), 0, 0);
 
-      mContext.releaseMasterClient(masterClientResource);
+        mContext.releaseMasterClient(masterClientResource);
 
-      LOG.debug("request replica info. path={}, replInfos={}", path.getPath(), replInfos);
+        LOG.debug("request replica info. path={}, replInfos={}", path.getPath(), replInfos);
+        List<BlockLocation> newBlockLocations = new ArrayList<>();
+
+        // TODO: try finer/coarser grained locations
+
+        /* finer grained */
+
+        long originOffset = blockLocations.get(0).getOffset(); /* assume one block */
+        long originLen = blockLocations.get(0).getLength();
+        String[] originNames = blockLocations.get(0).getNames();
+        String[] originHosts = blockLocations.get(0).getHosts();
+
+        // calculate segments
+
+        List<Pair<Long, Long>> sortedPairs = replInfos
+                .stream()
+                .map( o -> new Pair<>(o.getOffset(), o.getLength()))
+                .distinct()
+                .sorted( (p1, p2) -> p1.getFirst() > p2.getFirst() ? 1 : -1)
+                .collect(toList());
+
+        Map<Pair<Long, Long>, List<String>> sortedSegs = sortedPairs
+                .stream()
+                .collect(Collectors.toMap(
+                        pair -> pair,
+                        pair -> replInfos
+                                .stream()
+                                .filter( o -> o.getOffset()==pair.getFirst() && o.getLength()==pair.getSecond())
+                                .map(FileSegmentsInfo::getFilePath)
+                                .collect(toList())
+                ));
 
 
-      // TODO: try finer/coarser grained locations
+        long currentOffset = originOffset;
 
-      // finer grained
-//      for(FileSegmentsInfo info: replInfos){
+        for (Pair<Long, Long> seg: sortedSegs.keySet()){
+            if (currentOffset < seg.getFirst()){
+                newBlockLocations.add(
+                        new BlockLocation(originNames, originHosts, currentOffset, seg.getFirst() - currentOffset));
+            }
+
+            List<HostAndPort> addresses = sortedSegs
+                    .get(seg)
+                    .stream()
+                    .map(this::getAddrByPath)
+                    .collect(toList());
+            String[] newNames = ObjectArrays.concat(originNames, addresses.stream().map(HostAndPort::toString).toArray(String[]::new), String.class);
+            String[] newHosts = ObjectArrays.concat(originHosts, addresses.stream().map(HostAndPort::getHostText).toArray(String[]::new), String.class);
+
+            newBlockLocations.add(
+                    new BlockLocation(newNames, newHosts, seg.getFirst(), seg.getSecond()));
+
+            currentOffset = seg.getFirst() + seg.getSecond();
+        }
+
+        if(currentOffset < originLen){
+            newBlockLocations.add(
+                    new BlockLocation(originNames, originHosts, currentOffset, originLen - currentOffset));
+        }
+
+        /* coarser grained */
+
+//        List<HostAndPort> replAddresses = replInfos.stream()
+//              .map(FileSegmentsInfo::getFilePath)
+//              .map(this::getAddrByPath)
+//              .distinct()
+//              .collect(toList());
+//        String[] replNames = replAddresses.stream().map(HostAndPort::toString).toArray(String[]::new);
+//        String[] replHosts = replAddresses.stream().map(HostAndPort::getHostText).toArray(String[]::new);
 //
-//        HostAndPort hostAndPort = getAddrByPath(info.getFilePath());
-//        String[] names = new String[]{hostAndPort.toString()};
-//        String[] hosts = new String[]{hostAndPort.getHostText()};
-//
-//        // finer grained
-//        blockLocations.add(
-//                new BlockLocation(names, hosts, info.getOffset(), info.getLength()));
-//
-//      }
+//        for (BlockLocation location : blockLocations) {
+//            String[] newNames = ObjectArrays.concat(location.getNames(), replNames, String.class);
+//            String[] newHosts = ObjectArrays.concat(location.getHosts(), replHosts, String.class);
+//            newBlockLocations.add(
+//                    new BlockLocation(newNames, newHosts, location.getOffset(), location.getLength()));
+//        }
 
-      // coarser grained
-      List<HostAndPort> replAddresses = replInfos.stream()
-              .map(FileSegmentsInfo::getFilePath)
-              .map(this::getAddrByPath)
-              .distinct()
-              .collect(toList());
-      String[] replNames = replAddresses.stream().map(HostAndPort::toString).toArray(String[]::new);
-      String[] replHosts = replAddresses.stream().map(HostAndPort::getHostText).toArray(String[]::new);
-
-      List<BlockLocation> newBlockLocations = new ArrayList<>();
-
-      for (BlockLocation location : blockLocations) {
-        String[] newNames = ObjectArrays.concat(location.getNames(), replNames, String.class);
-        String[] newHosts = ObjectArrays.concat(location.getHosts(), replHosts, String.class);
-        newBlockLocations.add(
-                new BlockLocation(newNames, newHosts, location.getOffset(), location.getLength()));
-      }
-
-      blockLocations = newBlockLocations;
+        blockLocations = newBlockLocations;
 
     }
 
