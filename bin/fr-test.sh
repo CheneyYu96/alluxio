@@ -65,6 +65,8 @@ convert(){
     fi
 }
 
+core=2
+
 trace_test(){
     scl=$1
     query=$2
@@ -112,8 +114,10 @@ trace_test(){
             #--conf spark.driver.extraJavaOptions="-Dlog4j.configuration=file://$DIR/tpch-spark/log4j.properties" \
              #--log-trace \
 
-    core=2
-    total_cores=$[$core*4]
+    executor_num=(`cat /home/ec2-user/hadoop/conf/slaves | wc -l`)
+    executor_num=$(($executor_num-1))
+
+    total_cores=$[$core*$executor_num]
 
     for((q=${from};q<=${to};q++)); do
         $DIR/spark/bin/spark-submit \
@@ -313,7 +317,7 @@ wait_test(){
     qry=$1
     times=$2
 
-    for wt in 0 10 100 500 1000 3000; do
+    for wt in 5000 10000; do
         loc_wait=${wt}
         bandwidth_test 1000000 ${qry}
     done
