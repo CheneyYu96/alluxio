@@ -220,7 +220,7 @@ complie_job(){
     sbt assembly
 }
 
-times=8
+times=1
 
 bandwidth_test(){
     limit=$1
@@ -259,12 +259,12 @@ bandwidth_test_all(){
 
 
 compare_test(){
-    limit=$1
-    qry=$2
+    qry=$1
+    times=$2
 
     for useper in `seq 0 1`; do
         PER_COL=$useper
-        policy_test $limit $qry
+        policy_test 1000000 $qry
         remove $DIR/alluxio_env
     done
 }
