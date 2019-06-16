@@ -334,8 +334,8 @@ abstract class AbstractFileSystem extends org.apache.hadoop.fs.FileSystem {
       // coarser grained
       List<HostAndPort> replAddresses = replInfos.stream()
               .map(FileSegmentsInfo::getFilePath)
-              .distinct()
               .map(this::getAddrByPath)
+              .distinct()
               .collect(toList());
       String[] replNames = replAddresses.stream().map(HostAndPort::toString).toArray(String[]::new);
       String[] replHosts = replAddresses.stream().map(HostAndPort::getHostText).toArray(String[]::new);

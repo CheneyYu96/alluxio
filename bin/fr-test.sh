@@ -123,6 +123,7 @@ trace_test(){
             --executor-cores ${core} \
             --conf spark.executor.extraJavaOptions="-Dlog4j.configuration=file://$DIR/tpch-spark/log4j.properties" \
             --conf spark.driver.extraJavaOptions="-Dlog4j.configuration=file://$DIR/tpch-spark/log4j.properties" \
+            --conf spark.locality.wait=${loc_wait}
             --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar \
                 --query ${q} \
                 $(check_parquet) \
@@ -306,6 +307,18 @@ all_policy_test(){
 
 }
 
+loc_wait=$(cat ../spark/conf/spark-defaults.conf | grep locality | cut -d ' ' -f 2)
+
+wait_test(){
+    qry=$1
+    times=$2
+
+    for wt in 0 10 100 500 1000 3000; do
+        loc_wait=${wt}
+        bandwidth_test 1000000 ${qry}
+    done
+}
+
 if [[ "$#" -lt 3 ]]; then
     usage
     exit 1
@@ -332,6 +345,8 @@ else
         policy)                 policy_test $2 $3
                                 ;;
         policy-all)             all_policy_test $2 $3
+                                ;;
+        wait)                   wait_test $2 $3
                                 ;;
         * )                     usage
     esac
