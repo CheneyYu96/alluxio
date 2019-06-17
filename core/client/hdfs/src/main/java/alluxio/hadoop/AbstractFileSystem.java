@@ -333,7 +333,18 @@ abstract class AbstractFileSystem extends org.apache.hadoop.fs.FileSystem {
                 .stream()
                 .map( o -> new Pair<>(o.getOffset(), o.getLength()))
                 .distinct()
-                .sorted( (p1, p2) -> p1.getFirst() > p2.getFirst() ? 1 : -1)
+                .sorted( (p1, p2) -> {
+                    if (p1.getFirst() > p2.getFirst()){
+                        return 1;
+                    }
+                    else if(p1.getFirst().equals(p2.getFirst())){
+                        return p1.getSecond() > p2.getSecond() ? 1 : -1;
+
+                    }
+                    else {
+                        return -1;
+                    }
+                })
                 .collect(toList());
 
         Map<Pair<Long, Long>, List<String>> sortedSegs = sortedPairs
@@ -355,20 +366,25 @@ abstract class AbstractFileSystem extends org.apache.hadoop.fs.FileSystem {
                 newBlockLocations.add(
                         new BlockLocation(originNames, originHosts, currentOffset, seg.getFirst() - currentOffset));
             }
+            else if (currentOffset >= seg.getFirst() && currentOffset < seg.getFirst() + seg.getSecond()){
+                List<HostAndPort> addresses = sortedSegs
+                        .get(seg)
+                        .stream()
+                        .map(this::getAddrByPath)
+                        .collect(toList());
+                String[] newNames = ObjectArrays.concat(originNames, addresses.stream().map(HostAndPort::toString).toArray(String[]::new), String.class);
+                String[] newHosts = ObjectArrays.concat(originHosts, addresses.stream().map(HostAndPort::getHostText).toArray(String[]::new), String.class);
 
-            // TODO: segment overlap
-            List<HostAndPort> addresses = sortedSegs
-                    .get(seg)
-                    .stream()
-                    .map(this::getAddrByPath)
-                    .collect(toList());
-            String[] newNames = ObjectArrays.concat(originNames, addresses.stream().map(HostAndPort::toString).toArray(String[]::new), String.class);
-            String[] newHosts = ObjectArrays.concat(originHosts, addresses.stream().map(HostAndPort::getHostText).toArray(String[]::new), String.class);
+                newBlockLocations.add(
+                        new BlockLocation(newNames, newHosts, currentOffset, seg.getFirst() + seg.getSecond() - currentOffset));
 
-            newBlockLocations.add(
-                    new BlockLocation(newNames, newHosts, seg.getFirst(), seg.getSecond()));
-
-            currentOffset = seg.getFirst() + seg.getSecond();
+                currentOffset = seg.getFirst() + seg.getSecond();
+            }
+            else {
+                LOG.info("current pos exceed. pos={}, off={}, len={}", currentOffset, seg.getFirst(), seg.getSecond());
+                // TODO: segment overlap
+                continue;
+            }
         }
 
         if(currentOffset < originLen){
