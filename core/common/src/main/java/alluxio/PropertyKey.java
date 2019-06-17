@@ -4099,6 +4099,7 @@ public final class PropertyKey implements Comparable<PropertyKey> {
 
     public static final String FR_CLIENT_TRANS = "fr.client.translation";
     public static final String FR_CLIENT_BLOCK_LOC = "fr.client.block.location";
+    public static final String FR_CLIENT_BLOCK_FINER = "fr.client.block.finer";
     public static final String FR_PARQUET_INFO = "fr.parquet.info";
 
     private Name() {} // prevent instantiation
@@ -4635,6 +4636,11 @@ public final class PropertyKey implements Comparable<PropertyKey> {
   public static final PropertyKey FR_CLIENT_BLOCK_LOC =
           new Builder(Name.FR_CLIENT_BLOCK_LOC)
                   .setDefaultValue(true)
+                  .build();
+
+  public static final PropertyKey FR_CLIENT_BLOCK_FINER =
+          new Builder(Name.FR_CLIENT_BLOCK_FINER)
+                  .setDefaultValue(false)
                   .build();
 
   public static final PropertyKey FR_PARQUET_INFO =

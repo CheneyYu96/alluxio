@@ -320,96 +320,99 @@ abstract class AbstractFileSystem extends org.apache.hadoop.fs.FileSystem {
 
         // TODO: try finer/coarser grained locations
 
-        /* finer grained */
+        boolean isFinerGrained = Configuration.getBoolean(PropertyKey.FR_CLIENT_BLOCK_FINER);
 
-        long originOffset = blockLocations.get(0).getOffset(); /* assume one block */
-        long originLen = blockLocations.get(0).getLength();
-        String[] originNames = blockLocations.get(0).getNames();
-        String[] originHosts = blockLocations.get(0).getHosts();
+        if (isFinerGrained) {
 
-        // calculate segments
+            /* finer grained */
 
-        List<Pair<Long, Long>> sortedPairs = replInfos
-                .stream()
-                .map( o -> new Pair<>(o.getOffset(), o.getLength()))
-                .distinct()
-                .sorted( (p1, p2) -> {
-                    if (p1.getFirst() > p2.getFirst()){
-                        return 1;
-                    }
-                    else if(p1.getFirst().equals(p2.getFirst())){
-                        return p1.getSecond() > p2.getSecond() ? 1 : -1;
+            long originOffset = blockLocations.get(0).getOffset(); /* assume one block */
+            long originLen = blockLocations.get(0).getLength();
+            String[] originNames = blockLocations.get(0).getNames();
+            String[] originHosts = blockLocations.get(0).getHosts();
 
-                    }
-                    else {
-                        return -1;
-                    }
-                })
-                .collect(toList());
+            // calculate segments
 
-        Map<Pair<Long, Long>, List<String>> sortedSegs = sortedPairs
-                .stream()
-                .collect(Collectors.toMap(
-                        pair -> pair,
-                        pair -> replInfos
-                                .stream()
-                                .filter( o -> o.getOffset()==pair.getFirst() && o.getLength()==pair.getSecond())
-                                .map(FileSegmentsInfo::getFilePath)
-                                .collect(toList())
-                ));
+            List<Pair<Long, Long>> sortedPairs = replInfos
+                    .stream()
+                    .map(o -> new Pair<>(o.getOffset(), o.getLength()))
+                    .distinct()
+                    .sorted((p1, p2) -> {
+                        if (p1.getFirst() > p2.getFirst()) {
+                            return 1;
+                        } else if (p1.getFirst().equals(p2.getFirst())) {
+                            return p1.getSecond() > p2.getSecond() ? 1 : -1;
+
+                        } else {
+                            return -1;
+                        }
+                    })
+                    .collect(toList());
+
+            Map<Pair<Long, Long>, List<String>> sortedSegs = sortedPairs
+                    .stream()
+                    .collect(Collectors.toMap(
+                            pair -> pair,
+                            pair -> replInfos
+                                    .stream()
+                                    .filter(o -> o.getOffset() == pair.getFirst() && o.getLength() == pair.getSecond())
+                                    .map(FileSegmentsInfo::getFilePath)
+                                    .collect(toList())
+                    ));
 
 
-        long currentOffset = originOffset;
+            long currentOffset = originOffset;
 
-        for (Pair<Long, Long> seg: sortedPairs){
-            if (currentOffset < seg.getFirst()){
-                newBlockLocations.add(
-                        new BlockLocation(originNames, originHosts, currentOffset, seg.getFirst() - currentOffset));
-                currentOffset = seg.getFirst();
+            for (Pair<Long, Long> seg : sortedPairs) {
+                if (currentOffset < seg.getFirst()) {
+                    newBlockLocations.add(
+                            new BlockLocation(originNames, originHosts, currentOffset, seg.getFirst() - currentOffset));
+                    currentOffset = seg.getFirst();
+                }
+
+                if (currentOffset >= seg.getFirst() && currentOffset < seg.getFirst() + seg.getSecond()) {
+                    List<HostAndPort> addresses = sortedSegs
+                            .get(seg)
+                            .stream()
+                            .map(this::getAddrByPath)
+                            .collect(toList());
+                    String[] newNames = ObjectArrays.concat(originNames, addresses.stream().map(HostAndPort::toString).toArray(String[]::new), String.class);
+                    String[] newHosts = ObjectArrays.concat(originHosts, addresses.stream().map(HostAndPort::getHostText).toArray(String[]::new), String.class);
+
+                    newBlockLocations.add(
+                            new BlockLocation(newNames, newHosts, currentOffset, seg.getFirst() + seg.getSecond() - currentOffset));
+
+                    currentOffset = seg.getFirst() + seg.getSecond();
+                } else {
+                    LOG.info("current pos exceed. pos={}, off={}, len={}", currentOffset, seg.getFirst(), seg.getSecond());
+                    // TODO: segment overlap
+                    continue;
+                }
             }
 
-            if (currentOffset >= seg.getFirst() && currentOffset < seg.getFirst() + seg.getSecond()){
-                List<HostAndPort> addresses = sortedSegs
-                        .get(seg)
-                        .stream()
-                        .map(this::getAddrByPath)
-                        .collect(toList());
-                String[] newNames = ObjectArrays.concat(originNames, addresses.stream().map(HostAndPort::toString).toArray(String[]::new), String.class);
-                String[] newHosts = ObjectArrays.concat(originHosts, addresses.stream().map(HostAndPort::getHostText).toArray(String[]::new), String.class);
-
+            if (currentOffset < originLen) {
                 newBlockLocations.add(
-                        new BlockLocation(newNames, newHosts, currentOffset, seg.getFirst() + seg.getSecond() - currentOffset));
-
-                currentOffset = seg.getFirst() + seg.getSecond();
-            }
-            else {
-                LOG.info("current pos exceed. pos={}, off={}, len={}", currentOffset, seg.getFirst(), seg.getSecond());
-                // TODO: segment overlap
-                continue;
+                        new BlockLocation(originNames, originHosts, currentOffset, originLen - currentOffset));
             }
         }
+        else {
+            /* coarser grained */
 
-        if(currentOffset < originLen){
-            newBlockLocations.add(
-                    new BlockLocation(originNames, originHosts, currentOffset, originLen - currentOffset));
+            List<HostAndPort> replAddresses = replInfos.stream()
+                  .map(FileSegmentsInfo::getFilePath)
+                  .map(this::getAddrByPath)
+                  .distinct()
+                  .collect(toList());
+            String[] replNames = replAddresses.stream().map(HostAndPort::toString).toArray(String[]::new);
+            String[] replHosts = replAddresses.stream().map(HostAndPort::getHostText).toArray(String[]::new);
+
+            for (BlockLocation location : blockLocations) {
+                String[] newNames = ObjectArrays.concat(location.getNames(), replNames, String.class);
+                String[] newHosts = ObjectArrays.concat(location.getHosts(), replHosts, String.class);
+                newBlockLocations.add(
+                        new BlockLocation(newNames, newHosts, location.getOffset(), location.getLength()));
+            }
         }
-
-        /* coarser grained */
-
-//        List<HostAndPort> replAddresses = replInfos.stream()
-//              .map(FileSegmentsInfo::getFilePath)
-//              .map(this::getAddrByPath)
-//              .distinct()
-//              .collect(toList());
-//        String[] replNames = replAddresses.stream().map(HostAndPort::toString).toArray(String[]::new);
-//        String[] replHosts = replAddresses.stream().map(HostAndPort::getHostText).toArray(String[]::new);
-//
-//        for (BlockLocation location : blockLocations) {
-//            String[] newNames = ObjectArrays.concat(location.getNames(), replNames, String.class);
-//            String[] newHosts = ObjectArrays.concat(location.getHosts(), replHosts, String.class);
-//            newBlockLocations.add(
-//                    new BlockLocation(newNames, newHosts, location.getOffset(), location.getLength()));
-//        }
 
         blockLocations = newBlockLocations;
 
