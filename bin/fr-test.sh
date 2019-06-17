@@ -336,7 +336,7 @@ core_test(){
 
     loc_wait=0
 
-    for cr in 1 2 4; do
+    for cr in 1 2 4 8; do
         core=${cr}
         bandwidth_test 1000000 ${qry}
     done
