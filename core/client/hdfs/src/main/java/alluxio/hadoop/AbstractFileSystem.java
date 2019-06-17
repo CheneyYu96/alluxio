@@ -315,7 +315,7 @@ abstract class AbstractFileSystem extends org.apache.hadoop.fs.FileSystem {
 
         mContext.releaseMasterClient(masterClientResource);
 
-        LOG.info("request replica info. path={}, replInfos={}", path.getPath(), replInfos);
+        LOG.debug("request replica info. path={}, replInfos={}", path.getPath(), replInfos);
         List<BlockLocation> newBlockLocations = new ArrayList<>();
 
         // TODO: try finer/coarser grained locations
