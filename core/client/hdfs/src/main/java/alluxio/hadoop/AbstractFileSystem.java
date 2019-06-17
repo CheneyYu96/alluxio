@@ -90,7 +90,6 @@ abstract class AbstractFileSystem extends org.apache.hadoop.fs.FileSystem {
   private Statistics mStatistics = null;
   private String mAlluxioHeader = null;
 
-  private boolean hasFrReplica = false;
 
   /**
    * Constructs a new {@link AbstractFileSystem} instance with specified a {@link FileSystem}
@@ -102,7 +101,6 @@ abstract class AbstractFileSystem extends org.apache.hadoop.fs.FileSystem {
   AbstractFileSystem(FileSystem fileSystem) {
     mFileSystem = fileSystem;
     sInitialized = true;
-    hasFrReplica = Configuration.getBoolean(PropertyKey.FR_CLIENT_BLOCK_LOC);
   }
 
   /**
@@ -306,6 +304,8 @@ abstract class AbstractFileSystem extends org.apache.hadoop.fs.FileSystem {
             new BlockLocation(names, hosts, offset, fileBlockInfo.getBlockInfo().getLength()));
       }
     }
+
+    boolean hasFrReplica = Configuration.getBoolean(PropertyKey.FR_CLIENT_BLOCK_LOC);
 
     if(hasFrReplica){
         FileSystemMasterClient masterClientResource = mContext.acquireMasterClient();
@@ -602,7 +602,6 @@ abstract class AbstractFileSystem extends org.apache.hadoop.fs.FileSystem {
 
     Map<String, Object> uriConfProperties = getConfigurationFromUri(uri);
 
-    hasFrReplica = Configuration.getBoolean(PropertyKey.FR_CLIENT_BLOCK_LOC);
 
     synchronized (INIT_LOCK) {
       if (sInitialized) {
