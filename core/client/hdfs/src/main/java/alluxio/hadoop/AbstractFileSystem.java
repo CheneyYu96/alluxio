@@ -365,8 +365,10 @@ abstract class AbstractFileSystem extends org.apache.hadoop.fs.FileSystem {
             if (currentOffset < seg.getFirst()){
                 newBlockLocations.add(
                         new BlockLocation(originNames, originHosts, currentOffset, seg.getFirst() - currentOffset));
+                currentOffset = seg.getFirst();
             }
-            else if (currentOffset >= seg.getFirst() && currentOffset < seg.getFirst() + seg.getSecond()){
+
+            if (currentOffset >= seg.getFirst() && currentOffset < seg.getFirst() + seg.getSecond()){
                 List<HostAndPort> addresses = sortedSegs
                         .get(seg)
                         .stream()
