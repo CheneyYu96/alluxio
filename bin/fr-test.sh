@@ -342,6 +342,16 @@ core_test(){
     done
 }
 
+grained_test(){
+    core=$1
+    times=$2
+
+    for qry in 4 6 14 19; do
+        compare_test ${qry} ${times}
+    done
+}
+
+
 if [[ "$#" -lt 3 ]]; then
     usage
     exit 1
@@ -374,6 +384,8 @@ else
         wait-time)              wait_time_test $2 $3
                                 ;;
         core)                   core_test $2 $3
+                                ;;
+        grain)                  grained_test $2 $3
                                 ;;
         * )                     usage
     esac
