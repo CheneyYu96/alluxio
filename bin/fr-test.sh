@@ -10,6 +10,8 @@ USE_PARQUER=0
 FROM_HDFS=0
 NEED_PAR_INFO=0
 PER_COL=0
+CON_REQ=0
+
 
 tmp_dir=
 check_parquet(){
@@ -67,6 +69,9 @@ convert(){
 
 core=2
 
+# update
+all_core=4
+
 trace_test(){
     scl=$1
     query=$2
@@ -120,28 +125,58 @@ trace_test(){
     total_cores=$[$core*$executor_num]
 
     for((q=${from};q<=${to};q++)); do
-        $DIR/spark/bin/spark-submit \
-            --executor-memory 4g \
-            --driver-memory 4g \
-            --total-executor-cores ${total_cores} \
-            --executor-cores ${core} \
-            --conf spark.executor.extraJavaOptions="-Dlog4j.configuration=file://$DIR/tpch-spark/log4j.properties" \
-            --conf spark.driver.extraJavaOptions="-Dlog4j.configuration=file://$DIR/tpch-spark/log4j.properties" \
-            --conf spark.locality.wait=${loc_wait} \
-            --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar \
-                --query ${q} \
-                $(check_parquet) \
-                --app-name "TPCH shuffle: scale${scl} query${q}" \
-                > $DIR/logs/shuffle/scale${scl}_query${q}.log 2>&1
+        if [[ "${CON_REQ}" -eq "0" ]]; then
+            $DIR/spark/bin/spark-submit \
+                --executor-memory 4g \
+                --driver-memory 4g \
+                --total-executor-cores ${total_cores} \
+                --executor-cores ${core} \
+                --conf spark.executor.extraJavaOptions="-Dlog4j.configuration=file://$DIR/tpch-spark/log4j.properties" \
+                --conf spark.driver.extraJavaOptions="-Dlog4j.configuration=file://$DIR/tpch-spark/log4j.properties" \
+                --conf spark.locality.wait=${loc_wait} \
+                --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar \
+                    --query ${q} \
+                    $(check_parquet) \
+                    --app-name "TPCH shuffle: scale${scl} query${q}" \
+                    > $DIR/logs/shuffle/scale${scl}_query${q}.log 2>&1
 
-#        collect_workerloads shuffle query${q}
+    #        collect_workerloads shuffle query${q}
 
-        line=$(cat $DIR/logs/shuffle/scale${scl}_query${q}.log | grep 'Got application ID')
-        appid=${line##*ID: }
-        echo "App ID: ${appid}"
+            line=$(cat $DIR/logs/shuffle/scale${scl}_query${q}.log | grep 'Got application ID')
+            appid=${line##*ID: }
+            echo "App ID: ${appid}"
 
-        mkdir -p $DIR/logs/shuffle/query${q}
-        collect_worker_logs shuffle/query${q} ${appid}
+            mkdir -p $DIR/logs/shuffle/query${q}
+            collect_worker_logs shuffle/query${q} ${appid}
+        else
+
+            concurrent=$[$all_core/$core]
+            for((c=1;c<=${concurrent};c++)); do
+                $DIR/spark/bin/spark-submit \
+                    --executor-memory 4g \
+                    --driver-memory 4g \
+                    --total-executor-cores ${total_cores} \
+                    --executor-cores ${core} \
+                    --conf spark.executor.extraJavaOptions="-Dlog4j.configuration=file://$DIR/tpch-spark/log4j.properties" \
+                    --conf spark.driver.extraJavaOptions="-Dlog4j.configuration=file://$DIR/tpch-spark/log4j.properties" \
+                    --conf spark.locality.wait=${loc_wait} \
+                    --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar \
+                        --query ${q} \
+                        $(check_parquet) \
+                        --app-name "TPCH shuffle: scale${scl} query${q} con${c}" \
+                        > $DIR/logs/shuffle/scale${scl}_con${c}_query${q}.log 2>&1 &
+            done
+            wait
+
+            for((c=1;c<=${concurrent};c++)); do
+                line=$(cat $DIR/logs/shuffle/scale${scl}_con${c}_query${q}.log | grep 'Got application ID')
+                appid=${line##*ID: }
+                echo "App ID: ${appid}"
+
+                mkdir -p $DIR/logs/shuffle/con${c}_query${q}/
+                collect_worker_logs shuffle/con${c}_query${q} ${appid}
+            done
+        fi
     done
 
     mv $DIR/logs/shuffle ${dir_name}
@@ -352,6 +387,13 @@ grained_test(){
     done
 }
 
+con_test(){
+    qry=$1
+    core=$2
+
+    CON_REQ=1
+    bandwidth_test 1000000 ${qry}
+}
 
 if [[ "$#" -lt 3 ]]; then
     usage
@@ -387,6 +429,8 @@ else
         core)                   core_test $2 $3
                                 ;;
         grain)                  grained_test $2 $3
+                                ;;
+        con)                    con_test $2 $3
                                 ;;
         * )                     usage
     esac
