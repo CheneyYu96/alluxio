@@ -393,7 +393,7 @@ con_test(){
     core=$2
 
     CON_REQ=1
-    bandwidth_test 1000000 ${qry}
+    compare_test ${qry} 8
 }
 
 if [[ "$#" -lt 3 ]]; then
