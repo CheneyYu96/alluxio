@@ -389,11 +389,13 @@ grained_test(){
 }
 
 con_test(){
-    qry=$1
     core=$2
+    times=$2
 
     CON_REQ=1
-    compare_test ${qry} 8
+    for qry in 4 6 14; do
+        compare_test ${qry} ${times}
+    done
 }
 
 if [[ "$#" -lt 3 ]]; then
