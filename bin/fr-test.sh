@@ -163,7 +163,7 @@ trace_test(){
                     --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar \
                         --query ${q} \
                         $(check_parquet) \
-                        --app-name "TPCH shuffle: scale${scl} query${q} con${c}" \
+                        --app-name "TPCH shuffle: scale${scl} query${q} con${concurrent}-${c}" \
                         > $DIR/logs/shuffle/scale${scl}_con${c}_query${q}.log 2>&1 &
             done
             wait
