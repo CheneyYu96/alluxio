@@ -338,8 +338,8 @@ core_test(){
 
     for cr in 1 2 4; do
         core=${cr}
-        compare_test ${qry} ${times}
-#        bandwidth_test 1000000 ${qry}
+#        compare_test ${qry} ${times}
+        bandwidth_test 1000000 ${qry}
     done
 }
 
