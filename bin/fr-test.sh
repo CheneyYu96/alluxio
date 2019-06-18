@@ -153,8 +153,8 @@ trace_test(){
             concurrent=$[$all_core/$core]
             for((c=1;c<=${concurrent};c++)); do
                 $DIR/spark/bin/spark-submit \
-                    --executor-memory 4g \
-                    --driver-memory 4g \
+                    --executor-memory 2g \
+                    --driver-memory 2g \
                     --total-executor-cores ${total_cores} \
                     --executor-cores ${core} \
                     --conf spark.executor.extraJavaOptions="-Dlog4j.configuration=file://$DIR/tpch-spark/log4j.properties" \
