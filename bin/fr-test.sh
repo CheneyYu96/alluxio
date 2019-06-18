@@ -389,7 +389,7 @@ grained_test(){
 }
 
 con_test(){
-    core=$2
+    core=$1
     times=$2
 
     CON_REQ=1
