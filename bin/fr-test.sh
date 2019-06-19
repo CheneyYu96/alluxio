@@ -393,7 +393,8 @@ con_test(){
     times=$2
 
     CON_REQ=1
-    for qry in 4 6 14; do
+#    for qry in 4 6 14 19; do
+    for qry in 19; do
         compare_test ${qry} ${times}
     done
 }
