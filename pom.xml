@@ -183,6 +183,7 @@
     <module>underfs</module>
     <module>frclient</module>
     <module>writeparquet</module>
+    <module>readparquet</module>
   </modules>
 
   <dependencyManagement>
