@@ -3,6 +3,7 @@ package alluxio.master.repl;
 import alluxio.AlluxioURI;
 import alluxio.Configuration;
 import alluxio.PropertyKey;
+import alluxio.collections.Pair;
 import alluxio.exception.status.UnavailableException;
 import alluxio.master.block.BlockMasterFactory;
 import alluxio.master.repl.meta.FileAccessInfo;
@@ -14,14 +15,13 @@ import alluxio.wire.WorkerInfo;
 import alluxio.wire.WorkerNetAddress;
 import com.google.common.collect.ImmutableMap;
 import fr.client.FRClient;
+import fr.client.utils.MultiReplUnit;
 import fr.client.utils.OffLenPair;
 import fr.client.utils.ReplUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -49,6 +49,11 @@ public class ReplManager {
     private String frDir;
 
     private boolean useParuqetInfo;
+    private boolean repeatRepl;
+
+    private boolean replGlobal;
+    private boolean haveRepl;
+
     public ReplManager() {
         frClient = new FRClient();
         accessRecords = new ConcurrentHashMap<>();
@@ -60,19 +65,41 @@ public class ReplManager {
                 PropertyKey.FR_REPL_POLICY), new Class[] {}, new Object[] {});
         checkInterval = Configuration.getInt(PropertyKey.FR_REPL_INTERVAL);
         useParuqetInfo = Configuration.getBoolean(PropertyKey.FR_PARQUET_INFO);
+        repeatRepl = Configuration.getBoolean(PropertyKey.FR_REPL_REPEAT);
+
+        replGlobal = Configuration.getBoolean(PropertyKey.FR_REPL_GLOBAL);
+        haveRepl = false;
 
         frDir = Configuration.get(PropertyKey.FR_REPL_DIR);
 
         LOG.info("Create replication manager. check_interval : {}. policy : {}", checkInterval, replPolicy.getClass().getName());
     }
 
-    public void recordOffset(AlluxioURI requestFile, long offset, long length){
-        // TODO: unused
-        LOG.debug("Receive offset record for file {}. offset {} length {}", requestFile.getPath(), offset, length);
-
-        if (offsetInfoMap.containsKey(requestFile)) {
-            offsetInfoMap.get(requestFile).recordOffSet(offset, length);
+    public List<Pair<AlluxioURI, OffLenPair>> getReplicaInfo(AlluxioURI originFile){
+        if (fileReplicas.containsKey(originFile)){
+            return fileReplicas.get(originFile).getMappedReplicas();
         }
+        else {
+            return new ArrayList<>();
+        }
+    }
+
+    public OffLenPair recordOffset(AlluxioURI requestFile, long offset, long length){
+        LOG.debug("Receive offset check for file {}. offset {} length {}", requestFile.getPath(), offset, length);
+
+        FileOffsetInfo offsetInfo = offsetInfoMap.get(requestFile);
+
+        if(offsetInfo == null){
+            return new OffLenPair(0, 0);
+        }
+        else {
+            List<OffLenPair> pairs = offsetInfoMap.get(requestFile).getPairsByOffLen(offset, length);
+            if(pairs.size() == 0){
+                return new OffLenPair(0, 0);
+            }
+        }
+
+        return new OffLenPair(1, 0);
     }
 
     public Map<AlluxioURI, OffLenPair> recordAccess(AlluxioURI requestFile, long offset, long length){
@@ -92,17 +119,14 @@ public class ReplManager {
                 return ImmutableMap.of(requestFile, pair);
             }
             else {
-//                OffLenPair pairForParquet = offsetInfoMap.get(requestFile).getPairByOffset(offset);
-//                if (pairForParquet == null) {
-//                    return ImmutableMap.of(requestFile, pair);
-//                } else {
-//                    pair = pairForParquet;
-//                }
                 List<OffLenPair> pairs = offsetInfoMap.get(requestFile).getPairsByOffLen(offset, length);
                 // TODO: when exist multiple pairs
                 if(pairs.size() == 0){
                     return ImmutableMap.of(requestFile, pair);
                 }
+//                else if(pairs.size() == 1){
+//                    pair = pairs.get(0);
+//                }
             }
         }
 
@@ -144,68 +168,101 @@ public class ReplManager {
                 TimeUnit.SECONDS.sleep(checkInterval);
                 LOG.info("Checking stats for replication");
 
-                // TODO: allow bundling offsets from different tables
-                accessRecords.forEach((filePath, accessInfo) -> {
-                    List<ReplUnit> replUnits = replPolicy.calcReplicas(accessInfo);
-                    if (replUnits != null && replUnits.size() > 0){
-                        LOG.info("Make replication decision for file : {} ", filePath.getName());
+                // allow bundling offsets from different tables
+                if(replGlobal){
+                    if (repeatRepl){
+                        // TODO: delete all replicas
+                    }
+                    else {
+                        if (haveRepl){
+                            continue;
+                        }
+                        else {
+                            haveRepl = true;
+                        }
+                    }
 
-                        // delete old replicas
+                    List<MultiReplUnit> replUnits = replPolicy.calcMultiReplicas(new ArrayList<>(accessRecords.values()));
+
+                    // TODO: treat as ReplUnit now. May allow more complicated ops.
+                    for (MultiReplUnit unit : replUnits){
+                        unit.toReplUnit().forEach((key, value) -> replicate(key, Collections.singletonList(value)));
+                    }
+
+                }
+                else {
+                    accessRecords.forEach((filePath, accessInfo) -> {
 
                         if (fileReplicas.containsKey(filePath)) {
-                            FileRepInfo oldRepInfo = fileReplicas.remove(filePath);
-                            frClient.deleteReplicas(oldRepInfo.getReplicasURI());
-                            LOG.info("Delete replicas for file: {}.", filePath.getPath());
+                            if (repeatRepl) {
+                                // TODO: delay deletion
+                                // delete old replicas
+                                FileRepInfo oldRepInfo = fileReplicas.remove(filePath);
+                                frClient.deleteReplicas(oldRepInfo.getReplicasURI());
+                                LOG.info("Delete replicas for file: {}.", filePath.getPath());
+                            } else {
+                                // just replica once
+                                return;
+                            }
                         }
 
-                        FileRepInfo repInfo = new FileRepInfo(filePath);
-
-                        replUnits.forEach(unit -> {
-                            LOG.info("File : {}. Replication : {}", filePath.getName(), unit);
-
-                            if(unit.getReplicas() > 0) {
-
-                                List<WorkerNetAddress> availWorkerAddress = null;
-
-                                try {
-                                    List<WorkerInfo> allWorkers = BlockMasterFactory
-                                            .getBlockMaster()
-                                            .getWorkerInfoList();
-
-                                    availWorkerAddress = allWorkers
-                                            .stream()
-                                            .map(WorkerInfo::getAddress)
-                                            .collect(Collectors.toList());
-
-                                } catch (UnavailableException e) {
-                                    e.printStackTrace();
-                                }
-
-                                List<AlluxioURI> replicas = availWorkerAddress != null ?
-                                        frClient.copyFileOffset(filePath, unit, availWorkerAddress) :
-                                        frClient.copyFileOffset(filePath, unit);
-
-                                List<OffLenPair> originPairs = unit.getOffLenPairs();
-                                long newOffset = 0;
-                                List<OffLenPair> newPairs = new ArrayList<>();
-                                for (OffLenPair originPair : originPairs) {
-                                    newPairs.add(new OffLenPair(newOffset, originPair.length));
-                                    newOffset += originPair.length;
-                                }
-
-                                replicas.forEach(r -> repInfo.addReplicas(r, originPairs, newPairs));
-                                replicas.forEach(r -> replicaMap.put(r, filePath));
-                            }
-                        });
-                        fileReplicas.put(filePath, repInfo);
-                    }
-                });
+                        List<ReplUnit> replUnits = replPolicy.calcReplicas(accessInfo);
+                        replicate(filePath, replUnits);
+                    });
+                }
 
             }
         } catch (InterruptedException e) {
             // Allow thread to exit.
         } catch (Exception e) {
             LOG.error("Uncaught exception in checking stats", e);
+        }
+    }
+
+    private void replicate(AlluxioURI filePath, List<ReplUnit> replUnits){
+        if (replUnits != null && replUnits.size() > 0) {
+//            LOG.info("Make replication decision for file : {} ", filePath.getPath());
+
+            FileRepInfo repInfo = new FileRepInfo(filePath);
+
+            replUnits.forEach(unit -> {
+                LOG.info("File : {}. Replication : {}", filePath.getPath(), unit);
+
+                if (unit.getReplicas() > 0) {
+
+                    List<WorkerNetAddress> availWorkerAddress = null;
+
+                    try {
+                        List<WorkerInfo> allWorkers = BlockMasterFactory
+                                .getBlockMaster()
+                                .getWorkerInfoList();
+
+                        availWorkerAddress = allWorkers
+                                .stream()
+                                .map(WorkerInfo::getAddress)
+                                .collect(Collectors.toList());
+
+                    } catch (UnavailableException e) {
+                        e.printStackTrace();
+                    }
+
+                    List<AlluxioURI> replicas = availWorkerAddress != null ?
+                            frClient.copyFileOffset(filePath, unit, availWorkerAddress) :
+                            frClient.copyFileOffset(filePath, unit);
+
+                    List<OffLenPair> originPairs = unit.getOffLenPairs();
+                    long newOffset = 0;
+                    List<OffLenPair> newPairs = new ArrayList<>();
+                    for (OffLenPair originPair : originPairs) {
+                        newPairs.add(new OffLenPair(newOffset, originPair.length));
+                        newOffset += originPair.length;
+                    }
+
+                    replicas.forEach(r -> repInfo.addReplicas(r, originPairs, newPairs));
+                    replicas.forEach(r -> replicaMap.put(r, filePath));
+                }
+            });
+            fileReplicas.put(filePath, repInfo);
         }
     }
 }

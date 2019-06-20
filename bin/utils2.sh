@@ -20,8 +20,8 @@ gen_data(){
         touch ${ALLUXIO_ENV}
     fi
 
-    if [[ `cat ${DATA_SCALE}` == "$SCL" && -d ${DIR}/tpch_parquet ]]; then
-        echo "Parquet data exist. don't need to generate raw data"
+    if [[ `cat ${DATA_SCALE}` == "$SCL" && -d ${DIR}/data ]]; then
+        echo "Data exist"
     else
         clean_data
         cd $DIR/tpch-spark/dbgen
@@ -86,30 +86,15 @@ clean_data(){
 
 free_limit(){
     workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
-
-    worker_num=(`cat /home/ec2-user/hadoop/conf/slaves | wc -l`)
-    worker_num=$(($worker_num-2))
-
-    for i in `seq 0 ${worker_num}`; do
-        ssh ec2-user@${workers[$i]} -o StrictHostKeyChecking=no "sudo wondershaper -c -a eth0; echo test"
-    done
-
-    sudo wondershaper -c -a eth0 || echo "free master"
+    ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no "sudo wondershaper -c -a eth0; echo test"
+    ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no "sudo wondershaper -c -a eth0; echo test"
 }
 
 limit_bandwidth(){
     workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
     limit=$1
-
-    worker_num=(`cat /home/ec2-user/hadoop/conf/slaves | wc -l`)
-    worker_num=$(($worker_num-2))
-
-    for i in `seq 0 ${worker_num}`; do
-        ssh ec2-user@${workers[$i]} -o StrictHostKeyChecking=no "sudo wondershaper -c -a eth0; sudo wondershaper -a eth0 -d $limit -u $limit"
-    done
-
-    sudo wondershaper -c -a eth0 || sudo wondershaper -a eth0 -d $limit -u $limit
-
+    ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no "sudo wondershaper -c -a eth0; sudo wondershaper -a eth0 -d $limit -u $limit"
+    ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no "sudo wondershaper -c -a eth0; sudo wondershaper -a eth0 -d $limit -u $limit"
 }
 
 test_bandwidth() {
@@ -131,13 +116,18 @@ collect_worker_logs(){
 
     workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
 
-    worker_num=(`cat /home/ec2-user/hadoop/conf/slaves | wc -l`)
-    worker_num=$(($worker_num-2))
+    i=0
+    for w in $workers; do
+        worker_id=$(check_executor_id $w ${appid})
+        scp -o StrictHostKeyChecking=no ec2-user@$w:/home/ec2-user/spark/work/${appid}/${worker_id}/stderr /home/ec2-user/logs/${worker_log_dir}/${worker_id}.log
 
-    for i in `seq 0 ${worker_num}`; do
-        worker_id=$(check_executor_id ${workers[$i]} ${appid})
-        scp -o StrictHostKeyChecking=no ec2-user@${workers[$i]}:/home/ec2-user/spark/work/${appid}/${worker_id}/stderr /home/ec2-user/logs/${worker_log_dir}/${worker_id}.log
+        i=$(($i+1))
     done
+    # worker0_id=$(check_executor_id ${workers[0]} ${appid})
+    # scp -o StrictHostKeyChecking=no ec2-user@${workers[0]}:/home/ec2-user/spark/work/${appid}/${worker0_id}/stderr /home/ec2-user/logs/${worker_log_dir}/${worker0_id}.log
+
+    # worker1_id=$(check_executor_id ${workers[1]} ${appid})
+    # scp -o StrictHostKeyChecking=no ec2-user@${workers[1]}:/home/ec2-user/spark/work/${appid}/${worker1_id}/stderr /home/ec2-user/logs/${worker_log_dir}/${worker1_id}.log
 }
 
 check_executor_id(){
@@ -153,29 +143,73 @@ collect_workerloads(){
     name=$2
 
     workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
+    
+    i=0
+    for w in $workers; do
+        if ssh ec2-user@$w -o StrictHostKeyChecking=no test -e /home/ec2-user/logs/workerLoads.txt; then
+        scp -o StrictHostKeyChecking=no ec2-user@$w:/home/ec2-user/logs/workerLoads.txt /home/ec2-user/logs/${worker_log_dir}/workerLoads${}_${name}.txt
+        ssh ec2-user@$w -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/workerLoads.txt"
+        fi
+        i=$(($i+1))
+    done
+    # if ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no test -e /home/ec2-user/logs/workerLoads.txt; then
+    #     scp -o StrictHostKeyChecking=no ec2-user@${workers[0]}:/home/ec2-user/logs/workerLoads.txt /home/ec2-user/logs/${worker_log_dir}/workerLoads0_${name}.txt
+    #     ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/workerLoads.txt"
+    # fi
 
-    if ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no test -e /home/ec2-user/logs/workerLoads.txt; then
-        scp -o StrictHostKeyChecking=no ec2-user@${workers[0]}:/home/ec2-user/logs/workerLoads.txt /home/ec2-user/logs/${worker_log_dir}/workerLoads0_${name}.txt
-        ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/workerLoads.txt"
-    fi
-
-    if ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no test -e /home/ec2-user/logs/workerLoads.txt; then
-        scp -o StrictHostKeyChecking=no ec2-user@${workers[1]}:/home/ec2-user/logs/workerLoads.txt /home/ec2-user/logs/${worker_log_dir}/workerLoads1_${name}.txt
-        ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/workerLoads.txt"
-    fi
+    # if ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no test -e /home/ec2-user/logs/workerLoads.txt; then
+    #     scp -o StrictHostKeyChecking=no ec2-user@${workers[1]}:/home/ec2-user/logs/workerLoads.txt /home/ec2-user/logs/${worker_log_dir}/workerLoads1_${name}.txt
+    #     ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/workerLoads.txt"
+    # fi
 }
 
 clear_workerloads(){
     workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
+    
+    
+    for i in $workers; do
+        if ssh ec2-user@$i -o StrictHostKeyChecking=no test -e /home/ec2-user/logs/workerLoads.txt; then
+        ssh ec2-user@$i -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/workerLoads.txt"
+        fi
+    done
+    # i=0
+    # i=$(($i+1))
+    # if ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no test -e /home/ec2-user/logs/workerLoads.txt; then
+    #     ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/workerLoads.txt"
+    # fi
 
-    if ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no test -e /home/ec2-user/logs/workerLoads.txt; then
-        ssh ec2-user@${workers[0]} -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/workerLoads.txt"
-    fi
-
-    if ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no test -e /home/ec2-user/logs/workerLoads.txt; then
-        ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/workerLoads.txt"
-    fi
+    # if ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no test -e /home/ec2-user/logs/workerLoads.txt; then
+    #     ssh ec2-user@${workers[1]} -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/workerLoads.txt"
+    # fi
 }
+
+collect_alluxio_log(){
+    G_DIR=$1
+    mkdir $G_DIR/alluxio_master_log
+    mkdir $G_DIR/alluxio_worker_log
+    cp $DIR/alluxio/logs/* $G_DIR/alluxio_master_log/
+    
+    files=(`ls $DIR/alluxio/logs`)
+    for i in $files; do
+	    rm $DIR/alluxio/logs/$i
+    done
+    for i in $files; do
+	    touch $DIR/alluxio/logs/$i
+    done 
+
+    workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
+    i=0
+    for w in $workers; do
+        scp -o StrictHostKeyChecking=no -r ec2-user@$w:/home/ec2-user/alluxio/logs $G_DIR/alluxio_worker_log/${i}_logs
+        
+        ssh -o StrictHostKeyChecking=no ec2-user@$w 'files=(`ls /home/ec2-user/alluxio/logs`); for i in $files; do rm /home/ec2-user/alluxio/logs/$i; done; for i in $files; do touch /home/ec2-user/alluxio/logs/$i; done;'
+
+        i=$(($i+1))
+    done
+}
+
+
+
 
 shuffle_env(){
     sed -i \
@@ -199,20 +233,9 @@ nonshuffle_env(){
     ${DIR}/alluxio/bin/restart.sh
 }
 
-conv_env(){
-    sed -i "/fr.client.translation=true/c\fr.client.translation=false" $DIR/alluxio/conf/alluxio-site.properties
-    sed -i "/fr.client.block.location=true/c\fr.client.block.location=false" $DIR/alluxio/conf/alluxio-site.properties
-
-    sed -i "/alluxio.user.block.size.bytes.default=1GB/c\alluxio.user.block.size.bytes.default=900MB" $DIR/alluxio/conf/alluxio-site.properties
-     ${DIR}/alluxio/bin/restart.sh
-}
-
 fr_env(){
-    sed -i "/alluxio.user.block.size.bytes.default=900MB/c\alluxio.user.block.size.bytes.default=1GB" $DIR/alluxio/conf/alluxio-site.properties
 
     sed -i "/fr.client.translation=false/c\fr.client.translation=true" $DIR/alluxio/conf/alluxio-site.properties
-
-    sed -i "/fr.client.block.location=false/c\fr.client.block.location=true" $DIR/alluxio/conf/alluxio-site.properties
 
     sed -i "/alluxio.user.file.passive.cache.enabled=true/c\alluxio.user.file.passive.cache.enabled=false" $DIR/alluxio/conf/alluxio-site.properties
 
@@ -222,9 +245,6 @@ fr_env(){
 #        "/alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.TimerPolicy/c\alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.RoundRobinPolicy" \
 #        $DIR/alluxio/conf/alluxio-site.properties
 
-    sed -i \
-        "/alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.RoundRobinPolicy/c\alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.TimerPolicy" \
-        $DIR/alluxio/conf/alluxio-site.properties
 
      ${DIR}/alluxio/bin/restart.sh
 }
@@ -234,16 +254,6 @@ non_fr_env(){
     sed -i "/fr.client.translation=true/c\fr.client.translation=false" $DIR/alluxio/conf/alluxio-site.properties
 
      ${DIR}/alluxio/bin/restart.sh
-}
-
-bundle_env(){
-    sed -i "/fr.repl.policy.class=alluxio.master.repl.policy.ColReplPolicy/c\fr.repl.policy.class=alluxio.master.repl.policy.BundleHottestKPolicy" $DIR/alluxio/conf/alluxio-site.properties
-#    sed -i "/fr.repl.global=true/c\fr.repl.global=false" $DIR/alluxio/conf/alluxio-site.properties
-}
-
-per_col_env(){
-    sed -i "/fr.repl.policy.class=alluxio.master.repl.policy.BundleHottestKPolicy/c\fr.repl.policy.class=alluxio.master.repl.policy.ColReplPolicy" $DIR/alluxio/conf/alluxio-site.properties
-#    sed -i "/fr.repl.global=false/c\fr.repl.global=true" $DIR/alluxio/conf/alluxio-site.properties
 }
 
 get_dir_index(){

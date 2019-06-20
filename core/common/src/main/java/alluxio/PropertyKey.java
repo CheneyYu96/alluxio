@@ -4088,12 +4088,18 @@ public final class PropertyKey implements Comparable<PropertyKey> {
 
     // TODO: FR parameters
     public static final String FR_REPL_INTERVAL = "fr.repl.interval";
+    public static final String FR_REPL_REPEAT = "fr.repl.repeat";
     public static final String FR_REPL_POLICY = "fr.repl.policy.class";
     public static final String FR_REPL_DIR = "fr.repl.dir";
     public static final String FR_REPL_WEIGHT = "fr.repl.weight";
+    public static final String FR_REPL_GLOBAL = "fr.repl.global";
+    public static final String FR_REPL_BUDGET = "fr.repl.budget";
+
     public static final String FR_RECORD_INTERVAL = "fr.record.interval";
 
     public static final String FR_CLIENT_TRANS = "fr.client.translation";
+    public static final String FR_CLIENT_BLOCK_LOC = "fr.client.block.location";
+    public static final String FR_CLIENT_BLOCK_FINER = "fr.client.block.finer";
     public static final String FR_PARQUET_INFO = "fr.parquet.info";
 
     private Name() {} // prevent instantiation
@@ -4586,6 +4592,11 @@ public final class PropertyKey implements Comparable<PropertyKey> {
                   .setDefaultValue(60 /* in seconds */)
                   .build();
 
+  public static final PropertyKey FR_REPL_REPEAT =
+          new Builder(Name.FR_REPL_REPEAT)
+                  .setDefaultValue(true)
+                  .build();
+
   public static final PropertyKey FR_REPL_POLICY =
           new Builder(Name.FR_REPL_POLICY)
                   .setDefaultValue("alluxio.master.repl.policy.NaivePolicy")
@@ -4602,6 +4613,16 @@ public final class PropertyKey implements Comparable<PropertyKey> {
                   .setDefaultValue(1.0)
                   .build();
 
+  public static final PropertyKey FR_REPL_GLOBAL =
+          new Builder(Name.FR_REPL_GLOBAL)
+                  .setDefaultValue(false)
+                  .build();
+
+  public static final PropertyKey FR_REPL_BUDGET =
+          new Builder(Name.FR_REPL_BUDGET)
+                  .setDefaultValue(1.0)
+                  .build();
+
   public static final PropertyKey FR_RECORD_INTERVAL =
           new Builder(Name.FR_RECORD_INTERVAL)
                   .setDefaultValue(10 * 1000 /* in miliseconds */)
@@ -4610,6 +4631,16 @@ public final class PropertyKey implements Comparable<PropertyKey> {
   public static final PropertyKey FR_CLIENT_TRANS =
           new Builder(Name.FR_CLIENT_TRANS)
                   .setDefaultValue(true)
+                  .build();
+
+  public static final PropertyKey FR_CLIENT_BLOCK_LOC =
+          new Builder(Name.FR_CLIENT_BLOCK_LOC)
+                  .setDefaultValue(true)
+                  .build();
+
+  public static final PropertyKey FR_CLIENT_BLOCK_FINER =
+          new Builder(Name.FR_CLIENT_BLOCK_FINER)
+                  .setDefaultValue(false)
                   .build();
 
   public static final PropertyKey FR_PARQUET_INFO =

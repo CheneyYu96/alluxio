@@ -1,9 +1,11 @@
 package fr.client.utils;
 
 import alluxio.AlluxioURI;
+import com.google.common.collect.ImmutableMap;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * replication unit that contains multiple files.
@@ -19,11 +21,24 @@ public class MultiReplUnit {
         this.replicas = replicas;
     }
 
+    public MultiReplUnit(AlluxioURI file, List<OffLenPair> offsets, int replicas) {
+        this(ImmutableMap.of(file, offsets), replicas);
+    }
+
     public Map<AlluxioURI, List<OffLenPair>> getOffLenPairsWithFile() {
         return offLenPairsWithFile;
     }
 
     public int getReplicas() {
         return replicas;
+    }
+
+    public Map<AlluxioURI, ReplUnit> toReplUnit(){
+        return offLenPairsWithFile
+                .entrySet()
+                .stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        e -> new ReplUnit(e.getValue(), replicas)));
     }
 }

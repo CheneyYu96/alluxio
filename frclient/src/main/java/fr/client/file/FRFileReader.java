@@ -65,7 +65,13 @@ public class FRFileReader {
         int toRead = 0;
         for(OffLenPair pair : pairs){
             is.seek(pair.offset);
-            toRead += is.read(mBuf, toRead, (int) pair.length);
+            int readLen = is.read(mBuf, toRead, (int) pair.length);
+            if (readLen == pair.length){
+                toRead += readLen;
+            }
+            else {
+                throw new IOException("Read length: " + readLen + " not equals to actual length: " + pair.length + " in FR reader.");
+            }
         }
         is.close();
 

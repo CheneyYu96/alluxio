@@ -11,72 +11,55 @@
 
 package alluxio.hadoop;
 
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
-
 import alluxio.AlluxioConfiguration;
 import alluxio.AlluxioURI;
 import alluxio.Configuration;
 import alluxio.PropertyKey;
 import alluxio.client.block.AlluxioBlockStore;
 import alluxio.client.block.BlockWorkerInfo;
-import alluxio.client.file.FileOutStream;
 import alluxio.client.file.FileSystem;
-import alluxio.client.file.FileSystemContext;
-import alluxio.client.file.URIStatus;
+import alluxio.client.file.*;
 import alluxio.client.file.options.CreateDirectoryOptions;
 import alluxio.client.file.options.CreateFileOptions;
 import alluxio.client.file.options.DeleteOptions;
 import alluxio.client.file.options.SetAttributeOptions;
+import alluxio.collections.Pair;
 import alluxio.conf.InstancedConfiguration;
 import alluxio.conf.Source;
-import alluxio.exception.AlluxioException;
-import alluxio.exception.ExceptionMessage;
-import alluxio.exception.FileDoesNotExistException;
 import alluxio.exception.InvalidPathException;
-import alluxio.exception.PreconditionMessage;
+import alluxio.exception.*;
 import alluxio.master.MasterInquireClient.ConnectDetails;
 import alluxio.master.MasterInquireClient.Factory;
 import alluxio.security.User;
 import alluxio.security.authorization.Mode;
-import alluxio.uri.Authority;
-import alluxio.uri.MultiMasterAuthority;
-import alluxio.uri.SingleMasterAuthority;
-import alluxio.uri.UnknownAuthority;
-import alluxio.uri.ZookeeperAuthority;
+import alluxio.uri.*;
 import alluxio.wire.FileBlockInfo;
+import alluxio.wire.FileSegmentsInfo;
 import alluxio.wire.WorkerNetAddress;
-
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ObjectArrays;
 import com.google.common.net.HostAndPort;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import org.apache.hadoop.fs.BlockLocation;
-import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.*;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.Progressable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.net.URI;
-import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
 import javax.annotation.concurrent.NotThreadSafe;
 import javax.security.auth.Subject;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.URI;
+import java.security.Principal;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 
 /**
  * Base class for Apache Hadoop based Alluxio {@link org.apache.hadoop.fs.FileSystem}. This class
@@ -106,6 +89,7 @@ abstract class AbstractFileSystem extends org.apache.hadoop.fs.FileSystem {
   private Path mWorkingDir = new Path(AlluxioURI.SEPARATOR);
   private Statistics mStatistics = null;
   private String mAlluxioHeader = null;
+
 
   /**
    * Constructs a new {@link AbstractFileSystem} instance with specified a {@link FileSystem}
@@ -321,9 +305,137 @@ abstract class AbstractFileSystem extends org.apache.hadoop.fs.FileSystem {
       }
     }
 
+    boolean hasFrReplica = Configuration.getBoolean(PropertyKey.FR_CLIENT_BLOCK_LOC);
+
+    if(hasFrReplica){
+        FileSystemMasterClient masterClientResource = mContext.acquireMasterClient();
+        String pathStr = "<repInfo>" + path.getPath();
+        List<FileSegmentsInfo> replInfos = masterClientResource
+              .uploadFileSegmentsAccessInfo(new AlluxioURI(pathStr), 0, 0);
+
+        mContext.releaseMasterClient(masterClientResource);
+
+        LOG.debug("request replica info. path={}, replInfos={}", path.getPath(), replInfos);
+        List<BlockLocation> newBlockLocations = new ArrayList<>();
+
+        // TODO: try finer/coarser grained locations
+
+        boolean isFinerGrained = Configuration.getBoolean(PropertyKey.FR_CLIENT_BLOCK_FINER);
+
+        if (isFinerGrained) {
+
+            /* finer grained */
+
+            long originOffset = blockLocations.get(0).getOffset(); /* assume one block */
+            long originLen = blockLocations.get(0).getLength();
+            String[] originNames = blockLocations.get(0).getNames();
+            String[] originHosts = blockLocations.get(0).getHosts();
+
+            // calculate segments
+
+            List<Pair<Long, Long>> sortedPairs = replInfos
+                    .stream()
+                    .map(o -> new Pair<>(o.getOffset(), o.getLength()))
+                    .distinct()
+                    .sorted((p1, p2) -> {
+                        if (p1.getFirst() > p2.getFirst()) {
+                            return 1;
+                        } else if (p1.getFirst().equals(p2.getFirst())) {
+                            return p1.getSecond() > p2.getSecond() ? 1 : -1;
+
+                        } else {
+                            return -1;
+                        }
+                    })
+                    .collect(toList());
+
+            Map<Pair<Long, Long>, List<String>> sortedSegs = sortedPairs
+                    .stream()
+                    .collect(Collectors.toMap(
+                            pair -> pair,
+                            pair -> replInfos
+                                    .stream()
+                                    .filter(o -> o.getOffset() == pair.getFirst() && o.getLength() == pair.getSecond())
+                                    .map(FileSegmentsInfo::getFilePath)
+                                    .collect(toList())
+                    ));
+
+
+            long currentOffset = originOffset;
+
+            for (Pair<Long, Long> seg : sortedPairs) {
+                if (currentOffset < seg.getFirst()) {
+                    newBlockLocations.add(
+                            new BlockLocation(originNames, originHosts, currentOffset, seg.getFirst() - currentOffset));
+                    currentOffset = seg.getFirst();
+                }
+
+                if (currentOffset >= seg.getFirst() && currentOffset < seg.getFirst() + seg.getSecond()) {
+                    List<HostAndPort> addresses = sortedSegs
+                            .get(seg)
+                            .stream()
+                            .map(this::getAddrByPath)
+                            .collect(toList());
+                    String[] newNames = ObjectArrays.concat(originNames, addresses.stream().map(HostAndPort::toString).toArray(String[]::new), String.class);
+                    String[] newHosts = ObjectArrays.concat(originHosts, addresses.stream().map(HostAndPort::getHostText).toArray(String[]::new), String.class);
+
+                    newBlockLocations.add(
+                            new BlockLocation(newNames, newHosts, currentOffset, seg.getFirst() + seg.getSecond() - currentOffset));
+
+                    currentOffset = seg.getFirst() + seg.getSecond();
+                } else {
+                    LOG.info("current pos exceed. pos={}, off={}, len={}", currentOffset, seg.getFirst(), seg.getSecond());
+                    // TODO: segment overlap
+                    continue;
+                }
+            }
+
+            if (currentOffset < originLen) {
+                newBlockLocations.add(
+                        new BlockLocation(originNames, originHosts, currentOffset, originLen - currentOffset));
+            }
+        }
+        else {
+            /* coarser grained */
+
+            List<HostAndPort> replAddresses = replInfos.stream()
+                  .map(FileSegmentsInfo::getFilePath)
+                  .map(this::getAddrByPath)
+                  .distinct()
+                  .collect(toList());
+            String[] replNames = replAddresses.stream().map(HostAndPort::toString).toArray(String[]::new);
+            String[] replHosts = replAddresses.stream().map(HostAndPort::getHostText).toArray(String[]::new);
+
+            for (BlockLocation location : blockLocations) {
+                String[] newNames = ObjectArrays.concat(location.getNames(), replNames, String.class);
+                String[] newHosts = ObjectArrays.concat(location.getHosts(), replHosts, String.class);
+                newBlockLocations.add(
+                        new BlockLocation(newNames, newHosts, location.getOffset(), location.getLength()));
+            }
+        }
+
+        blockLocations = newBlockLocations;
+
+    }
+
+    LOG.info("getFileBlockLocations(path={}, start={}, len={}, ret={})", file.getPath(), start, len, blockLocations);
+
     BlockLocation[] ret = new BlockLocation[blockLocations.size()];
     blockLocations.toArray(ret);
     return ret;
+  }
+
+  private HostAndPort getAddrByPath(String filePath){
+    AlluxioURI replica = new AlluxioURI(filePath);
+    FileBlockInfo block = null;
+    try {
+      block = getFileBlocks(replica).get(0);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+    WorkerNetAddress addr = block.getBlockInfo().getLocations().get(0).getWorkerAddress();
+    return HostAndPort.fromParts(addr.getHost(), addr.getDataPort());
   }
 
   @Override
@@ -494,6 +606,7 @@ abstract class AbstractFileSystem extends org.apache.hadoop.fs.FileSystem {
     mUri = URI.create(mAlluxioHeader);
 
     Map<String, Object> uriConfProperties = getConfigurationFromUri(uri);
+
 
     synchronized (INIT_LOCK) {
       if (sInitialized) {
