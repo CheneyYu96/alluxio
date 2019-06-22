@@ -216,7 +216,7 @@ def col_wise_policy(table_col_dict, col_locs_dict):
         for p in part_files:
             avail_locs = [col_locs_dict[c][p] for c in cols ]
 
-            all_possible_locs = set(origin_locs[p])
+            all_possible_locs = set([origin_locs[p]])
             for col_repl in [ l.replicas for l in avail_locs ]:
                 all_possible_locs = all_possible_locs.union(col_repl)
 
