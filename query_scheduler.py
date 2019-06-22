@@ -102,7 +102,7 @@ class ColLocation:
         pair = par_col.path_off_dict[path]
         
         self.replicas = set()
-        if os.path.isfile(replica_file_path):
+        if self.path in replica_locs:
             self.replicas = set([ repl_loc.loc for repl_loc in replica_locs[self.path] if repl_loc.hasPair(pair) ])
 
 def parse_all_queries():
