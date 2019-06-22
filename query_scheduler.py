@@ -41,7 +41,7 @@ name_ip_dict = {}
 origin_locs = {}
 replica_locs = {}
 
-replica_file_path = '{}/{}'.format(ALLUXIO_DIR, REPL_LOC_FILE)
+replica_file_path = '{}/../{}'.format(ALLUXIO_DIR, REPL_LOC_FILE)
 
 class ReplicaLoc:
     def __init__(self, replica, loc, origin, pairs):
