@@ -179,7 +179,7 @@ def submit_query(query, logs_dir, policy):
 
     pool = ThreadPoolExecutor(max_workers=len(sched_res.items()) + 3)
     for p, res in sched_res.items():
-        logging.debug('Schedule res. file: {}, ip: {}'.format(p, res[0]))    
+        logging.info('Schedule res. file: {}, ip: {}'.format(p, res[0]))    
         pool.submit(send_to_worker, res[0], p, res[1], logs_dir)
     pool.shutdown(wait=True)
 
