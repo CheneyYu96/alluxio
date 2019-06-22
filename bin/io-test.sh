@@ -94,7 +94,7 @@ trace_test(){
 
     for((q=${from};q<=${to};q++)); do
         cd ${DIR}/alluxio
-        python query_scheduler.py ${q}
+        python query_scheduler.py ${q} ${dir_name}
 
     done
 
