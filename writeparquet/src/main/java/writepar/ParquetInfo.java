@@ -2,14 +2,14 @@ package writepar;
 
 import alluxio.AlluxioURI;
 import alluxio.client.file.FileSystem;
+import alluxio.client.file.FileSystemContext;
 import alluxio.util.CommonUtils;
+import alluxio.wire.WorkerNetAddress;
+import fr.client.utils.FRUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,25 +19,19 @@ import java.util.List;
 public class ParquetInfo {
     private FileSystem mFileSystem;
 
+    private final String locationsFile;
+
     private static final Logger LOG = LoggerFactory.getLogger(ParquetInfo.class);
 
 
     public ParquetInfo() {
         mFileSystem = FileSystem.Factory.get();
+        locationsFile = System.getProperty("user.dir") + "/origin-locs.txt";
+
     }
 
     public void sendInfo(String filePath, String infoPath) throws IOException{
         long startTimeMs = CommonUtils.getCurrentMs();
-
-        Runtime run = Runtime.getRuntime();
-
-//        String absPath = System.getProperty("user.dir");
-//        String outputPath = absPath + "/output.txt";
-//        String pythonPath = absPath + "/offsetParser.py";
-//        String infoPath = absPath + "/offset.txt";
-
-//        run.exec("parquet column-index " + localFilePath + " > " + outputPath);
-//        run.exec("python3 " + pythonPath + " " + outputPath);
 
         List<Long> offset = new ArrayList<>();
         List<Long> length = new ArrayList<>();
@@ -59,6 +53,16 @@ public class ParquetInfo {
 
         mFileSystem.sendParquetInfo(new AlluxioURI(filePath), offset, length);
 
-        LOG.info("Send parquet file info. " + filePath + "; elapsed:" + (CommonUtils.getCurrentMs() - startTimeMs));
+        System.out.println("Send parquet file info. " + filePath + "; elapsed:" + (CommonUtils.getCurrentMs() - startTimeMs));
+
+        WorkerNetAddress address = FRUtils.getFileLocation(new AlluxioURI(filePath), mFileSystem, FileSystemContext.get());
+        if (address == null){
+            System.err.println("File block address is null");
+            return;
+        }
+        FileWriter fw = new FileWriter(locationsFile, true);
+        fw.write(filePath + "," + address.getHost() + "\n");
+        fw.close();
+
     }
 }

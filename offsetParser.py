@@ -10,6 +10,7 @@ def parse(inpath, outpath):
     index = 0
     offset_list = []
     length_list = []
+    col_list = []
 
     with open(inpath, 'r') as f:
         flag = False
@@ -31,6 +32,8 @@ def parse(inpath, outpath):
 
             elif (re.match('offset', line_list[0])):
                 flag = True
+                if ':' in line_list[-1]:
+                    col_list.append(line_list[-1].split(':')[0])
             if (flag and re.match('page',line_list[0])):
                 offs.append(int(line_list[1]))
                 lens.append(int(line_list[2]))
@@ -55,10 +58,10 @@ def parse(inpath, outpath):
         else:
             print('Warn: offset < start index')
         start_i = offset_list[i] + length_list[i]
-        
+    print(len(infer_offs), len(col_list))
     with open(outpath, 'w') as f:
         for i in range(len(infer_offs)):
-            f.write(str(infer_offs[i]) + ',' + str(infer_lens[i])+'\n')
+            f.write(str(infer_offs[i]) + ',' + str(infer_lens[i]) + ',' + col_list[i] + '\n')
 
 if __name__ == '__main__':
     parse()

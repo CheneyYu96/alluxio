@@ -36,6 +36,31 @@ add_name(){
 
 }
 
+IP_NAME_FILE=${DIR}/alluxio/ip-name.txt
+map_ip_name(){
+
+    if [[ -f ${IP_NAME_FILE} ]]; then
+        rm ${IP_NAME_FILE}
+    else
+        touch ${IP_NAME_FILE}
+    fi
+
+    workers=(`hdfs dfsadmin -printTopology | grep ip`)
+    worker_num=(`hdfs dfsadmin -printTopology | grep ip | wc -l`)
+    worker_num=$(($worker_num-1))
+
+    for i in `seq 0 ${worker_num}`; do
+        w_ip=(`echo ${workers[$((i*2))]} | cut -d ':' -f 1`)
+
+        echo ${w_ip}
+
+        name=(`echo ${workers[$((i*2+1))]} | cut -d '(' -f 2 | cut -d ')' -f 1`)
+        echo ${name}
+
+        echo "${w_ip},${name}" >> ${IP_NAME_FILE}
+    done
+}
+
 remove_last(){
     cd ${LOCAL_DIR}
     ./alluxio copyDir ../../spark/conf
@@ -53,6 +78,8 @@ else
         add)                    add_name
                                 ;;
         remove)                 remove_last
+                                ;;
+        map)                    map_ip_name
                                 ;;
         * )                     usage
     esac

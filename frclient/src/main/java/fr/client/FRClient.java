@@ -4,22 +4,20 @@ import alluxio.AlluxioURI;
 import alluxio.Configuration;
 import alluxio.PropertyKey;
 import alluxio.client.WriteType;
-import alluxio.client.block.BlockMasterClient;
 import alluxio.client.file.FileSystem;
 import alluxio.client.file.FileSystemContext;
-import alluxio.client.file.URIStatus;
 import alluxio.client.file.options.CreateFileOptions;
 import alluxio.client.file.policy.SpecificHostPolicy;
 import alluxio.exception.AlluxioException;
-import alluxio.resource.CloseableResource;
 import alluxio.util.CommonUtils;
-import alluxio.wire.BlockInfo;
 import alluxio.wire.WorkerNetAddress;
 import fr.client.file.FRFileReader;
 import fr.client.file.FRFileWriter;
+import fr.client.utils.FRUtils;
 import fr.client.utils.OffLenPair;
 import fr.client.utils.ReplUnit;
 
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
@@ -36,10 +34,13 @@ public class FRClient {
     private FileSystem mFileSystem;
     private FileSystemContext mContext;
 
+    private final String replicaLocsFile;
+
     public FRClient() {
         mFileSystem = FileSystem.Factory.get();
         mContext = FileSystemContext.get();
         FR_DIR = Configuration.get(PropertyKey.FR_REPL_DIR);
+        replicaLocsFile = System.getProperty("user.dir") + "/replica-locs.txt";
     }
 
     public void deleteReplicas(List<AlluxioURI> replicaFilePath){
@@ -54,27 +55,8 @@ public class FRClient {
 
     public List<AlluxioURI> copyFileOffset(AlluxioURI sourceFilePath, ReplUnit replUnit, List<WorkerNetAddress> availWorkers) {
 
-        try {
-            URIStatus orginStatus = mFileSystem.getStatus(sourceFilePath);
-
-            // Assume part parquet file just occupy one block
-            long blockId = orginStatus.getBlockIds().get(0);
-
-            BlockInfo info;
-            try (CloseableResource<BlockMasterClient> masterClientResource =
-                         mContext.acquireBlockMasterClientResource()) {
-                info = masterClientResource.get().getBlockInfo(blockId);
-            }
-
-            WorkerNetAddress blockLocation = info
-                    .getLocations()
-                    .get(0)
-                    .getWorkerAddress();
-
-            availWorkers.remove(blockLocation);
-        } catch (IOException | AlluxioException e) {
-            e.printStackTrace();
-        }
+        WorkerNetAddress blockLocation = FRUtils.getFileLocation(sourceFilePath, mFileSystem, mContext);
+        availWorkers.remove(blockLocation);
 
         int replicaNum = Math.min(replUnit.getReplicas(), availWorkers.size());
         List<Integer> indexList = IntStream
@@ -132,6 +114,21 @@ public class FRClient {
         try {
             int toRead = reader.readFile(pairs);
             writer.writeFile(reader.getBuf());
+
+            String pairStr = pairs
+                    .stream()
+                    .map(o -> o.offset + ":" + o.length)
+                    .reduce("", (f, s) -> f + "," + s);
+
+            WorkerNetAddress address = FRUtils.getFileLocation(destFilePath, mFileSystem, mContext);
+
+            FileWriter fw = new FileWriter(replicaLocsFile, true);
+            fw.write(destFilePath.getPath() + "," +
+                    address.getHost() + "," +
+                    sourceFilePath.getPath() + pairStr +
+                    "\n");
+            fw.close();
+
             return destFilePath;
 
         } catch (IOException | AlluxioException e) {
