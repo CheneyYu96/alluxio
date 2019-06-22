@@ -89,7 +89,7 @@ class ParColumn:
                 for line in f:
                     col_info = line.strip().split(',')
                     if len(col_info) >=3 and col_info[2] == col:
-                        path_off_dict[path] = (col_info[0], col_info[1])
+                        self.path_off_dict[path] = (col_info[0], col_info[1])
                         break
         
         print(self.path_off_dict)
