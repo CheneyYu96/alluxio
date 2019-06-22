@@ -99,7 +99,7 @@ class ColLocation:
         self.col = par_col.col
         self.locs = origin_locs[path] # origin table loc
 
-        self.pair = par_col.path_off_dict[path]
+        pair = par_col.path_off_dict[path]
         
         self.replicas = set()
         if os.path.isfile(replica_file_path):
