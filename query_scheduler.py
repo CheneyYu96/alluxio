@@ -120,7 +120,7 @@ def get_unique_log_name(path):
     timestamp = int(now())
     return '{}-{}-{}'.format(table_name, part_name, timestamp)
 
-EXE_CMD = 'cd /home/ec2-user/alluxio; java -jar readparquet/target/readparquet-2.0.0-SNAPSHOT.jar'
+EXE_CMD = 'cd /home/ec2-user/alluxio/readparquet; java -jar target/readparquet-2.0.0-SNAPSHOT.jar'
 
 def send_to_worker(addr, path, cols, logs_dir):
     col_pair_str = ''
