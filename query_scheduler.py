@@ -10,7 +10,6 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 
 import logging
-
 logging.basicConfig(
     level   =   logging.INFO,
     format  =   '%(asctime)s %(levelname)s %(message)s',
@@ -138,12 +137,12 @@ def send_to_worker(addr, path, cols, logs_dir):
         for line in stdout.xreadlines():
             print(line)
     
-    logging.info('Finish reading. path: {}'.format(path))
+    logging.debug('Finish reading. path: {}'.format(path))
 
     sftp = ssh.open_sftp()
     sftp.get('/home/ec2-user/logs/{}'.format(log_name), '{}/{}'.format(logs_dir, log_name))
 
-    logging.info('Finish fetching log file. path: {}'.format(path))
+    logging.debug('Finish fetching log file. path: {}'.format(path))
 
     ssh.close()
 
@@ -154,7 +153,8 @@ gap_time = lambda past_time : int((now() - past_time) * 1000)
 @click.command()
 @click.argument('query', type=int)
 @click.argument('logs-dir', type=click.Path(exists=True, resolve_path=True))
-def submit_query(query, logs_dir):
+@click.option('--policy', type=int, default=1) # 1: bundling, 0: column-wise
+def submit_query(query, logs_dir, policy):
     all_queries = parse_all_queries()
     if query < 1 or query > len(all_queries):
         print('Invalid query')
@@ -172,20 +172,19 @@ def submit_query(query, logs_dir):
 
     col_locs_dict = { c: { p: ColLocation(p, c) for p in c.pathes } for c in all_par_cols }
 
-    sched_res = bundling_policy(table_col_dict, col_locs_dict)
+    sched_res = policies[policy](table_col_dict, col_locs_dict)
 
     logging.info('Got scheduling result')    
     start = now()
 
     pool = ThreadPoolExecutor(max_workers=len(sched_res.items()) + 3)
     for p, res in sched_res.items():
-        logging.info('Schedule res. file: {}, ip: {}'.format(p, res[0]))    
+        logging.debug('Schedule res. file: {}, ip: {}'.format(p, res[0]))    
         pool.submit(send_to_worker, res[0], p, res[1], logs_dir)
     pool.shutdown(wait=True)
 
     duration = gap_time(start)
     logging.info('All task finished. elapsed: {}'.format(duration))
-
 
 def bundling_policy(table_col_dict, col_locs_dict):
     sched_res = {}
@@ -205,9 +204,27 @@ def bundling_policy(table_col_dict, col_locs_dict):
             else:
                 # served by origin table
                 sched_res[p] = (origin_locs[p], col_pair)
-    
     return sched_res
 
-    
+def col_wise_policy(table_col_dict, col_locs_dict):
+    sched_res = {}
+    for t, cols in table_col_dict.items():
+        part_files = cols[0].pathes
+        for p in part_files:
+            avail_locs = [col_locs_dict[c][p] for c in cols ]
+
+            all_possible_locs = set(origin_locs[p])
+            for col_repl in [ l.replicas for l in avail_locs ]:
+                all_possible_locs = all_possible_locs.union(col_repl)
+
+            col_pair = [ c.path_off_dict[p] for c in cols ]
+            # random pick one replica to serve
+            sched_res[p] = (all_possible_locs[random.randint(0, len(all_possible_locs) - 1)], col_pair)
+    return sched_res
+
+policies = {
+    0: bundling_policy,
+    1: col_wise_policy
+}
 if __name__ == '__main__':
     submit_query()
