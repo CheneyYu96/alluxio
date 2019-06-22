@@ -2,6 +2,7 @@ package readpar;
 
 import fr.client.utils.OffLenPair;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,7 +11,7 @@ import java.util.List;
  */
 public class Main {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         if (args.length > 1 && args.length % 2 == 1){
             String fileName = args[0];
 
