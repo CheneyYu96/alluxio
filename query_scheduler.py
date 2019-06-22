@@ -80,7 +80,7 @@ class ParColumn:
         self.col = col
         table_name = TPCH_T_NAME[col.split('_')[0]]
         self.table = table_name
-        self.pathes = glob.glob('{}/{}.parquet/*'.format(PAR_DIR, table_name))
+        self.pathes = [ p for p in glob.glob('{}/{}.parquet/*'.format(PAR_DIR, table_name)) if not p.split('/')[-1].startswith('_SUCCESS')] 
 
         self.path_off_dict = {}
         for path in self.pathes:
@@ -142,8 +142,9 @@ def submit_query(query):
     
     init_from_file()
     
-    logging.info('Receive query: {}'.format(query))
     col_to_read = all_queries[query - 1]
+    logging.info('Receive query: {}, cols: {}'.format(query, col_to_read))
+
     all_par_cols = [ ParColumn(c) for c in col_to_read ]
     
     table_set = set([ c.table for c in all_par_cols])
