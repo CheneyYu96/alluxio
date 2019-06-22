@@ -41,6 +41,8 @@ name_ip_dict = {}
 origin_locs = {}
 replica_locs = {}
 
+replica_file_path = '{}/{}'.format(ALLUXIO_DIR, REPL_LOC_FILE)
+
 class ReplicaLoc:
     def __init__(self, replica, loc, origin, pairs):
         self.replica = replica
@@ -65,7 +67,6 @@ def init_from_file():
             origin_locs[path_loc[0]] = name_ip_dict[path_loc[1]]
 
     # init replica locs
-    replica_file_path = '{}/{}'.format(ALLUXIO_DIR, REPL_LOC_FILE)
     if os.path.isfile(replica_file_path):
         with open(replica_file_path, 'r') as f:
             for line in f:
@@ -92,8 +93,6 @@ class ParColumn:
                         self.path_off_dict[path] = (col_info[0], col_info[1])
                         break
         
-        print(self.path_off_dict)
-
 class ColLocation:
     def __init__(self, path, par_col):
         self.path = path
@@ -101,7 +100,10 @@ class ColLocation:
         self.locs = origin_locs[path] # origin table loc
 
         self.pair = par_col.path_off_dict[path]
-        self.replicas = set([ repl_loc.loc for repl_loc in replica_locs[self.path] if repl_loc.hasPair(pair) ])
+        
+        self.replicas = set()
+        if os.path.isfile(replica_file_path):
+            self.replicas = set([ repl_loc.loc for repl_loc in replica_locs[self.path] if repl_loc.hasPair(pair) ])
 
 def parse_all_queries():
     tpch_queries = []
