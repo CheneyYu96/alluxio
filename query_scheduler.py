@@ -92,7 +92,7 @@ class ParColumn:
                         path_off_dict[path] = (col_info[0], col_info[1])
                         break
         
-        print(path_off_dict)
+        print(self.path_off_dict)
 
 class ColLocation:
     def __init__(self, path, par_col):
