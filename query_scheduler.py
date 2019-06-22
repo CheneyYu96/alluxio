@@ -128,7 +128,6 @@ def send_to_worker(addr, path, cols):
     _, stdout, stderr = ssh.exec_command('{} {} {}'.format(EXE_CMD, path, col_pair_str))
     is_success = stdout.channel.recv_exit_status() == 0
     if not is_success:
-
         for line in stdout.xreadlines():
             print(line)
 
@@ -158,7 +157,7 @@ def submit_query(query):
 
     sched_res = bundling_policy(table_col_dict, col_locs_dict)
 
-    logging.info('Got scheduling result')    
+    logging.info('Got scheduling result. res: {}'.format(sched_res))    
     start = now()
 
     pool = ThreadPoolExecutor(max_workers=len(sched_res.items()) + 3)
