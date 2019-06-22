@@ -114,10 +114,15 @@ def parse_all_queries():
 
     return tpch_queries
 
+def get_unique_log_name(path):
+    table_name = path.split('/')[-2].split('.')[0]
+    part_name = path.split('/')[-1].split('-')[1]
+    timestamp = int(now())
+    return '{}-{}-{}'.format(table_name, part_name, timestamp)
+
 EXE_CMD = 'cd /home/ec2-user/alluxio; java -jar readparquet/target/readparquet-2.0.0-SNAPSHOT.jar'
 
-def send_to_worker(addr, path, cols):
-    print(addr)
+def send_to_worker(addr, path, cols, logs_dir):
     col_pair_str = ''
     for off, length in cols:
         col_pair_str = col_pair_str + '{} {} '.format(off, length)
@@ -126,11 +131,21 @@ def send_to_worker(addr, path, cols):
     ssh.set_missing_host_key_policy(paramiko.client.AutoAddPolicy())
     ssh.connect(hostname=addr, username='ec2-user')
 
-    _, stdout, stderr = ssh.exec_command('{} {} {}'.format(EXE_CMD, path, col_pair_str))
+    log_name = get_unique_log_name(path)
+    _, stdout, stderr = ssh.exec_command('{} {} {} > /home/ec2-user/logs/{}'.format(EXE_CMD, path, col_pair_str, log_name))
     is_success = stdout.channel.recv_exit_status() == 0
     if not is_success:
         for line in stdout.xreadlines():
             print(line)
+    
+    logging.info('Finish reading. path: {}'.format(path))
+
+    sftp = ssh.open_sftp()
+    sftp.get('/home/ec2-user/logs/{}'.format(log_name), '{}/{}'.format(logs_dir, log_name))
+
+    logging.info('Finish fetching log file. path: {}'.format(path))
+
+    ssh.close()
 
 now = lambda: time.time()
 gap_time = lambda past_time : int((now() - past_time) * 1000)
@@ -138,7 +153,8 @@ gap_time = lambda past_time : int((now() - past_time) * 1000)
 # the logic in scheduler should avoid offset & len, use column instead
 @click.command()
 @click.argument('query', type=int)
-def submit_query(query):
+@click.argument('logs-dir', type=click.Path(exists=True, resolve_path=True))
+def submit_query(query, logs_dir):
     all_queries = parse_all_queries()
     if query < 1 or query > len(all_queries):
         print('Invalid query')
@@ -164,11 +180,11 @@ def submit_query(query):
     pool = ThreadPoolExecutor(max_workers=len(sched_res.items()) + 3)
     for p, res in sched_res.items():
         logging.info('Schedule res. file: {}, ip: {}'.format(p, res[0]))    
-        pool.submit(send_to_worker, res[0], p, res[1])
+        pool.submit(send_to_worker, res[0], p, res[1], logs_dir)
     pool.shutdown(wait=True)
 
     duration = gap_time(start)
-    logging.info('Finish reading. elapsed: {}'.format(duration))
+    logging.info('All task finished. elapsed: {}'.format(duration))
 
 
 def bundling_policy(table_col_dict, col_locs_dict):
