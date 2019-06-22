@@ -200,7 +200,6 @@ def bundling_policy(table_col_dict, col_locs_dict):
             col_pair = [ c.path_off_dict[p] for c in cols ]
 
             all_cols_repl = list(all_cols_repl)
-            print(len(all_cols_repl))
             if len(all_cols_repl) > 0:
                 # random pick one replica to serve
                 sched_res[p] = (all_cols_repl[random.randint(0, len(all_cols_repl) - 1)], col_pair)
@@ -222,7 +221,6 @@ def col_wise_policy(table_col_dict, col_locs_dict):
 
             col_pair = [ c.path_off_dict[p] for c in cols ]
             # random pick one replica to serve
-            print(len(all_possible_locs))
             all_possible_locs = list(all_possible_locs)
             sched_res[p] = (all_possible_locs[random.randint(0, len(all_possible_locs) - 1)], col_pair)
     return sched_res
