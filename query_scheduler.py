@@ -91,6 +91,8 @@ class ParColumn:
                     if len(col_info) >=3 and col_info[2] == col:
                         path_off_dict[path] = (col_info[0], col_info[1])
                         break
+        
+        print(path_off_dict)
 
 class ColLocation:
     def __init__(self, path, par_col):
