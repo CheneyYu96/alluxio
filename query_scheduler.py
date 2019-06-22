@@ -87,8 +87,7 @@ class ParColumn:
             file_name = os.path.basename(path)
             with open('{}/{}.parquet/{}.txt'.format(INFO_DIR, table_name, file_name), 'r') as f:
                 for line in f:
-                    col_info = line.split(',')
-                    print(col_info, col_info[2], col)
+                    col_info = line.strip().split(',')
                     if len(col_info) >=3 and col_info[2] == col:
                         path_off_dict[path] = (col_info[0], col_info[1])
                         break
