@@ -122,6 +122,9 @@ def get_unique_log_name(path):
 LOG_PREFIX = '/home/ec2-user/logs'
 EXE_CMD = 'cd /home/ec2-user/alluxio/readparquet; java -jar target/readparquet-2.0.0-SNAPSHOT.jar'
 
+MAX_RETRY = 6
+all_servers = list(name_ip_dict.values())
+
 def send_cmd_to_worker(ssh_client, cmd, log_name):
     _, stdout, stderr = ssh_client.exec_command('{} > {}/{} 2>&1'.format(cmd, LOG_PREFIX, log_name))
     is_success = stdout.channel.recv_exit_status() == 0
@@ -141,15 +144,21 @@ def gen_exe_plan(addr, path, cols, alternatives):
 
     count = 0
     selected_ip = addr
-    for i in range(len(alternatives) + 1):
+
+    retry = MAX_RETRY
+    alter_index = 0
+    while retry > 0:
         try:
             ssh.connect(hostname=addr, username='ec2-user', timeout=500)
         except:
             failed_ip = selected_ip
-            selected_ip = alternatives[i] if i < len(alternatives) else 'None'
+            selected_ip = alternatives[alter_index] if alter_index < len(alternatives) else all_servers[random.randint(0, len(all_servers - 1))]
             logging.warn('Fail to establish connection. ip: {}. next_choice: {}'.format(failed_ip, selected_ip))
+            alter_index += 1
+            retry -= 1
 
-    if selected_ip == 'None':
+    if retry == 0:
+        logging.warn('Fail connects. attemps: {}'.format(MAX_RETRY))
         exit(1)
 
     log_name = get_unique_log_name(path)
