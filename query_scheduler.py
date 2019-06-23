@@ -117,7 +117,7 @@ def get_unique_log_name(path):
     table_name = path.split('/')[-2].split('.')[0]
     part_name = path.split('/')[-1].split('-')[1]
     timestamp = int(now())
-    return '{}-{}-{}'.format(table_name, part_name, timestamp)
+    return '{}-{}-{}.log'.format(table_name, part_name, timestamp)
 
 LOG_PREFIX = '/home/ec2-user/logs'
 EXE_CMD = 'cd /home/ec2-user/alluxio/readparquet; java -jar target/readparquet-2.0.0-SNAPSHOT.jar'
