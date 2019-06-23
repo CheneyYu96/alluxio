@@ -176,7 +176,7 @@ clear(){
     remove $DIR/alluxio_env
     remove $DIR/alluxio/logs
     remove $DIR/alluxio/origin-locs.txt
-    remove $DIR/alluxio/replica-locs.txt
+    remove $DIR/replica-locs.txt
 }
 
 complie_job(){
