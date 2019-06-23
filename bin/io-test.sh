@@ -199,7 +199,7 @@ bandwidth_test(){
 
     limit_bandwidth $limit
 
-    test_bandwidth $DIR/logs
+#    test_bandwidth $DIR/logs
 
     for((t=0;t<${times};t++)); do
         trace_test $scl $qry
@@ -224,11 +224,11 @@ bandwidth_test_all(){
 }
 
 con_all_test(){
-    qry=$1
-    up_con_times=$2
+    limit=$1
+    qry=$2
 
-    for((con_times=1;con_times<=up_con_times;con_times++)); do
-        bandwidth_test 1000000 ${qry}
+    for((con_times=2;con_times<=20;con_times=con_times+2)); do
+        bandwidth_test ${limit} ${qry}
     done
 }
 
