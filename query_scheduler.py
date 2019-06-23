@@ -119,32 +119,30 @@ def get_unique_log_name(path):
     timestamp = int(now())
     return '{}-{}-{}'.format(table_name, part_name, timestamp)
 
+LOG_PREFIX = '/home/ec2-user/logs'
 EXE_CMD = 'cd /home/ec2-user/alluxio/readparquet; java -jar target/readparquet-2.0.0-SNAPSHOT.jar'
 
-def send_to_worker(addr, path, cols, logs_dir):
+def send_cmd_to_worker(ssh_client, cmd, log_name):
+    _, stdout, stderr = ssh_client.exec_command('{} > {}/{}'.format(cmd, LOG_PREFIX, log_name))
+    is_success = stdout.channel.recv_exit_status() == 0
+    if not is_success:
+        for line in stdout.xreadlines():
+            print(line)
+
+def gen_exe_plan(addr, path, cols):
     col_pair_str = ''
     for off, length in cols:
         col_pair_str = col_pair_str + '{} {} '.format(off, length)
+
+    cmd_str = '{} {} {}'.format(EXE_CMD, path, col_pair_str)
 
     ssh = paramiko.client.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.client.AutoAddPolicy())
     ssh.connect(hostname=addr, username='ec2-user')
 
     log_name = get_unique_log_name(path)
-    _, stdout, stderr = ssh.exec_command('{} {} {} > /home/ec2-user/logs/{}'.format(EXE_CMD, path, col_pair_str, log_name))
-    is_success = stdout.channel.recv_exit_status() == 0
-    if not is_success:
-        for line in stdout.xreadlines():
-            print(line)
-    
-    logging.debug('Finish reading. path: {}'.format(path))
 
-    sftp = ssh.open_sftp()
-    sftp.get('/home/ec2-user/logs/{}'.format(log_name), '{}/{}'.format(logs_dir, log_name))
-
-    logging.debug('Finish fetching log file. path: {}'.format(path))
-
-    ssh.close()
+    return (ssh, cmd_str, log_name)
 
 now = lambda: time.time()
 gap_time = lambda past_time : int((now() - past_time) * 1000)
@@ -173,18 +171,27 @@ def submit_query(query, logs_dir, policy):
     col_locs_dict = { c: { p: ColLocation(p, c) for p in c.pathes } for c in all_par_cols }
 
     sched_res = policies[policy](table_col_dict, col_locs_dict)
+    exe_plan = [ gen_exe_plan(res[0], p, res[1]) for p, res in sched_res.items()]
 
-    logging.info('Got scheduling result')    
+    logging.info('Got scheduling plan')
     start = now()
 
-    pool = ThreadPoolExecutor(max_workers=len(sched_res.items()) + 3)
-    for p, res in sched_res.items():
-        logging.info('Schedule res. file: {}, ip: {}'.format(p, res[0]))    
-        pool.submit(send_to_worker, res[0], p, res[1], logs_dir)
+    pool = ThreadPoolExecutor(max_workers=len(exe_plan) + 3)
+    for ssh_client, cmd, log_name in exe_plan:
+        pool.submit(send_cmd_to_worker, ssh_client, cmd, log_name)
     pool.shutdown(wait=True)
 
-    duration = gap_time(start)
-    logging.info('All task finished. elapsed: {}'.format(duration))
+    logging.info('All reading task finished. elapsed: {}'.format(gap_time(start)))
+
+    # collect worker log
+    start = now()
+
+    for ssh_client, _, log_name in exe_plan:
+        sftp = ssh_client.open_sftp()
+        sftp.get('{}/{}'.format(LOG_PREFIX, log_name), '{}/{}'.format(logs_dir, log_name))
+        ssh_client.close()
+    
+    logging.info('Finish log collection. elapsed: {}'.format(gap_time(start)))
 
 def bundling_policy(table_col_dict, col_locs_dict):
     sched_res = {}
