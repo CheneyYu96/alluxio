@@ -138,7 +138,11 @@ def gen_exe_plan(addr, path, cols):
 
     ssh = paramiko.client.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.client.AutoAddPolicy())
-    ssh.connect(hostname=addr, username='ec2-user', timeout=500)
+    try:
+        ssh.connect(hostname=addr, username='ec2-user', timeout=500)
+    except:
+        logging.error('Fail to establish connection. ip: {}'.format(addr))
+        exit(1)
 
     log_name = get_unique_log_name(path)
 
