@@ -129,7 +129,7 @@ def send_cmd_to_worker(ssh_client, cmd, log_name):
         for line in stdout.xreadlines():
             print(line)
 
-def gen_exe_plan(addr, path, cols):
+def gen_exe_plan(addr, path, cols, alternatives):
     col_pair_str = ''
     for off, length in cols:
         col_pair_str = col_pair_str + '{} {} '.format(off, length)
@@ -138,10 +138,18 @@ def gen_exe_plan(addr, path, cols):
 
     ssh = paramiko.client.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.client.AutoAddPolicy())
-    try:
-        ssh.connect(hostname=addr, username='ec2-user', timeout=500)
-    except:
-        logging.error('Fail to establish connection. ip: {}'.format(addr))
+
+    count = 0
+    selected_ip = addr
+    for i in range(len(alternatives) + 1):
+        try:
+            ssh.connect(hostname=addr, username='ec2-user', timeout=500)
+        except:
+            failed_ip = selected_ip
+            selected_ip = alternatives[i] if i < len(alternatives) else 'None'
+            logging.warn('Fail to establish connection. ip: {}. next_choice: {}'.format(failed_ip, selected_ip))
+
+    if selected_ip == 'None':
         exit(1)
 
     log_name = get_unique_log_name(path)
@@ -175,7 +183,7 @@ def submit_query(query, logs_dir, policy):
     col_locs_dict = { c: { p: ColLocation(p, c) for p in c.pathes } for c in all_par_cols }
 
     sched_res = policies[policy](table_col_dict, col_locs_dict)
-    exe_plan = [ gen_exe_plan(res[0], p, res[1]) for p, res in sched_res.items()]
+    exe_plan = [ gen_exe_plan(res[0], p, res[1], res[2]) for p, res in sched_res.items()]
 
     logging.info('Got scheduling plan')
     start = now()
@@ -205,18 +213,23 @@ def bundling_policy(table_col_dict, col_locs_dict):
             avail_locs = [col_locs_dict[c][p] for c in cols ]
 
             all_cols_repl = avail_locs[0].replicas
+            all_possible_locs = set()
             for col_repl in [ l.replicas for l in avail_locs ]:
                 all_cols_repl = all_cols_repl.intersection(col_repl)
+                all_possible_locs = all_possible_locs.union(col_repl)
 
             col_pair = [ c.path_off_dict[p] for c in cols ]
 
             all_cols_repl = list(all_cols_repl)
+            all_possible_locs = list(all_possible_locs)
             if len(all_cols_repl) > 0:
                 # random pick one replica to serve
-                sched_res[p] = (all_cols_repl[random.randint(0, len(all_cols_repl) - 1)], col_pair)
+                random.shuffle(all_cols_repl)
+                sched_res[p] = (all_cols_repl[0], col_pair, all_cols_repl[1:] + [origin_locs[p]])
             else:
                 # served by origin table
-                sched_res[p] = (origin_locs[p], col_pair)
+                random.shuffle(all_possible_locs)
+                sched_res[p] = (origin_locs[p], col_pair, all_possible_locs)
     return sched_res
 
 def col_wise_policy(table_col_dict, col_locs_dict):
@@ -233,7 +246,8 @@ def col_wise_policy(table_col_dict, col_locs_dict):
             col_pair = [ c.path_off_dict[p] for c in cols ]
             # random pick one replica to serve
             all_possible_locs = list(all_possible_locs)
-            sched_res[p] = (all_possible_locs[random.randint(0, len(all_possible_locs) - 1)], col_pair)
+            random.shuffle(all_possible_locs)
+            sched_res[p] = (all_possible_locs[0], col_pair, all_possible_locs[1:])
     return sched_res
 
 policies = {
