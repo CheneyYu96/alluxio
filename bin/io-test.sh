@@ -7,7 +7,7 @@ LOCAL_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )"  && pwd )"
 source ${LOCAL_DIR}/utils.sh
 
 FROM_HDFS=0
-NEED_PAR_INFO=0
+NEED_PAR_INFO=1
 PER_COL=0
 
 times=1
@@ -53,26 +53,10 @@ convert(){
     fi
 }
 
-trace_test(){
-    scl=$1
-    query=$2
-
-    dir_name=$(get_dir_index scale${scl}_query${query}_trace)
-    mkdir -p ${dir_name}
-
+init_alluxio_status(){
     if [[ ! -d $DIR/tpch_parquet ]]; then
         convert_test $scl
     fi
-
-    NEED_PAR_INFO=1
-
-    from=$query
-    to=$query
-    if [[ "${query}" -eq "0" ]]; then
-        from=1
-        to=22
-    fi
-
 
     if [[ `cat ${ALLUXIO_ENV}` == "1" ]]; then
         echo 'Alluxio env already prepared'
@@ -92,6 +76,24 @@ trace_test(){
         fi
 
         echo '1' > ${ALLUXIO_ENV}
+    fi
+}
+
+trace_test(){
+    scl=$1
+    query=$2
+
+    init_alluxio_status
+
+    dir_name=$(get_dir_index scale${scl}_query${query}_trace)
+    mkdir -p ${dir_name}
+
+    from=${query}
+    to=${query}
+
+    if [[ "${query}" -eq "0" ]]; then
+        from=1
+        to=22
     fi
 
     for((q=${from};q<=${to};q++)); do
@@ -187,6 +189,8 @@ complie_job(){
 bandwidth_test(){
     limit=$1
     qry=$2
+
+    init_alluxio_status
 
     scl=`cat ${DATA_SCALE}`
 
