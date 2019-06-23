@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
@@ -43,11 +44,12 @@ public class FRParquetReader {
         }
         is.close();
 
+        LOG.info("Alluxio master: {}", masterAddr);
+
         Configuration.set(PropertyKey.MASTER_HOSTNAME, masterAddr);
     }
 
     public void read(String filePath, List<OffLenPair> columnsToRead){
-//        long startTimeMs = CommonUtils.getCurrentMs();
         LOG.info("Read file: {}; off: {}", filePath, columnsToRead);
         FRFileReader reader = new FRFileReader(new AlluxioURI(filePath), true);
         try {
@@ -56,5 +58,13 @@ public class FRParquetReader {
             e.printStackTrace();
         }
 
+    }
+
+    public void read(String filePath, long[] segs){
+        List<OffLenPair> columnsToRead = new ArrayList<>();
+        for(int i = 0; i < segs.length; i=i+2){
+            columnsToRead.add(new OffLenPair(segs[i], segs[i+1]));
+        }
+        read(filePath, columnsToRead);
     }
 }

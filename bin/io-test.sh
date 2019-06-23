@@ -223,6 +223,15 @@ bandwidth_test_all(){
     bandwidth_test ${limit} 0
 }
 
+con_all_test(){
+    qry=$1
+    up_con_times=$2
+
+    for((con_times=1;con_times<=up_con_times;con_times++)); do
+        bandwidth_test 1000000 ${qry}
+    done
+}
+
 con_test(){
     qry=$1
     con_times=$2
@@ -314,6 +323,8 @@ else
         policy-all)             all_policy_test $2 $3
                                 ;;
         con)                    con_test $2 $3
+                                ;;
+        con-all)                con_all_test $2 $3
                                 ;;
         * )                     usage
     esac
