@@ -10,7 +10,9 @@ FROM_HDFS=0
 NEED_PAR_INFO=0
 PER_COL=0
 
+times=1
 
+con_times=10
 tmp_dir=
 
 check_from_hdfs(){
@@ -55,8 +57,8 @@ trace_test(){
     scl=$1
     query=$2
 
-    dir_name=$(get_dir_index scale${scl}_query${query}_trace)
-    mkdir -p ${dir_name}
+     dir_name=$(get_dir_index scale${scl}_query${query}_trace)
+     mkdir -p ${dir_name}
 
     if [[ ! -d $DIR/tpch_parquet ]]; then
         convert_test $scl
@@ -94,7 +96,13 @@ trace_test(){
 
     for((q=${from};q<=${to};q++)); do
         cd ${DIR}/alluxio
-        python query_scheduler.py ${q} ${dir_name} --policy ${PER_COL}
+
+        for((c_tm=1;c_tm<=${con_times};c_tm++)); do
+            log_dir_name=${dir_name}/con${c_tm}
+            mkdir -p ${log_dir_name}
+
+            python query_scheduler.py ${q} ${log_dir_name} --policy ${PER_COL} > ${log_dir_name}/master.log &
+        done
 
     done
 
@@ -174,7 +182,6 @@ complie_job(){
     sbt assembly
 }
 
-times=1
 
 bandwidth_test(){
     limit=$1
@@ -211,6 +218,12 @@ bandwidth_test_all(){
     bandwidth_test ${limit} 0
 }
 
+con_test(){
+    qry=$1
+    con_times=$2
+
+    bandwidth_test 1000000 ${qry}
+}
 
 compare_test(){
     qry=$1
