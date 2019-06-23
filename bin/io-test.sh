@@ -8,7 +8,7 @@ source ${LOCAL_DIR}/utils.sh
 
 FROM_HDFS=0
 NEED_PAR_INFO=1
-PER_COL=0
+PER_COL=1
 
 times=1
 
@@ -224,11 +224,12 @@ bandwidth_test_all(){
 }
 
 con_all_test(){
-    limit=$1
-    qry=$2
+    qry=$1
+    up_times=$2
 
-    for((con_times=2;con_times<=20;con_times=con_times+2)); do
-        bandwidth_test ${limit} ${qry}
+
+    for((con_times=2;con_times<=up_times;con_times=con_times+2)); do
+        bandwidth_test 1000000 ${qry}
     done
 }
 
@@ -251,19 +252,18 @@ compare_test(){
 }
 
 policy_test(){
-    limit=$1
-    qry=$2
+    qry=$1
+    up_times=$2
 
     bdgt=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.budget' | cut -d "=" -f 2)
 
-    p_dir=$(get_dir_index q${qry}_b${bdgt}_)
+    p_dir=$(get_dir_index q${qry}_b${bdgt}_dft_)
     mkdir -p ${p_dir}
-
 
     start=$(date "+%s")
 
-    bandwidth_test ${limit} ${qry}
-    first_dir=${tmp_dir}
+    con_all_test ${qry} ${up_times}
+    mv ${DIR}/logs/band* ${p_dir}
 
     now=$(date "+%s")
     tm=$((now-start))
@@ -273,11 +273,11 @@ policy_test(){
 
     sleep ${sleep_time}
 
-    bandwidth_test ${limit} ${qry}
-    second_dir=${tmp_dir}
+    p_dir=$(get_dir_index q${qry}_b${bdgt}_plc${PER_COL}_)
+    mkdir -p ${p_dir}
 
-    mv ${first_dir} ${p_dir}
-    mv ${second_dir} ${p_dir}
+    con_all_test ${qry} ${up_times}
+    mv ${DIR}/logs/band* ${p_dir}
 
 }
 
