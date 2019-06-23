@@ -57,8 +57,8 @@ trace_test(){
     scl=$1
     query=$2
 
-     dir_name=$(get_dir_index scale${scl}_query${query}_trace)
-     mkdir -p ${dir_name}
+    dir_name=$(get_dir_index scale${scl}_query${query}_trace)
+    mkdir -p ${dir_name}
 
     if [[ ! -d $DIR/tpch_parquet ]]; then
         convert_test $scl
@@ -103,6 +103,7 @@ trace_test(){
 
             python query_scheduler.py ${q} ${log_dir_name} --policy ${PER_COL} > ${log_dir_name}/master.log &
         done
+        wait
 
     done
 
