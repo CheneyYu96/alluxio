@@ -308,6 +308,8 @@ else
                                 ;;
         policy-all)             all_policy_test $2 $3
                                 ;;
+        con)                    con_test $2 $3
+                                ;;
         * )                     usage
     esac
 fi
