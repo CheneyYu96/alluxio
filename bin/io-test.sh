@@ -101,7 +101,7 @@ trace_test(){
             log_dir_name=${dir_name}/con${c_tm}
             mkdir -p ${log_dir_name}
 
-            python query_scheduler.py ${q} ${log_dir_name} --policy ${PER_COL} > ${log_dir_name}/master.log &
+            python query_scheduler.py ${q} ${log_dir_name} --policy ${PER_COL} > ${log_dir_name}/master.log 2>&1 &
         done
         wait
 
