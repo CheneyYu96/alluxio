@@ -116,7 +116,7 @@ def parse_all_queries():
 def get_unique_log_name(path):
     table_name = path.split('/')[-2].split('.')[0]
     part_name = path.split('/')[-1].split('-')[1]
-    timestamp = int(now())
+    timestamp = int(round(now() * 1000))
     return '{}-{}-{}.log'.format(table_name, part_name, timestamp)
 
 LOG_PREFIX = '/home/ec2-user/logs'
@@ -153,7 +153,7 @@ def gen_exe_plan(addr, path, cols, alternatives):
             break
         except:
             failed_ip = selected_ip
-            selected_ip = alternatives[alter_index] if alter_index < len(alternatives) else all_servers[random.randint(0, len(all_servers - 1))]
+            selected_ip = alternatives[alter_index] if alter_index < len(alternatives) else all_servers[random.randint(0, len(all_servers) - 1)]
             logging.warn('Fail to establish connection. ip: {}. next_choice: {}'.format(failed_ip, selected_ip))
             alter_index += 1
             retry -= 1
