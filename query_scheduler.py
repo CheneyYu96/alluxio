@@ -194,9 +194,10 @@ def submit_query(query, logs_dir, policy):
     col_locs_dict = { c: { p: ColLocation(p, c) for p in c.pathes } for c in all_par_cols }
 
     sched_res = policies[policy](table_col_dict, col_locs_dict)
+
     exe_plan = [ gen_exe_plan(res[0], p, res[1], res[2]) for p, res in sched_res.items()]
 
-    logging.info('Got scheduling plan')
+    logging.info('Got schedule result.')
     start = now()
 
     pool = ThreadPoolExecutor(max_workers=len(exe_plan) + 3)
