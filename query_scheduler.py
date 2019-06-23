@@ -123,7 +123,6 @@ LOG_PREFIX = '/home/ec2-user/logs'
 EXE_CMD = 'cd /home/ec2-user/alluxio/readparquet; java -jar target/readparquet-2.0.0-SNAPSHOT.jar'
 
 MAX_RETRY = 6
-all_servers = list(name_ip_dict.values())
 
 def send_cmd_to_worker(ssh_client, cmd, log_name):
     _, stdout, stderr = ssh_client.exec_command('{} > {}/{} 2>&1'.format(cmd, LOG_PREFIX, log_name))
@@ -147,6 +146,8 @@ def gen_exe_plan(addr, path, cols, alternatives):
 
     retry = MAX_RETRY
     alter_index = 0
+    all_servers = list(name_ip_dict.values())
+
     while retry > 0:
         try:
             ssh.connect(hostname=addr, username='ec2-user', timeout=500)
