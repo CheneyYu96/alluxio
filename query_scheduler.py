@@ -150,6 +150,7 @@ def gen_exe_plan(addr, path, cols, alternatives):
     while retry > 0:
         try:
             ssh.connect(hostname=addr, username='ec2-user', timeout=500)
+            break
         except:
             failed_ip = selected_ip
             selected_ip = alternatives[alter_index] if alter_index < len(alternatives) else all_servers[random.randint(0, len(all_servers - 1))]
