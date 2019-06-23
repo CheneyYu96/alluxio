@@ -123,7 +123,7 @@ LOG_PREFIX = '/home/ec2-user/logs'
 EXE_CMD = 'cd /home/ec2-user/alluxio/readparquet; java -jar target/readparquet-2.0.0-SNAPSHOT.jar'
 
 def send_cmd_to_worker(ssh_client, cmd, log_name):
-    _, stdout, stderr = ssh_client.exec_command('{} > {}/{}'.format(cmd, LOG_PREFIX, log_name))
+    _, stdout, stderr = ssh_client.exec_command('{} > {}/{} 1>&2'.format(cmd, LOG_PREFIX, log_name))
     is_success = stdout.channel.recv_exit_status() == 0
     if not is_success:
         for line in stdout.xreadlines():
