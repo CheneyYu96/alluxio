@@ -136,7 +136,7 @@ def gen_exe_plan(addr, path, cols):
 
     cmd_str = '{} {} {}'.format(EXE_CMD, path, col_pair_str)
 
-    ssh = paramiko.client.SSHClient()
+    ssh = paramiko.client.SSHClient(banner_timeout=300)
     ssh.set_missing_host_key_policy(paramiko.client.AutoAddPolicy())
     ssh.connect(hostname=addr, username='ec2-user')
 
