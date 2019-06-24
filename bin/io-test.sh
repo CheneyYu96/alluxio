@@ -275,22 +275,22 @@ policy_test(){
     bdgt=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.budget=' | cut -d "=" -f 2)
 
     p_dir=$(get_dir_index q${qry}_b${bdgt}_dft_)
-    mkdir -p ${p_dir}
-
-    default_env
-
-    con_all_test ${qry} ${up_times}
-    mv ${DIR}/logs/band* ${p_dir}
-
-    policy_env
-    rm_env
-
-#    warm up
-    con_times=1
-    bandwidth_test 1000000 ${qry}
-    rm -r $DIR/logs/band*
-
-    sleep 150
+#    mkdir -p ${p_dir}
+#
+#    default_env
+#
+#    con_all_test ${qry} ${up_times}
+#    mv ${DIR}/logs/band* ${p_dir}
+#
+#    policy_env
+#    rm_env
+#
+##    warm up
+#    con_times=1
+#    bandwidth_test 1000000 ${qry}
+#    rm -r $DIR/logs/band*
+#
+#    sleep 300
 
     p_dir=$(get_dir_index q${qry}_b${bdgt}_plc${PER_COL}_)
     mkdir -p ${p_dir}
