@@ -188,6 +188,12 @@ clear(){
     done
 }
 
+rm_env(){
+    remove $DIR/alluxio_env
+    remove $DIR/alluxio/origin-locs.txt
+    remove $DIR/replica-locs.txt
+}
+
 complie_job(){
     cd $DIR/tpch-spark
     git pull
@@ -256,7 +262,7 @@ compare_test(){
     for useper in `seq 0 1`; do
         PER_COL=$useper
         policy_test 1000000 $qry
-        remove $DIR/alluxio_env
+        rm_env
     done
 }
 
@@ -291,13 +297,22 @@ policy_test(){
 }
 
 all_policy_test(){
-    limit=$1
-    times=$2
+    up_times=$1
 
     for((qr=1;qr<=22;qr++)); do
-        policy_test ${limit} ${qr}
-        remove $DIR/alluxio_env
+        policy_test ${qr} ${up_times}
+        rm_env
     done
+
+}
+
+query_con_test(){
+    rate=$1
+    query_num=$2
+
+    q_c_dir=$(get_dir_index query_con_rt${rate}_)
+
+    init_alluxio_status
 
 }
 
