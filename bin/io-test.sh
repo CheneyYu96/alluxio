@@ -10,7 +10,7 @@ FROM_HDFS=0
 NEED_PAR_INFO=1
 PER_COL=1
 
-FAULT=1
+FAULT=0
 
 times=1
 
@@ -328,7 +328,8 @@ query_con_test(){
 
     df_log_dir_name=$(get_dir_index py_q${query}_rt${rate}_dft_)
 
-    start=$(date "+%s")
+    default_env
+
     init_alluxio_status
     limit_bandwidth 1000000
 
@@ -341,12 +342,21 @@ query_con_test(){
         --policy ${PER_COL} \
         --fault ${FAULT}
 
-    now=$(date "+%s")
-    tm=$((now-start))
+    free_limit
 
-    sleep_time=$((interval+180-tm))
-    sleep ${sleep_time}
+    policy_env
+    rm_env
+    init_alluxio_status
 
+    limit_bandwidth 1000000
+    #    warm up
+    log_dir_name=$DIR/logs/warmup
+    mkdir -p ${log_dir_name}
+    python query_scheduler.py ${query} ${log_dir_name} --policy ${PER_COL} --fault ${FAULT} > ${log_dir_name}/master.log 2>&1
+
+    remove ${log_dir_name}
+
+    sleep 300
     pl_log_dir_name=$(get_dir_index py_q${query}_rt${rate}_plc${PER_COL}_)
 
     cd ${DIR}/alluxio
@@ -357,6 +367,9 @@ query_con_test(){
         ${pl_log_dir_name} \
         --policy ${PER_COL} \
         --fault ${FAULT}
+
+    free_limit
+
 }
 
 loc_wait=$(cat ../spark/conf/spark-defaults.conf | grep locality | cut -d ' ' -f 2)
