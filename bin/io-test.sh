@@ -300,8 +300,12 @@ all_policy_test(){
     up_times=$1
 
     for((qr=1;qr<=22;qr++)); do
+        mkdir ${DIR}/logs/q${qr}
+
         policy_test ${qr} ${up_times}
         rm_env
+
+        mv ${DIR}/logs/q${qr}* ${DIR}/logs/q${qr}
     done
 
 }
