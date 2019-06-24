@@ -221,7 +221,7 @@ def submit_query_internal(query, logs_dir, policy):
         task_res.append(pool.submit(exe_task, res[0], p, res[1], res[2]))
     # pool.shutdown(wait=True)
 
-    all_res = [ r.get() for r in task_res ]
+    all_res = [ r.result() for r in task_res ]
 
     if all(all_res):
         logging.info('All reading task finished. elapsed: {}'.format(gap_time(start)))
