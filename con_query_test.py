@@ -90,7 +90,7 @@ def poisson_test(rate, timeout, query, logdir, policy):
 
 def send_query(query, sub_dir, policy):
     mkdir(sub_dir)
-    os.system('python query_scheduler.py {} {} --policy {} > {}/master.log'.format(query, sub_dir, policy, sub_dir))
+    os.system('python query_scheduler.py {} {} --policy {} > {}/master.log 2>&1'.format(query, sub_dir, policy, sub_dir))
     # query_scheduler.submit_query_internal(query, sub_dir, policy)
 
 def mkdir(newdir):
