@@ -8,7 +8,9 @@ source ${LOCAL_DIR}/utils.sh
 
 FROM_HDFS=0
 NEED_PAR_INFO=1
-PER_COL=0
+PER_COL=1
+
+FAULT=0
 
 times=1
 
@@ -103,7 +105,7 @@ trace_test(){
             log_dir_name=${dir_name}/con${c_tm}
             mkdir -p ${log_dir_name}
 
-            python query_scheduler.py ${q} ${log_dir_name} --policy ${PER_COL} > ${log_dir_name}/master.log 2>&1 &
+            python query_scheduler.py ${q} ${log_dir_name} --policy ${PER_COL} --fault ${FAULT} > ${log_dir_name}/master.log 2>&1 &
         done
         wait
 
@@ -334,7 +336,8 @@ query_con_test(){
         ${timeout} \
         ${query} \
         ${df_log_dir_name} \
-        --policy ${PER_COL}
+        --policy ${PER_COL} \
+        --fault ${FAULT}
 
     now=$(date "+%s")
     tm=$((now-start))
@@ -350,8 +353,8 @@ query_con_test(){
         ${timeout} \
         ${query} \
         ${pl_log_dir_name} \
-        --policy ${PER_COL}
-
+        --policy ${PER_COL} \
+        --fault ${FAULT}
 }
 
 loc_wait=$(cat ../spark/conf/spark-defaults.conf | grep locality | cut -d ' ' -f 2)

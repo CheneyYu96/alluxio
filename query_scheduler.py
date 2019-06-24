@@ -131,7 +131,7 @@ def send_cmd_to_worker(ssh_client, cmd, log_name):
         for line in stdout.xreadlines():
             print(line)
 
-def gen_exe_plan(addr, path, cols, alternatives):
+def gen_exe_plan(addr, path, cols, alternatives, fault_tolerant):
     col_pair_str = ''
     for off, length in cols:
         col_pair_str = col_pair_str + '{} {} '.format(off, length)
@@ -153,9 +153,10 @@ def gen_exe_plan(addr, path, cols, alternatives):
             ssh.connect(hostname=selected_ip, username='ec2-user', timeout=300)
             break
         except:
-            failed_ip = selected_ip
-            selected_ip = alternatives[alter_index] if alter_index < len(alternatives) else all_servers[random.randint(0, len(all_servers) - 1)]
-            logging.warn('Fail to establish connection. ip: {}. next_choice: {}'.format(failed_ip, selected_ip))
+            if fault_tolerant == 1:
+                failed_ip = selected_ip
+                selected_ip = alternatives[alter_index] if alter_index < len(alternatives) else all_servers[random.randint(0, len(all_servers) - 1)]
+                logging.warn('Fail to establish connection. ip: {}. next_choice: {}'.format(failed_ip, selected_ip))
             alter_index += 1
             retry -= 1
 
@@ -168,9 +169,9 @@ def gen_exe_plan(addr, path, cols, alternatives):
 
     return (ssh, cmd_str, log_name)
 
-def exe_task(addr, path, cols, alternatives):
+def exe_task(addr, path, cols, alternatives, fault_tolerant):
     try:
-        (ssh, cmd_str, log_name) = gen_exe_plan(addr, path, cols, alternatives)
+        (ssh, cmd_str, log_name) = gen_exe_plan(addr, path, cols, alternatives, fault_tolerant)
         send_cmd_to_worker(ssh, cmd_str, log_name)
         return True
     except:
@@ -185,10 +186,11 @@ gap_time = lambda past_time : int((now() - past_time) * 1000)
 @click.argument('query', type=int)
 @click.argument('logs-dir', type=click.Path(exists=True, resolve_path=True))
 @click.option('--policy', type=int, default=0) # 1: column-wise, 0: bundling
-def submit_query(query, logs_dir, policy):
-    submit_query_internal(query, logs_dir, policy)
+@click.option('--fault', type=int, default=1)
+def submit_query(query, logs_dir, policy, fault):
+    submit_query_internal(query, logs_dir, policy, fault)
 
-def submit_query_internal(query, logs_dir, policy):
+def submit_query_internal(query, logs_dir, policy, fault):
     all_queries = parse_all_queries()
     if query < 1 or query > len(all_queries):
         print('Invalid query')
@@ -218,7 +220,7 @@ def submit_query_internal(query, logs_dir, policy):
     #     pool.submit(send_cmd_to_worker, ssh_client, cmd, log_name)
     task_res = []
     for p, res in sched_res.items():
-        task_res.append(pool.submit(exe_task, res[0], p, res[1], res[2]))
+        task_res.append(pool.submit(exe_task, res[0], p, res[1], res[2], fault))
     # pool.shutdown(wait=True)
 
     all_res = [ r.result() for r in task_res ]

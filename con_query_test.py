@@ -52,7 +52,8 @@ class ZipFGenerator:
 @click.argument('query', type=int)
 @click.argument('logdir', type=str)
 @click.option('--policy', type=int, default=0) # 1: column-wise, 0: bundling
-def poisson_test(rate, timeout, query, logdir, policy):
+@click.option('--fault', type=int, default=1)
+def poisson_test(rate, timeout, query, logdir, policy, fault):
 
     metrics = {}
 
@@ -80,7 +81,7 @@ def poisson_test(rate, timeout, query, logdir, policy):
             logging.info('Generate query: {}, sleep: {}'.format(act_q, s))
 
             sub_dir = '{}/q{}/c{}'.format(logdir, act_q, metrics[act_q])
-            pool.submit(send_query, act_q, sub_dir, policy)
+            pool.submit(send_query, act_q, sub_dir, policy, fault)
             time.sleep(s)
 
     sorted_metrics = list(metrics.items())
@@ -88,10 +89,10 @@ def poisson_test(rate, timeout, query, logdir, policy):
     for q, c in sorted_metrics:
         print('query={} , count={}'.format(q, c))
 
-def send_query(query, sub_dir, policy):
+def send_query(query, sub_dir, policy, fault):
     mkdir(sub_dir)
-    os.system('python query_scheduler.py {} {} --policy {} > {}/master.log 2>&1'.format(query, sub_dir, policy, sub_dir))
-    # query_scheduler.submit_query_internal(query, sub_dir, policy)
+    os.system('python query_scheduler.py {} {} --policy {} --fault {} > {}/master.log 2>&1'.format(query, sub_dir, policy, fault, sub_dir))
+    # query_scheduler.submit_query_internal(query, sub_dir, policy, fault)
 
 def mkdir(newdir):
     if type(newdir) is not str:
