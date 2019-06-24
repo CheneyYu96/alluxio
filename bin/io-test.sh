@@ -177,6 +177,15 @@ clear(){
     remove $DIR/alluxio/logs
     remove $DIR/alluxio/origin-locs.txt
     remove $DIR/replica-locs.txt
+
+    workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
+
+    worker_num=(`cat /home/ec2-user/hadoop/conf/slaves | wc -l`)
+    worker_num=$(($worker_num-2))
+
+    for i in `seq 0 ${worker_num}`; do
+        ssh ec2-user@${workers[$i]} -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/*"
+    done
 }
 
 complie_job(){
