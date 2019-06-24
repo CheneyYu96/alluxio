@@ -31,10 +31,10 @@ if os.path.isfile(pop_file):
 
 
 @click.command()
-@click.argument('--rate', type=int) # number of query per minute
-@click.argument('--timeout', type=int) # minute
-@click.argument('--query', type=int)
-@click.argument('--logdir', type=str)
+@click.argument('rate', type=int) # number of query per minute
+@click.argument('timeout', type=int) # minute
+@click.argument('query', type=int)
+@click.argument('logdir', type=str)
 @click.option('--policy', type=int, default=0) # 1: column-wise, 0: bundling
 def poisson_test(rate, timeout, query, logdir, policy):
 

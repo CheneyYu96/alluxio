@@ -323,10 +323,10 @@ query_con_test(){
 
     cd ${DIR}/alluxio
     python con_query_test.py \
-        --rate ${rate} \
-        --timeout ${timeout} \
-        --query ${query} \
-        --logdir ${log_dir_name} \
+        ${rate} \
+        ${timeout} \
+        ${query} \
+        ${log_dir_name} \
         --policy ${PER_COL}
 
 
