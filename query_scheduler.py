@@ -146,11 +146,11 @@ def gen_exe_plan(addr, path, cols, alternatives):
 
     retry = MAX_RETRY
     alter_index = 0
-    all_servers = list(name_ip_dict.values())
+    all_servers = list(set(name_ip_dict.values()) - set(alternatives + [addr]))
 
     while retry > 0:
         try:
-            ssh.connect(hostname=addr, username='ec2-user', timeout=500)
+            ssh.connect(hostname=selected_ip, username='ec2-user', timeout=300)
             break
         except:
             failed_ip = selected_ip
@@ -164,9 +164,16 @@ def gen_exe_plan(addr, path, cols, alternatives):
         exit(1)
 
     log_name = get_unique_log_name(path)
+    log_info[log_name] = ssh
 
     return (ssh, cmd_str, log_name)
 
+def exe_task(addr, path, cols, alternatives):
+    (ssh, cmd_str, log_name) = gen_exe_plan(addr, path, cols, alternatives)
+    send_cmd_to_worker(ssh, cmd_str, log_name)
+
+
+log_info = {}
 now = lambda: time.time()
 gap_time = lambda past_time : int((now() - past_time) * 1000)
 
@@ -195,14 +202,16 @@ def submit_query(query, logs_dir, policy):
 
     sched_res = policies[policy](table_col_dict, col_locs_dict)
 
-    exe_plan = [ gen_exe_plan(res[0], p, res[1], res[2]) for p, res in sched_res.items()]
-
     logging.info('Got schedule result.')
     start = now()
 
-    pool = ThreadPoolExecutor(max_workers=len(exe_plan) + 3)
-    for ssh_client, cmd, log_name in exe_plan:
-        pool.submit(send_cmd_to_worker, ssh_client, cmd, log_name)
+    pool = ThreadPoolExecutor(max_workers=len(sched_res.items()) + 3)
+
+    # exe_plan = [ gen_exe_plan(res[0], p, res[1], res[2]) for p, res in sched_res.items()]
+    # for ssh_client, cmd, log_name in exe_plan:
+    #     pool.submit(send_cmd_to_worker, ssh_client, cmd, log_name)
+    for p, res in sched_res.items():
+        pool.submit(exe_task, res[0], p, res[1], res[2])
     pool.shutdown(wait=True)
 
     logging.info('All reading task finished. elapsed: {}'.format(gap_time(start)))
@@ -210,7 +219,7 @@ def submit_query(query, logs_dir, policy):
     # collect worker log
     start = now()
 
-    for ssh_client, _, log_name in exe_plan:
+    for log_name, ssh_client in log_info.items():
         sftp = ssh_client.open_sftp()
         sftp.get('{}/{}'.format(LOG_PREFIX, log_name), '{}/{}'.format(logs_dir, log_name))
         ssh_client.close()
