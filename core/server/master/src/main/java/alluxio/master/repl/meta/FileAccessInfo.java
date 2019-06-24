@@ -7,6 +7,7 @@ import alluxio.collections.ConcurrentHashSet;
 import alluxio.util.CommonUtils;
 import fr.client.utils.OffLenPair;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -39,6 +40,13 @@ public class FileAccessInfo {
     public FileAccessInfo(AlluxioURI mFilePath, OffLenPair accessPair) {
         this(mFilePath);
         incCount(accessPair);
+    }
+
+    public FileAccessInfo(AlluxioURI mFilePath, List<OffLenPair> allEmptyPair) {
+        this(mFilePath);
+        for (OffLenPair pair: allEmptyPair){
+            offsetCount.put(pair, (long) 0);
+        }
     }
 
     public AlluxioURI getFilePath() {

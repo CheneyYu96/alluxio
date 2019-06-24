@@ -25,6 +25,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Control selective replication for raw data segments.
@@ -54,6 +55,8 @@ public class ReplManager {
     private boolean replGlobal;
     private boolean haveRepl;
 
+    private boolean isBudgetAccess;
+
     public ReplManager() {
         frClient = new FRClient();
         accessRecords = new ConcurrentHashMap<>();
@@ -69,6 +72,8 @@ public class ReplManager {
 
         replGlobal = Configuration.getBoolean(PropertyKey.FR_REPL_GLOBAL);
         haveRepl = false;
+
+        isBudgetAccess = Configuration.getBoolean(PropertyKey.FR_REPL_BUDGET_ACCESS);
 
         frDir = Configuration.get(PropertyKey.FR_REPL_DIR);
 
@@ -157,6 +162,13 @@ public class ReplManager {
                 offsetInfoMap.put(filePath, fileOffsetInfo);
             } else {
                 LOG.error("File {}'s offset and length does not match", filePath);
+            }
+
+            if(isBudgetAccess){
+                List<OffLenPair> allPairs = IntStream.range(0, offset.size())
+                        .mapToObj(i -> new OffLenPair(offset.get(i), length.get(i)))
+                        .collect(Collectors.toList());
+                accessRecords.put(filePath, new FileAccessInfo(filePath, allPairs));
             }
         }
     }
