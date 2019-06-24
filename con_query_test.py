@@ -20,14 +20,14 @@ now = lambda: time.time()
 gap_time = lambda past_time : int((now() - past_time) * 1000)
 
 ALLUXIO_DIR = os.path.dirname(os.path.abspath(__file__))
-POP_FILE = 'pop.txt'
+pop_file = '{}/{}'.format(ALLUXIO_DIR, 'pop.txt')
 
 query_pop_dict = {}
-
-with open('{}/{}'.format(ALLUXIO_DIR, POP_FILE), 'r') as f:
-    for line in f:
-        q_p = [ i for i in line.strip().split(',') if i ]
-        query_pop_dict[int(q_p[0])] = int(q_p[1])
+if os.path.isfile(pop_file):
+    with open(pop_file, 'r') as f:
+        for line in f:
+            q_p = [ i for i in line.strip().split(',') if i ]
+            query_pop_dict[int(q_p[0])] = int(q_p[1])
 
 
 @click.command()
