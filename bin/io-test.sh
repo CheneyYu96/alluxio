@@ -314,6 +314,8 @@ all_policy_test(){
 
 }
 
+timeout=5
+
 
 #####################
 #  call python test script
@@ -323,8 +325,6 @@ query_con_test(){
     query=$2
 
     interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
-
-    timeout=$((interval/60 - 5))
 
     df_log_dir_name=$(get_dir_index py_q${query}_rt${rate}_dft_)
 
