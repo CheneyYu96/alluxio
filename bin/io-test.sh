@@ -316,10 +316,12 @@ query_con_test(){
 
     interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
 
-
     timeout=$((interval/60 - 4))
 
     log_dir_name=$(get_dir_index py_q${query}_rt${rate}_)
+
+    init_alluxio_status
+    limit_bandwidth 1000000
 
     cd ${DIR}/alluxio
     python con_query_test.py \
