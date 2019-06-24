@@ -29,6 +29,22 @@ if os.path.isfile(pop_file):
             q_p = [ i for i in line.strip().split(',') if i ]
             query_pop_dict[int(q_p[0])] = int(q_p[1])
 
+class ZipFGenerator:
+	def __init__(self, count, alpha):
+		self.ps = [1.0 / (i + 1) ** alpha for i in range(count)]
+		s = sum(self.ps)
+		self.ps = map(lambda x: x / s, self.ps)
+
+	def generate(self, size):
+		words = size
+		num_per_word = map(lambda x: x * words, self.ps)
+
+		res = []
+		for i, n in enumerate(num_per_word):
+			c = int(n) if int(n) > 0 else 1
+			res.append(c)
+
+		return res
 
 @click.command()
 @click.argument('rate', type=int) # number of query per minute
@@ -48,7 +64,15 @@ def poisson_test(rate, timeout, query, logdir, policy):
         for s in interval_samples:
             act_q = -1
             if query == 0:
-                pass
+                q_p_list = list(query_pop_dict.items())
+                q_p_list.sort(key=lambda e: e[0])
+
+                p_sum = sum([ p for _, p in q_p_list])
+                prob = [ p * 1.0/ p_sum for _, p in q_p_list ]
+
+                q_index = np.random.choice(len(q_p_list), 1, p=prob)[0]
+                act_q = q_p_list[q_index][0]
+
             else:
                 act_q = query
             
@@ -59,7 +83,9 @@ def poisson_test(rate, timeout, query, logdir, policy):
             pool.submit(send_query, query, sub_dir, policy)
             time.sleep(s)
 
-    for q, c in metrics.items():
+    sorted_metrics = list(metrics.items())
+    sorted_metrics.sort(key=lambda e: e[0])
+    for q, c in sorted_metrics:
         print('query={} , count={}'.format(q, c))
 
 def send_query(query, sub_dir, policy):
@@ -84,3 +110,11 @@ def mkdir(newdir):
 
 if __name__ == '__main__':
     poisson_test()
+    # g = ZipFGenerator(22, 1.)
+    # pops = g.generate(size=100)
+
+    # with open(pop_file, 'w') as f:
+    #     for i in range(len(pops)):
+    #         f.write(str(i+1) + ',' + str(pops[i])+ '\n')
+
+
