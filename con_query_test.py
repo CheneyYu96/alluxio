@@ -80,7 +80,7 @@ def poisson_test(rate, timeout, query, logdir, policy):
             logging.info('Generate query: {}, sleep: {}'.format(act_q, s))
 
             sub_dir = '{}/q{}/c{}'.format(logdir, act_q, metrics[act_q])
-            pool.submit(send_query, query, sub_dir, policy)
+            pool.submit(send_query, act_q, sub_dir, policy)
             time.sleep(s)
 
     sorted_metrics = list(metrics.items())
