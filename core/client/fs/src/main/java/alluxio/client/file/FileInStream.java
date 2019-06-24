@@ -123,8 +123,6 @@ public class FileInStream extends InputStream implements BoundedStream, Position
   private long mNewLength;
 
   private long mNewBlockSize;
-  private boolean mFirstRead;
-  private boolean mReadData;
 
   protected FileInStream(URIStatus status, InStreamOptions options, FileSystemContext context) {
     mStatus = status;
@@ -149,8 +147,6 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     mNewLength = mNewStatus.getLength();
     mNewBlockSize = mNewStatus.getBlockSizeBytes();
     mCurrentSeg = new FileSegmentsInfo(status.getPath(), -1, Long.MIN_VALUE);
-    mReadData = false;
-    mFirstRead = true;
 
     LOG.info("Generate file in stream for file: {}", mStatus.getPath());
 
@@ -331,15 +327,6 @@ public class FileInStream extends InputStream implements BoundedStream, Position
   }
 
   private void checkStreamUpdate(int len) throws IOException {
-    if (mFirstRead){
-      if(checkReadData(mPosition, len)) {
-        mReadData = true;
-        LOG.info("Find reading data. mPos: {}. mNewPos: {}. len: {}", mPosition, mNewPosition, len);
-      }
-      mFirstRead = false;
-    }
-
-    if (mReadData && len > 10) {
 
       long startTimeMs = CommonUtils.getCurrentMs();
       try {
@@ -350,14 +337,6 @@ public class FileInStream extends InputStream implements BoundedStream, Position
       LOG.info("update file in stream. elapsed: {}. mPos: {}. mNewPos: {}. len: {}. fileToRead: {}",
               (CommonUtils.getCurrentMs() - startTimeMs),
               mPosition, mNewPosition, len, mNewStatus.getPath());
-    }
-    else {
-      mNewPosition = mPosition;
-//      if(len > 100){
-//        LOG.info("Attemtion. pos: {}. len: {}. file: {}", mNewPosition, len, mNewStatus.getPath());
-//      }
-    }
-
   }
 
   /* Input Stream methods */

@@ -56,6 +56,7 @@ public class FRParquetReader {
             reader.readFile(columnsToRead);
         } catch (IOException | AlluxioException e) {
             e.printStackTrace();
+            System.exit(1);
         }
 
     }
