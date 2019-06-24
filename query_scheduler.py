@@ -161,7 +161,7 @@ def gen_exe_plan(addr, path, cols, alternatives):
 
     if retry == 0:
         logging.warn('Fail connects. attemps: {}'.format(MAX_RETRY))
-        exit(1)
+        raise Exception('Fail connects')
 
     log_name = get_unique_log_name(path)
     log_info[log_name] = ssh
@@ -169,9 +169,12 @@ def gen_exe_plan(addr, path, cols, alternatives):
     return (ssh, cmd_str, log_name)
 
 def exe_task(addr, path, cols, alternatives):
-    (ssh, cmd_str, log_name) = gen_exe_plan(addr, path, cols, alternatives)
-    send_cmd_to_worker(ssh, cmd_str, log_name)
-
+    try:
+        (ssh, cmd_str, log_name) = gen_exe_plan(addr, path, cols, alternatives)
+        send_cmd_to_worker(ssh, cmd_str, log_name)
+        return True
+    except:
+        return False
 
 log_info = {}
 now = lambda: time.time()
@@ -213,21 +216,27 @@ def submit_query_internal(query, logs_dir, policy):
     # exe_plan = [ gen_exe_plan(res[0], p, res[1], res[2]) for p, res in sched_res.items()]
     # for ssh_client, cmd, log_name in exe_plan:
     #     pool.submit(send_cmd_to_worker, ssh_client, cmd, log_name)
+    task_res = []
     for p, res in sched_res.items():
-        pool.submit(exe_task, res[0], p, res[1], res[2])
-    pool.shutdown(wait=True)
+        task_res.append(pool.submit(exe_task, res[0], p, res[1], res[2]))
+    # pool.shutdown(wait=True)
 
-    logging.info('All reading task finished. elapsed: {}'.format(gap_time(start)))
+    all_res = [ r.get() for r in task_res ]
 
-    # collect worker log
-    start = now()
+    if all(all_res):
+        logging.info('All reading task finished. elapsed: {}'.format(gap_time(start)))
 
-    for log_name, ssh_client in log_info.items():
-        sftp = ssh_client.open_sftp()
-        sftp.get('{}/{}'.format(LOG_PREFIX, log_name), '{}/{}'.format(logs_dir, log_name))
-        ssh_client.close()
-    
-    logging.info('Finish log collection. elapsed: {}'.format(gap_time(start)))
+        # collect worker log
+        start = now()
+
+        for log_name, ssh_client in log_info.items():
+            sftp = ssh_client.open_sftp()
+            sftp.get('{}/{}'.format(LOG_PREFIX, log_name), '{}/{}'.format(logs_dir, log_name))
+            ssh_client.close()
+        
+        logging.info('Finish log collection. elapsed: {}'.format(gap_time(start)))
+    else:
+        logging.info('Fail task. count: {}'.format(len([r for r in all_res if not r])))
 
 def bundling_policy(table_col_dict, col_locs_dict):
     sched_res = {}
