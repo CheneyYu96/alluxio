@@ -8,6 +8,7 @@ import click
 import paramiko
 import time
 from concurrent.futures import ThreadPoolExecutor
+import query_scheduler
 
 import logging
 logging.basicConfig(
@@ -18,64 +19,67 @@ logging.basicConfig(
 now = lambda: time.time()
 gap_time = lambda past_time : int((now() - past_time) * 1000)
 
+ALLUXIO_DIR = os.path.dirname(os.path.abspath(__file__))
+POP_FILE = 'pop.txt'
+
+query_pop_dict = {}
+
+with open('{}/{}'.format(ALLUXIO_DIR, POP_FILE), 'r') as f:
+    for line in f:
+        q_p = [ i for i in line.strip().split(',') if i ]
+        query_pop_dict[int(q_p[0])] = int(q_p[1])
+
+
 @click.command()
-@click.argument('rate', type=int) # number of query per minute
-@click.argument('timeout', type=int) # minute
-@click.argument('logdir', type=str)
-def submit_query(rate, timeout, logdir):
-    pool = ThreadPoolExecutor(50)
-    for i in range(timeout):
+@click.argument('--rate', type=int) # number of query per minute
+@click.argument('--timeout', type=int) # minute
+@click.argument('--query', type=int)
+@click.argument('--logdir', type=str)
+@click.option('--policy', type=int, default=0) # 1: column-wise, 0: bundling
+def poisson_test(rate, timeout, query, logdir, policy):
 
+    metrics = {}
 
-def bundling_policy(table_col_dict, col_locs_dict):
-    sched_res = {}
-    for t, cols in table_col_dict.items():
-        part_files = cols[0].pathes
-        for p in part_files:
-            avail_locs = [col_locs_dict[c][p] for c in cols ]
+    pool = ThreadPoolExecutor(rate * 3)
+    for _ in range(timeout):
+        avg_interval = 60 * 1.0 / rate
+        interval_samples = np.random.poisson(avg_interval, rate)
 
-            all_cols_repl = avail_locs[0].replicas
-            all_possible_locs = set()
-            for col_repl in [ l.replicas for l in avail_locs ]:
-                all_cols_repl = all_cols_repl.intersection(col_repl)
-                all_possible_locs = all_possible_locs.union(col_repl)
-
-            col_pair = [ c.path_off_dict[p] for c in cols ]
-
-            all_cols_repl = list(all_cols_repl)
-            all_possible_locs = list(all_possible_locs)
-            if len(all_cols_repl) > 0:
-                # random pick one replica to serve
-                random.shuffle(all_cols_repl)
-                sched_res[p] = (all_cols_repl[0], col_pair, all_cols_repl[1:] + [origin_locs[p]])
+        for s in interval_samples:
+            act_q = -1
+            if query == 0:
+                pass
             else:
-                # served by origin table
-                random.shuffle(all_possible_locs)
-                sched_res[p] = (origin_locs[p], col_pair, all_possible_locs)
-    return sched_res
+                act_q = query
+            
+            metrics[act_q] = metrics[act_q] + 1 if act_q in metrics else 1
+            logging.info('Generate query: {}, sleep: {}'.format(act_q, s))
 
-def col_wise_policy(table_col_dict, col_locs_dict):
-    sched_res = {}
-    for t, cols in table_col_dict.items():
-        part_files = cols[0].pathes
-        for p in part_files:
-            avail_locs = [col_locs_dict[c][p] for c in cols ]
+            sub_dir = '{}/q{}/c{}'.format(logdir, act_q, metrics[act_q])
+            pool.submit(send_query, query, sub_dir, policy)
+            time.sleep(s)
 
-            all_possible_locs = set([origin_locs[p]])
-            for col_repl in [ l.replicas for l in avail_locs ]:
-                all_possible_locs = all_possible_locs.union(col_repl)
+    for q, c in metrics.items():
+        print('query={} , count={}'.format(q, c))
 
-            col_pair = [ c.path_off_dict[p] for c in cols ]
-            # random pick one replica to serve
-            all_possible_locs = list(all_possible_locs)
-            random.shuffle(all_possible_locs)
-            sched_res[p] = (all_possible_locs[0], col_pair, all_possible_locs[1:])
-    return sched_res
+def send_query(query, sub_dir, policy):
+    mkdir(sub_dir)
+    query_scheduler.submit_query_internal(query, sub_dir, policy)
 
-policies = {
-    0: bundling_policy,
-    1: col_wise_policy,
-}
+def mkdir(newdir):
+    if type(newdir) is not str:
+        newdir = str(newdir)
+    if os.path.isdir(newdir):
+        pass
+    elif os.path.isfile(newdir):
+        raise OSError("a file with the same name as the desired " \
+                      "dir, '%s', already exists." % newdir)
+    else:
+        head, tail = os.path.split(newdir)
+        if head and not os.path.isdir(head):
+            mkdir(head)
+        if tail:
+            os.mkdir(newdir)
 
 if __name__ == '__main__':
-    submit_query()
+    poisson_test()

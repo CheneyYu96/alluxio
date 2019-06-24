@@ -183,6 +183,9 @@ gap_time = lambda past_time : int((now() - past_time) * 1000)
 @click.argument('logs-dir', type=click.Path(exists=True, resolve_path=True))
 @click.option('--policy', type=int, default=0) # 1: column-wise, 0: bundling
 def submit_query(query, logs_dir, policy):
+    submit_query_internal(query, logs_dir, policy)
+
+def submit_query_internal(query, logs_dir, policy):
     all_queries = parse_all_queries()
     if query < 1 or query > len(all_queries):
         print('Invalid query')

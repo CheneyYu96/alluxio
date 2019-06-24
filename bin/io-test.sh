@@ -306,13 +306,29 @@ all_policy_test(){
 
 }
 
+
+#####################
+#  call python test script
+#####################
 query_con_test(){
     rate=$1
-    query_num=$2
+    query=$2
 
-    q_c_dir=$(get_dir_index query_con_rt${rate}_)
+    interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
 
-    init_alluxio_status
+
+    timeout=$((interval/60 - 4))
+
+    log_dir_name=$(get_dir_index py_q${query}_rt${rate}_)
+
+    cd ${DIR}/alluxio
+    python con_query_test.py \
+        --rate ${rate} \
+        --timeout ${timeout} \
+        --query ${query} \
+        --logdir ${log_dir_name} \
+        --policy ${PER_COL}
+
 
 }
 
