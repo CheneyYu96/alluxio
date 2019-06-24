@@ -316,10 +316,11 @@ query_con_test(){
 
     interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
 
-    timeout=$((interval/60 - 4))
+    timeout=$((interval/60 - 5))
 
-    log_dir_name=$(get_dir_index py_q${query}_rt${rate}_)
+    df_log_dir_name=$(get_dir_index py_q${query}_rt${rate}_dft_)
 
+    start=$(date "+%s")
     init_alluxio_status
     limit_bandwidth 1000000
 
@@ -328,9 +329,24 @@ query_con_test(){
         ${rate} \
         ${timeout} \
         ${query} \
-        ${log_dir_name} \
+        ${df_log_dir_name} \
         --policy ${PER_COL}
 
+    now=$(date "+%s")
+    tm=$((now-start))
+
+    sleep_time=$((interval+180-tm))
+    sleep ${sleep_time}
+
+    pl_log_dir_name=$(get_dir_index py_q${query}_rt${rate}_plc${PER_COL}_)
+
+    cd ${DIR}/alluxio
+    python con_query_test.py \
+        ${rate} \
+        ${timeout} \
+        ${query} \
+        ${pl_log_dir_name} \
+        --policy ${PER_COL}
 
 }
 
