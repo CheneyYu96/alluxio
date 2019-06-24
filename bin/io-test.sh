@@ -10,7 +10,7 @@ FROM_HDFS=0
 NEED_PAR_INFO=1
 PER_COL=1
 
-FAULT=1
+FAULT=0
 
 times=1
 
@@ -272,23 +272,25 @@ policy_test(){
     qry=$1
     up_times=$2
 
-    bdgt=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.budget' | cut -d "=" -f 2)
+    bdgt=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.budget=' | cut -d "=" -f 2)
 
     p_dir=$(get_dir_index q${qry}_b${bdgt}_dft_)
     mkdir -p ${p_dir}
 
-    start=$(date "+%s")
+    default_env
 
     con_all_test ${qry} ${up_times}
     mv ${DIR}/logs/band* ${p_dir}
 
-    now=$(date "+%s")
-    tm=$((now-start))
-    interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
+    policy_env
+    rm_env
 
-    sleep_time=$((interval+180-tm))
+#    warm up
+    con_times=1
+    bandwidth_test 1000000 ${qry}
+    rm -r $DIR/logs/band*
 
-    sleep ${sleep_time}
+    sleep 150
 
     p_dir=$(get_dir_index q${qry}_b${bdgt}_plc${PER_COL}_)
     mkdir -p ${p_dir}

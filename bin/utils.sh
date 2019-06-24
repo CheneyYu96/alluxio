@@ -236,6 +236,14 @@ non_fr_env(){
      ${DIR}/alluxio/bin/restart.sh
 }
 
+default_env(){
+    sed -i "/fr.repl.interval=300/c\fr.repl.interval=30000" $DIR/alluxio/conf/alluxio-site.properties
+}
+
+policy_env(){
+    sed -i "/fr.repl.interval=30000/c\fr.repl.interval=300" $DIR/alluxio/conf/alluxio-site.properties
+}
+
 bundle_env(){
     sed -i "/fr.repl.policy.class=alluxio.master.repl.policy.ColReplPolicy/c\fr.repl.policy.class=alluxio.master.repl.policy.BundleHottestKPolicy" $DIR/alluxio/conf/alluxio-site.properties
 #    sed -i "/fr.repl.global=true/c\fr.repl.global=false" $DIR/alluxio/conf/alluxio-site.properties
