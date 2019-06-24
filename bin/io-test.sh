@@ -237,7 +237,7 @@ con_all_test(){
     up_times=$2
 
 
-    for((con_times=2;con_times<=up_times;con_times=con_times+2)); do
+    for((con_times=1;con_times<=up_times;con_times=con_times+1)); do
         bandwidth_test 1000000 ${qry}
     done
 }
