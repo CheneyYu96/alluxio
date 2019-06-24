@@ -91,8 +91,8 @@ def poisson_test(rate, timeout, query, logdir, policy, fault):
 
 def send_query(query, sub_dir, policy, fault):
     mkdir(sub_dir)
-    os.system('python query_scheduler.py {} {} --policy {} --fault {} > {}/master.log 2>&1'.format(query, sub_dir, policy, fault, sub_dir))
-    # query_scheduler.submit_query_internal(query, sub_dir, policy, fault)
+    # os.system('python query_scheduler.py {} {} --policy {} --fault {} > {}/master.log 2>&1'.format(query, sub_dir, policy, fault, sub_dir))
+    query_scheduler.submit_query_internal(query, sub_dir, policy, fault)
 
 def mkdir(newdir):
     if type(newdir) is not str:

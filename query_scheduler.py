@@ -150,7 +150,7 @@ def gen_exe_plan(addr, path, cols, alternatives, fault_tolerant):
 
     while retry > 0:
         try:
-            ssh.connect(hostname=selected_ip, username='ec2-user', timeout=300)
+            ssh.connect(hostname=selected_ip, username='ec2-user')
             break
         except:
             if fault_tolerant == 1:
