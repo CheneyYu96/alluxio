@@ -366,6 +366,8 @@ else
                                 ;;
         con-all)                con_all_test $2 $3
                                 ;;
+        py)                     query_con_test $2 $3
+                                ;;
         * )                     usage
     esac
 fi
