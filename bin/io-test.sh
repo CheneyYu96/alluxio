@@ -372,6 +372,50 @@ query_con_test(){
 
 }
 
+all_query_con_test(){
+    rate=$1
+    query=$2
+
+    interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
+
+    df_log_dir_name=$(get_dir_index py_q${query}_rt${rate}_dft_)
+
+    timeout=$((interval/60 - 5))
+    start=$(date "+%s")
+
+    init_alluxio_status
+    limit_bandwidth 1000000
+
+    cd ${DIR}/alluxio
+    python con_query_test.py \
+        ${rate} \
+        ${timeout} \
+        ${query} \
+        ${df_log_dir_name} \
+        --policy ${PER_COL} \
+        --fault ${FAULT}
+
+    now=$(date "+%s")
+    tm=$((now-start))
+
+    sleep_time=$((interval+300-tm))
+
+    sleep ${sleep_time}
+
+    pl_log_dir_name=$(get_dir_index py_q${query}_rt${rate}_plc${PER_COL}_)
+
+    cd ${DIR}/alluxio
+    python con_query_test.py \
+        ${rate} \
+        ${timeout} \
+        ${query} \
+        ${pl_log_dir_name} \
+        --policy ${PER_COL} \
+        --fault ${FAULT}
+
+    free_limit
+}
+
 loc_wait=$(cat ../spark/conf/spark-defaults.conf | grep locality | cut -d ' ' -f 2)
 
 
@@ -407,6 +451,8 @@ else
         con-all)                con_all_test $2 $3
                                 ;;
         py)                     query_con_test $2 $3
+                                ;;
+        py-all)                 all_query_con_test $2 $3
                                 ;;
         * )                     usage
     esac
