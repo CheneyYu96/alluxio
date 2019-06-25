@@ -119,7 +119,7 @@ public class GTBundlingPolicy implements ReplPolicy {
             double hotL = loadSize.get(coldIndex).getFirst();
             double hotS = loadSize.stream().skip(coldIndex).map(Pair::getSecond).reduce(0.0, Double::sum);
 
-            cost = cost + Math.ceil(alpha * hotL) * hotS;
+            cost = cost + (int) Math.ceil(alpha * hotL) * hotS;
         }
 
         return cost;
