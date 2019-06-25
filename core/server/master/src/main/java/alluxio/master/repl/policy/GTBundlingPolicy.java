@@ -51,6 +51,7 @@ public class GTBundlingPolicy implements ReplPolicy {
                 .stream()
                 .map(info -> {
                     List<Pair<Double, OffLenPair>> loads = calcPatternLoad(allSize, info);
+                    System.out.println(loads);
 
                     int coldIndex = 0;
 
@@ -67,8 +68,10 @@ public class GTBundlingPolicy implements ReplPolicy {
 
                     int replicas = (int) Math.ceil(finalOptAlpha * hotL);
 
-                    LOG.info("File: {}. Bundle columns: {}. replicas: {}. offsets: {}",
+                    LOG.info("File: {}. all columns: {}. cold index: {}. bundle columns: {}. replicas: {}. offsets: {}",
                             info.getFilePath().getPath(),
+                            loads.size(),
+                            coldIndex,
                             hotOffs.size(),
                             replicas,
                             hotOffs);
