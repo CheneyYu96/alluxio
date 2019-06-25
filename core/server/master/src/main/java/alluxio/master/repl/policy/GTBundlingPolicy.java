@@ -51,12 +51,11 @@ public class GTBundlingPolicy implements ReplPolicy {
                 .stream()
                 .map(info -> {
                     List<Pair<Double, OffLenPair>> loads = calcPatternLoad(allSize, info);
-                    System.out.println(loads);
 
                     int coldIndex = 0;
 
                     for(int i = 0; i < loads.size(); i++){
-                        double coldLoad = 0;
+                        double coldLoad = loads.get(i).getFirst();
                         if (coldLoad > 1 / finalOptAlpha){
                             coldIndex = i;
                             break;
