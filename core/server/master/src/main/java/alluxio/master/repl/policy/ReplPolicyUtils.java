@@ -31,6 +31,11 @@ public class ReplPolicyUtils {
                                 .map(p -> new Pair<>(p.getFirst(), p.getSecond().length * 1.0 / allSize))
                                 .collect(Collectors.toList())
                 ));
+        return calcGlobalAlpha(allLoadSize, budget, costCalculator);
+
+    }
+
+    public static double calcGlobalAlpha(Map<AlluxioURI, List<Pair<Double, Double>>> allLoadSize, double budget, CostCalculator costCalculator) {
         // ascending order
         List<Double> sortedLoads = allLoadSize
                 .values()

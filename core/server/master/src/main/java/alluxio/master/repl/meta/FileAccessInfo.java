@@ -96,4 +96,9 @@ public class FileAccessInfo {
         }
         patternCount.merge(pattern, (long) 1, Long::sum);
     }
+
+    public Map<Set<OffLenPair>, Long> getPatternCount() {
+        return patternCount;
+    }
+
 }
