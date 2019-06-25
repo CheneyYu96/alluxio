@@ -245,12 +245,12 @@ policy_env(){
 }
 
 bundle_env(){
-    sed -i "/fr.repl.policy.class=alluxio.master.repl.policy.ColReplPolicy/c\fr.repl.policy.class=alluxio.master.repl.policy.BundleHottestKPolicy" $DIR/alluxio/conf/alluxio-site.properties
+    sed -i "/fr.repl.policy.class=alluxio.master.repl.policy.ColReplPolicy/c\fr.repl.policy.class=alluxio.master.repl.policy.GTBundlingPolicy" $DIR/alluxio/conf/alluxio-site.properties
 #    sed -i "/fr.repl.global=true/c\fr.repl.global=false" $DIR/alluxio/conf/alluxio-site.properties
 }
 
 per_col_env(){
-    sed -i "/fr.repl.policy.class=alluxio.master.repl.policy.BundleHottestKPolicy/c\fr.repl.policy.class=alluxio.master.repl.policy.ColReplPolicy" $DIR/alluxio/conf/alluxio-site.properties
+    sed -i "/fr.repl.policy.class=alluxio.master.repl.policy.GTBundlingPolicy/c\fr.repl.policy.class=alluxio.master.repl.policy.ColReplPolicy" $DIR/alluxio/conf/alluxio-site.properties
 #    sed -i "/fr.repl.global=false/c\fr.repl.global=true" $DIR/alluxio/conf/alluxio-site.properties
 }
 
