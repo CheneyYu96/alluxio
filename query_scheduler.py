@@ -33,6 +33,7 @@ ORIGIN_LOC_FILE = 'origin-locs.txt'
 REPL_LOC_FILE = 'replica-locs.txt'
 IP_NAME_FILE = 'ip-name.txt'
 QUERY_COL_FILE = 'queries-tpch.txt'
+GROUND_TRUTH_FILE = 'pattern-gt.txt'
 
 ALLUXIO_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -41,6 +42,7 @@ origin_locs = {}
 replica_locs = {}
 
 replica_file_path = '{}/../{}'.format(ALLUXIO_DIR, REPL_LOC_FILE)
+gt_file_path = '{}/{}'.format(ALLUXIO_DIR, GROUND_TRUTH_FILE)
 
 class ReplicaLoc:
     def __init__(self, replica, loc, origin, pairs):
@@ -187,10 +189,11 @@ gap_time = lambda past_time : int((now() - past_time) * 1000)
 @click.argument('logs-dir', type=click.Path(exists=True, resolve_path=True))
 @click.option('--policy', type=int, default=0) # 1: column-wise, 0: bundling
 @click.option('--fault', type=int, default=1)
-def submit_query(query, logs_dir, policy, fault):
-    submit_query_internal(query, logs_dir, policy, fault)
+@click.option('--gt', type=bool, default=True)
+def submit_query(query, logs_dir, policy, fault, gt):
+    submit_query_internal(query, logs_dir, policy, fault, gt)
 
-def submit_query_internal(query, logs_dir, policy, fault):
+def submit_query_internal(query, logs_dir, policy, fault, gt):
     all_queries = parse_all_queries()
     if query < 1 or query > len(all_queries):
         print('Invalid query')
@@ -209,6 +212,14 @@ def submit_query_internal(query, logs_dir, policy, fault):
     col_locs_dict = { c: { p: ColLocation(p, c) for p in c.pathes } for c in all_par_cols }
 
     sched_res = policies[policy](table_col_dict, col_locs_dict)
+
+    if gt:
+        with open(gt_file_path, 'a') as f:
+            for p, res in sched_res.items():
+                pattern_str = ''
+                for off, _ in res[1]:
+                    pattern_str = pattern_str + ',{}'.format(off)
+                f.write('{}{}\n'.format(p, pattern_str))
 
     logging.info('Got schedule result.')
     start = now()

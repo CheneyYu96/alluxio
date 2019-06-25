@@ -21,6 +21,7 @@ import fr.client.utils.ReplUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -47,7 +48,7 @@ public class ReplManager {
     private Map<AlluxioURI, FileOffsetInfo> offsetInfoMap;
     private int checkInterval; /* in seconds */
 
-    private String frDir;
+    private final String frDir;
 
     private boolean useParuqetInfo;
     private boolean repeatRepl;
@@ -55,7 +56,9 @@ public class ReplManager {
     private boolean replGlobal;
     private boolean haveRepl;
 
-    private boolean isBudgetAccess;
+    /* init empty access info and record ground truth*/
+    private boolean useAccessInfo;
+    private final String gtFilePath;
 
     public ReplManager() {
         frClient = new FRClient();
@@ -73,9 +76,10 @@ public class ReplManager {
         replGlobal = Configuration.getBoolean(PropertyKey.FR_REPL_GLOBAL);
         haveRepl = false;
 
-        isBudgetAccess = Configuration.getBoolean(PropertyKey.FR_REPL_BUDGET_ACCESS);
+        useAccessInfo = Configuration.getBoolean(PropertyKey.FR_REPL_BUDGET_ACCESS);
 
         frDir = Configuration.get(PropertyKey.FR_REPL_DIR);
+        gtFilePath = "/home/ec2-user/alluxio/pattern-gt.txt";
 
         LOG.info("Create replication manager. check_interval : {}. policy : {}", checkInterval, replPolicy.getClass().getName());
     }
@@ -138,18 +142,20 @@ public class ReplManager {
         LOG.info("Record access for file {}. offset {} length {}", requestFile.getPath(), pair.offset, pair.length);
 
         Map<AlluxioURI, OffLenPair> mappedOffsets = new ConcurrentHashMap<>(ImmutableMap.of(requestFile, pair));
+        FileRepInfo repInfo = fileReplicas.get(requestFile);
+        if (repInfo != null){
+            repInfo.getMappedPairs(pair).forEach(mappedOffsets::put);
+        }
 
-        if(accessRecords.containsKey(requestFile)){
-            accessRecords.get(requestFile).incCount(pair);
-
-            FileRepInfo repInfo = fileReplicas.get(requestFile);
-            if (repInfo != null){
-                repInfo.getMappedPairs(pair).forEach(mappedOffsets::put);
+        // update access counts
+        if (!useAccessInfo) {
+            if (accessRecords.containsKey(requestFile)) {
+                accessRecords.get(requestFile).incCount(pair);
+            } else {
+                accessRecords.put(requestFile, new FileAccessInfo(requestFile, pair));
             }
         }
-        else {
-            accessRecords.put(requestFile, new FileAccessInfo(requestFile, pair));
-        }
+
         return mappedOffsets;
     }
 
@@ -164,7 +170,7 @@ public class ReplManager {
                 LOG.error("File {}'s offset and length does not match", filePath);
             }
 
-            if(isBudgetAccess){
+            if(useAccessInfo){
                 List<OffLenPair> allPairs = IntStream.range(0, offset.size())
                         .mapToObj(i -> new OffLenPair(offset.get(i), length.get(i)))
                         .collect(Collectors.toList());
@@ -180,47 +186,40 @@ public class ReplManager {
                 TimeUnit.SECONDS.sleep(checkInterval);
                 LOG.info("Checking stats for replication");
 
-                // allow bundling offsets from different tables
-                if(replGlobal){
-                    if (repeatRepl){
-                        // TODO: delete all replicas
+                if (repeatRepl){
+                    // TODO: delete all replicas
+                }
+                else{
+                    if (haveRepl){
+                        continue;
                     }
                     else {
-                        if (haveRepl){
-                            continue;
-                        }
-                        else {
-                            haveRepl = true;
-                        }
+                        haveRepl = true;
                     }
 
-                    List<MultiReplUnit> replUnits = replPolicy.calcMultiReplicas(new ArrayList<>(accessRecords.values()));
-
-                    // TODO: treat as ReplUnit now. May allow more complicated ops.
-                    for (MultiReplUnit unit : replUnits){
-                        unit.toReplUnit().forEach((key, value) -> replicate(key, Collections.singletonList(value)));
+                    if(useAccessInfo){
+                        readGTAccessPattern();
                     }
 
-                }
-                else {
-                    accessRecords.forEach((filePath, accessInfo) -> {
+                    // allow bundling offsets from different tables
+                    if(replGlobal){
 
-                        if (fileReplicas.containsKey(filePath)) {
-                            if (repeatRepl) {
-                                // TODO: delay deletion
-                                // delete old replicas
-                                FileRepInfo oldRepInfo = fileReplicas.remove(filePath);
-                                frClient.deleteReplicas(oldRepInfo.getReplicasURI());
-                                LOG.info("Delete replicas for file: {}.", filePath.getPath());
-                            } else {
-                                // just replica once
-                                return;
-                            }
+                        List<MultiReplUnit> replUnits = replPolicy.calcMultiReplicas(new ArrayList<>(accessRecords.values()));
+
+                        // TODO: treat as ReplUnit now. May allow more complicated ops.
+                        for (MultiReplUnit unit : replUnits){
+                            unit.toReplUnit().forEach((key, value) -> replicate(key, Collections.singletonList(value)));
                         }
 
-                        List<ReplUnit> replUnits = replPolicy.calcReplicas(accessInfo);
-                        replicate(filePath, replUnits);
-                    });
+                    }
+                    else {
+                        accessRecords.forEach((filePath, accessInfo) -> {
+
+                            List<ReplUnit> replUnits = replPolicy.calcReplicas(accessInfo);
+                            replicate(filePath, replUnits);
+                        });
+                    }
+
                 }
 
             }
@@ -230,6 +229,27 @@ public class ReplManager {
             LOG.error("Uncaught exception in checking stats", e);
         }
     }
+
+    private void readGTAccessPattern() throws IOException {
+        FileInputStream is = new FileInputStream(gtFilePath);
+        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+        String line;
+        while ((line = reader.readLine()) != null) {
+            String[] accessPattern = line.trim().split(",");
+            String path = accessPattern[0];
+            FileAccessInfo fileAccessInfo = accessRecords.get(new AlluxioURI(path));
+
+            if (fileAccessInfo != null){
+                List<Long> offsInPattern = Arrays.stream(accessPattern).skip(1).map(Long::parseLong).collect(Collectors.toList());
+                fileAccessInfo.addPattern(offsInPattern);
+            }
+            else {
+                LOG.warn("Find null file info when adding pattern. path: {}", path);
+            }
+        }
+        is.close();
+    }
+
 
     private void replicate(AlluxioURI filePath, List<ReplUnit> replUnits){
         if (replUnits != null && replUnits.size() > 0) {

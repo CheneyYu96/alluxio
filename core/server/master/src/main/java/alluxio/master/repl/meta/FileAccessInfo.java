@@ -7,6 +7,7 @@ import alluxio.collections.ConcurrentHashSet;
 import alluxio.util.CommonUtils;
 import fr.client.utils.OffLenPair;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,11 +21,12 @@ public class FileAccessInfo {
     private AlluxioURI mFilePath;
     private Map<OffLenPair, Long> offsetCount;
 
-
     private long queryNum;
     private long lastAccessTime; /* estimate query based on interval */
     private long recordInterval;
     private Set<OffLenPair> offsetWithinQuery;
+
+    private Map<Set<OffLenPair>, Long> patternCount;
 
     public FileAccessInfo(AlluxioURI filePath) {
         mFilePath = filePath;
@@ -33,8 +35,9 @@ public class FileAccessInfo {
         queryNum = 0;
         lastAccessTime = 0;
         recordInterval = Configuration.getLong(PropertyKey.FR_RECORD_INTERVAL);
-
         offsetWithinQuery = new ConcurrentHashSet<>();
+
+        patternCount = new ConcurrentHashMap<>();
     }
 
     public FileAccessInfo(AlluxioURI mFilePath, OffLenPair accessPair) {
@@ -81,5 +84,16 @@ public class FileAccessInfo {
         }
 
         lastAccessTime = currentTime;
+    }
+
+    public void addPattern(List<Long> offInPattern){
+        Set<OffLenPair> pattern = new HashSet<>();
+        for (long off : offInPattern){
+            OffLenPair offLenPair = offsetCount.keySet().stream().filter( p -> p.offset == off).findFirst().get();
+
+            offsetCount.merge(offLenPair, (long) 1, Long::sum);
+            pattern.add(offLenPair);
+        }
+        patternCount.merge(pattern, (long) 1, Long::sum);
     }
 }
