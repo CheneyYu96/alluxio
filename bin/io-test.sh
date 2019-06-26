@@ -180,7 +180,7 @@ clear(){
     remove $DIR/alluxio/origin-locs.txt
     remove $DIR/replica-locs.txt
 
-    remove $DIR/pattern-gt.txt
+    remove $DIR/alluxio/pattern-gt.txt
 
     workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
 
