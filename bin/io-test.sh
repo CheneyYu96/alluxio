@@ -398,7 +398,7 @@ all_query_con_test(){
     now=$(date "+%s")
     tm=$((now-start))
 
-    sleep_time=$((interval+300-tm))
+    sleep_time=$((interval+600-tm))
 
     sleep ${sleep_time}
 
