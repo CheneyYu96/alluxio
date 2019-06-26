@@ -42,7 +42,7 @@ public class ReplPolicyUtils {
                 .stream()
                 .flatMap(Collection::stream)
                 .map(Pair::getFirst)
-                .sorted((e1, e2) -> e1 > e2 ? 1 : -1)
+                .sorted()
                 .collect(Collectors.toList());
 
         LOG.info("All loads: {}", sortedLoads);
