@@ -188,7 +188,7 @@ gap_time = lambda past_time : int((now() - past_time) * 1000)
 @click.argument('query', type=int)
 @click.argument('logs-dir', type=click.Path(exists=True, resolve_path=True))
 @click.option('--policy', type=int, default=0) # 1: column-wise, 0: bundling
-@click.option('--fault', type=int, default=1)
+@click.option('--fault', type=int, default=0)
 @click.option('--gt', type=bool, default=True)
 def submit_query(query, logs_dir, policy, fault, gt):
     submit_query_internal(query, logs_dir, policy, fault, gt)
@@ -272,6 +272,7 @@ def bundling_policy(table_col_dict, col_locs_dict):
                 # random pick one replica to serve
                 random.shuffle(all_cols_repl)
                 sched_res[p] = (all_cols_repl[0], col_pair, all_cols_repl[1:] + [origin_locs[p]])
+                logging.info('Served by replica. table: {}, path: {}, loc: {}'.format(t, p, all_cols_repl[0]))
             else:
                 # served by origin table
                 random.shuffle(all_possible_locs)
