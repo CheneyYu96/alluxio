@@ -8,7 +8,7 @@ source ${LOCAL_DIR}/utils.sh
 
 FROM_HDFS=0
 NEED_PAR_INFO=1
-PER_COL=0
+PER_COL=2
 
 FAULT=0
 
