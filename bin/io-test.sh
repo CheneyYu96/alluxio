@@ -379,6 +379,7 @@ query_con_test(){
 all_query_con_test(){
     rate=$1
     limit=$2
+    query=0
 
     interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
 
