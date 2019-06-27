@@ -177,13 +177,17 @@ extract_par_info(){
 
 clear(){
     remove $DIR/logs
-    remove $DIR/alluxio_env
     remove $DIR/alluxio/logs
+
+    rm_env
+}
+
+rm_env(){
+    remove $DIR/alluxio_env
     remove $DIR/alluxio/origin-locs.txt
     remove $DIR/replica-locs.txt
 
     remove $DIR/alluxio/pattern-gt.txt
-
     workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
 
     worker_num=(`cat /home/ec2-user/hadoop/conf/slaves | wc -l`)
@@ -192,12 +196,6 @@ clear(){
     for i in `seq 0 ${worker_num}`; do
         ssh ec2-user@${workers[$i]} -o StrictHostKeyChecking=no "rm /home/ec2-user/logs/*"
     done
-}
-
-rm_env(){
-    remove $DIR/alluxio_env
-    remove $DIR/alluxio/origin-locs.txt
-    remove $DIR/replica-locs.txt
 }
 
 complie_job(){
@@ -322,7 +320,7 @@ timeout=5
 
 
 #####################
-#  call python test script
+#  call python test script, single query
 #####################
 query_con_test(){
     rate=$1
@@ -421,6 +419,17 @@ all_query_con_test(){
     free_limit
 }
 
+auto_all_query_test(){
+
+    for rt in 10 20 30; do
+        for plc in 0 1 2; do
+            PER_COL=${plc}
+            all_query_con_test ${rt} 1000000
+            rm_env
+        done
+    done
+}
+
 loc_wait=$(cat ../spark/conf/spark-defaults.conf | grep locality | cut -d ' ' -f 2)
 
 
@@ -458,6 +467,8 @@ else
         py)                     query_con_test $2 $3
                                 ;;
         py-all)                 all_query_con_test $2 $3
+                                ;;
+        auto)                   auto_all_query_test
                                 ;;
         * )                     usage
     esac

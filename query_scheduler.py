@@ -295,6 +295,9 @@ def col_wise_policy(table_col_dict, col_locs_dict):
             all_possible_locs = list(all_possible_locs)
             random.shuffle(all_possible_locs)
             sched_res[p] = (all_possible_locs[0], col_pair, all_possible_locs[1:])
+            if all_possible_locs[0] != origin_locs[p]:
+                logging.info('Served by replica. table: {}, path: {}, loc: {}'.format(t, p, all_possible_locs[0]))
+
     return sched_res
 
 def table_wise_policy(table_col_dict, col_locs_dict):
