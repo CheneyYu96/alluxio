@@ -298,7 +298,7 @@ def col_wise_policy(table_col_dict, col_locs_dict):
     return sched_res
 
 def table_wise_policy(table_col_dict, col_locs_dict):
-    col_wise_policy(table_col_dict, col_locs_dict)
+    return col_wise_policy(table_col_dict, col_locs_dict)
 
 policies = {
     0: bundling_policy,
