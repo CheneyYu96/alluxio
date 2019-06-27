@@ -378,7 +378,7 @@ query_con_test(){
 
 all_query_con_test(){
     rate=$1
-    query=$2
+    limit=$2
 
     interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
 
@@ -388,7 +388,7 @@ all_query_con_test(){
     start=$(date "+%s")
 
     init_alluxio_status
-    limit_bandwidth 1000000
+    limit_bandwidth ${limit}
 
     cd ${DIR}/alluxio
     python con_query_test.py \
