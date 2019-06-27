@@ -51,7 +51,7 @@ class ZipFGenerator:
 @click.argument('timeout', type=int) # minute
 @click.argument('query', type=int)
 @click.argument('logdir', type=str)
-@click.option('--policy', type=int, default=0) # 1: column-wise, 0: bundling
+@click.option('--policy', type=int, default=0) # 0: bundling, 1: column-wise, 2: table
 @click.option('--fault', type=int, default=0)
 @click.option('--gt', type=bool, default=True)
 def poisson_test(rate, timeout, query, logdir, policy, fault, gt):

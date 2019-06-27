@@ -187,7 +187,7 @@ gap_time = lambda past_time : int((now() - past_time) * 1000)
 @click.command()
 @click.argument('query', type=int)
 @click.argument('logs-dir', type=click.Path(exists=True, resolve_path=True))
-@click.option('--policy', type=int, default=0) # 1: column-wise, 0: bundling
+@click.option('--policy', type=int, default=0) # 0: bundling, 1: column-wise, 2: table
 @click.option('--fault', type=int, default=0)
 @click.option('--gt', type=bool, default=True)
 def submit_query(query, logs_dir, policy, fault, gt):
@@ -297,9 +297,13 @@ def col_wise_policy(table_col_dict, col_locs_dict):
             sched_res[p] = (all_possible_locs[0], col_pair, all_possible_locs[1:])
     return sched_res
 
+def table_wise_policy(table_col_dict, col_locs_dict):
+    col_wise_policy(table_col_dict, col_locs_dict)
+
 policies = {
     0: bundling_policy,
     1: col_wise_policy,
+    2: table_wise_policy,
 }
 
 if __name__ == '__main__':

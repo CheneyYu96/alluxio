@@ -208,7 +208,7 @@ conv_env(){
 }
 
 fr_env(){
-    sed -i "/alluxio.user.block.size.bytes.default=900MB/c\alluxio.user.block.size.bytes.default=1GB" $DIR/alluxio/conf/alluxio-site.properties
+    sed -i '/^alluxio.user.block.size.bytes.default=/calluxio.user.block.size.bytes.default=1GB' $DIR/alluxio/conf/alluxio-site.properties
 
     sed -i "/fr.client.translation=false/c\fr.client.translation=true" $DIR/alluxio/conf/alluxio-site.properties
 
@@ -230,28 +230,29 @@ fr_env(){
 }
 
 non_fr_env(){
-
     sed -i "/fr.client.translation=true/c\fr.client.translation=false" $DIR/alluxio/conf/alluxio-site.properties
 
      ${DIR}/alluxio/bin/restart.sh
 }
 
 default_env(){
-    sed -i "/fr.repl.interval=300/c\fr.repl.interval=30000" $DIR/alluxio/conf/alluxio-site.properties
+    sed -i '/^fr.repl.interval=/cfr.repl.interval=30000' $DIR/alluxio/conf/alluxio-site.properties
 }
 
 policy_env(){
-    sed -i "/fr.repl.interval=30000/c\fr.repl.interval=300" $DIR/alluxio/conf/alluxio-site.properties
+    sed -i '/^fr.repl.interval=/cfr.repl.interval=300' $DIR/alluxio/conf/alluxio-site.properties
 }
 
 bundle_env(){
-    sed -i "/fr.repl.policy.class=alluxio.master.repl.policy.ColReplPolicy/c\fr.repl.policy.class=alluxio.master.repl.policy.GTBundlingPolicy" $DIR/alluxio/conf/alluxio-site.properties
-#    sed -i "/fr.repl.global=true/c\fr.repl.global=false" $DIR/alluxio/conf/alluxio-site.properties
+    sed -i '/^fr.repl.policy.class=/cfr.repl.policy.class=alluxio.master.repl.policy.GTBundlingPolicy' $DIR/alluxio/conf/alluxio-site.properties
 }
 
 per_col_env(){
-    sed -i "/fr.repl.policy.class=alluxio.master.repl.policy.GTBundlingPolicy/c\fr.repl.policy.class=alluxio.master.repl.policy.ColReplPolicy" $DIR/alluxio/conf/alluxio-site.properties
-#    sed -i "/fr.repl.global=false/c\fr.repl.global=true" $DIR/alluxio/conf/alluxio-site.properties
+    sed -i '/^fr.repl.policy.class=/cfr.repl.policy.class=alluxio.master.repl.policy.ColReplPolicy' $DIR/alluxio/conf/alluxio-site.properties
+}
+
+table_repl_env(){
+    sed -i '/^fr.repl.policy.class=/cfr.repl.policy.class=alluxio.master.repl.policy.TableReplPolicy' $DIR/alluxio/conf/alluxio-site.properties
 }
 
 get_dir_index(){

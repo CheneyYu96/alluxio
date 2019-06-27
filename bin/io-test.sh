@@ -63,10 +63,12 @@ init_alluxio_status(){
     if [[ `cat ${ALLUXIO_ENV}` == "1" ]]; then
         echo 'Alluxio env already prepared'
     else
-        if [[ "${PER_COL}" -eq "1" ]]; then
-            per_col_env
-        else
+        if [[ "${PER_COL}" -eq "0" ]]; then
             bundle_env
+        elif [[ "${PER_COL}" -eq "1" ]]; then
+            per_col_env
+        elif [[ "${PER_COL}" -eq "2" ]]; then
+            table_repl_env
         fi
 
         fr_env
