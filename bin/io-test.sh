@@ -192,6 +192,7 @@ rm_env_except_pattern(){
     remove $DIR/alluxio/origin-locs.txt
     remove $DIR/replica-locs.txt
 
+    workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
     worker_num=(`cat /home/ec2-user/hadoop/conf/slaves | wc -l`)
     worker_num=$(($worker_num-2))
 
