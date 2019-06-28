@@ -183,12 +183,14 @@ clear(){
 }
 
 rm_env(){
+    rm_env_except_pattern
+    remove $DIR/alluxio/pattern-gt.txt
+}
+
+rm_env_except_pattern(){
     remove $DIR/alluxio_env
     remove $DIR/alluxio/origin-locs.txt
     remove $DIR/replica-locs.txt
-
-    remove $DIR/alluxio/pattern-gt.txt
-    workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
 
     worker_num=(`cat /home/ec2-user/hadoop/conf/slaves | wc -l`)
     worker_num=$(($worker_num-2))
@@ -419,14 +421,65 @@ all_query_con_test(){
     free_limit
 }
 
-auto_all_query_test(){
+limit=3000000
 
-    for rt in 10 20 30; do
-        for plc in 0 1 2; do
-            PER_COL=${plc}
-            all_query_con_test ${rt} 1000000
-            rm_env
-        done
+auto_all_query_test(){
+    rate=$1
+    timeout=$2
+    query=0
+
+    df_log_dir_name=$(get_dir_index py_q${query}_rt${rate}_dft_)
+
+    default_env
+    init_alluxio_status
+    limit_bandwidth ${limit}
+
+    cd ${DIR}/alluxio
+    python con_query_test.py \
+        ${rate} \
+        ${timeout} \
+        ${query} \
+        ${df_log_dir_name} \
+        --policy ${PER_COL} \
+        --fault ${FAULT} \
+        --gt True
+
+    free_limit
+
+    for plc in 0 1 2; do
+        PER_COL=${plc}
+
+        rm_env_except_pattern
+
+        policy_env
+
+        interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
+        start=$(date "+%s")
+
+        init_alluxio_status
+
+        now=$(date "+%s")
+        tm=$((now-start))
+
+        sleep_time=$((interval+300-tm))
+
+        sleep ${sleep_time} # wait util replication finished
+
+        limit_bandwidth ${limit}
+
+        plc_log_dir_name=$(get_dir_index py_q${query}_rt${rate}_plc${PER_COL}_)
+
+        cd ${DIR}/alluxio
+        python con_query_test.py \
+            ${rate} \
+            ${timeout} \
+            ${query} \
+            ${plc_log_dir_name} \
+            --policy ${PER_COL} \
+            --fault ${FAULT} \
+            --gt False
+
+        free_limit
     done
 }
 
@@ -468,7 +521,7 @@ else
                                 ;;
         py-all)                 all_query_con_test $2 $3
                                 ;;
-        auto)                   auto_all_query_test
+        auto)                   auto_all_query_test $2 $3
                                 ;;
         * )                     usage
     esac

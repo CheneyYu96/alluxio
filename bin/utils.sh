@@ -236,7 +236,7 @@ non_fr_env(){
 }
 
 default_env(){
-    sed -i '/^fr.repl.interval=/cfr.repl.interval=30000' $DIR/alluxio/conf/alluxio-site.properties
+    sed -i '/^fr.repl.interval=/cfr.repl.interval=300000' $DIR/alluxio/conf/alluxio-site.properties
 }
 
 policy_env(){
