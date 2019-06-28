@@ -81,6 +81,8 @@ init_alluxio_status(){
 
         echo '1' > ${ALLUXIO_ENV}
     fi
+
+    mkdir -p ${DIR}/logs
 }
 
 trace_test(){
@@ -505,7 +507,7 @@ else
                                 ;;
         auto)                   auto_all_query_test $2 $3
                                 ;;
-        skew)                   skew_cmpr_test $2
+        skew)                   skew_cmpr_test $2 $3
                                 ;;
         * )                     usage
     esac
