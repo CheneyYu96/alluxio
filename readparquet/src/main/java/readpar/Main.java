@@ -1,10 +1,6 @@
 package readpar;
 
-import fr.client.utils.OffLenPair;
-
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  *
@@ -18,14 +14,13 @@ public class Main {
 
             String fileName = args[0];
 
-            List<OffLenPair> columnsToRead = new ArrayList<>();
-            for (int i = 1; i < args.length; i=i+2){
-                columnsToRead.add(
-                        new OffLenPair(Long.parseLong(args[i]), Long.parseLong(args[i + 1])));
+            long[] segs = new long[args.length - 1];
+            for (int i = 1; i < args.length; i++){
+                segs[i - 1] = Long.parseLong(args[i]);
             }
 
             FRParquetReader parquetInfo = new FRParquetReader();
-            parquetInfo.read(fileName, columnsToRead);
+            parquetInfo.read(fileName, segs);
 
             System.out.println("Main-execution time: " + (System.currentTimeMillis() - startTime));
         }
