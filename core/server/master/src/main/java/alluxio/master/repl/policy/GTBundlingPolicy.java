@@ -67,13 +67,16 @@ public class GTBundlingPolicy implements ReplPolicy {
 
                     int replicas = (int) Math.ceil(finalOptAlpha * hotL);
 
-                    LOG.info("File: {}. all columns: {}. cold index: {}. bundle columns: {}. replicas: {}. offsets: {}",
+                    String loadStr = loads.stream().map(p -> p.getSecond().offset + "," + p.getSecond().length + "," + p.getFirst() + "|").reduce("", String::concat);
+
+                    LOG.info("Log all loads. load: {}. path: {}", loadStr, info.getFilePath().getPath());
+
+                    LOG.info("File: {}. all columns: {}. cold index: {}. bundle columns: {}. replicas: {}.",
                             info.getFilePath().getPath(),
                             loads.size(),
                             coldIndex,
                             hotOffs.size(),
-                            replicas,
-                            hotOffs);
+                            replicas);
 
                     return new MultiReplUnit(info.getFilePath(), hotOffs, replicas);
                 })
