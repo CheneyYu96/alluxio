@@ -323,59 +323,8 @@ timeout=5
 
 
 #####################
-#  call python test script, single query
+#  call python test script
 #####################
-query_con_test(){
-    rate=$1
-    query=$2
-
-    interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
-
-    df_log_dir_name=$(get_dir_index py_q${query}_rt${rate}_dft_)
-
-    default_env
-
-    init_alluxio_status
-    limit_bandwidth 1000000
-
-    cd ${DIR}/alluxio
-    python con_query_test.py \
-        ${rate} \
-        ${timeout} \
-        ${query} \
-        ${df_log_dir_name} \
-        --policy ${PER_COL} \
-        --fault ${FAULT}
-
-    free_limit
-
-    policy_env
-    rm_env
-    init_alluxio_status
-
-    limit_bandwidth 1000000
-    #    warm up
-    log_dir_name=$DIR/logs/warmup
-    mkdir -p ${log_dir_name}
-    python query_scheduler.py ${query} ${log_dir_name} --policy ${PER_COL} --fault ${FAULT} > ${log_dir_name}/master.log 2>&1
-
-    remove ${log_dir_name}
-
-    sleep 300
-    pl_log_dir_name=$(get_dir_index py_q${query}_rt${rate}_plc${PER_COL}_)
-
-    cd ${DIR}/alluxio
-    python con_query_test.py \
-        ${rate} \
-        ${timeout} \
-        ${query} \
-        ${pl_log_dir_name} \
-        --policy ${PER_COL} \
-        --fault ${FAULT}
-
-    free_limit
-
-}
 
 all_query_con_test(){
     rate=$1
@@ -399,7 +348,8 @@ all_query_con_test(){
         ${query} \
         ${df_log_dir_name} \
         --policy ${PER_COL} \
-        --fault ${FAULT}
+        --fault ${FAULT} \
+        --dist ${DIST}
 
     now=$(date "+%s")
     tm=$((now-start))
@@ -417,12 +367,14 @@ all_query_con_test(){
         ${query} \
         ${pl_log_dir_name} \
         --policy ${PER_COL} \
-        --fault ${FAULT}
+        --fault ${FAULT} \
+        --dist ${DIST}
 
     free_limit
 }
 
 limit=5000000
+DIST=2
 
 auto_all_query_test(){
     rate=$1
@@ -443,7 +395,8 @@ auto_all_query_test(){
         ${df_log_dir_name} \
         --policy ${PER_COL} \
         --fault ${FAULT} \
-        --gt True
+        --gt True \
+        --dist ${DIST}
 
     free_limit
 
@@ -478,9 +431,21 @@ auto_all_query_test(){
             ${plc_log_dir_name} \
             --policy ${PER_COL} \
             --fault ${FAULT} \
-            --gt False
+            --gt False \
+            --dist ${DIST}
 
         free_limit
+    done
+}
+
+skew_cmpr_test(){
+    rate=$1
+
+    PER_COL=0
+
+    for DIST in 0 1 2 3; do
+        all_query_con_test ${rate} ${limit}
+        rm_env
     done
 }
 
@@ -518,11 +483,11 @@ else
                                 ;;
         con-all)                con_all_test $2 $3
                                 ;;
-        py)                     query_con_test $2 $3
-                                ;;
         py-all)                 all_query_con_test $2 $3
                                 ;;
         auto)                   auto_all_query_test $2 $3
+                                ;;
+        skew)                   skew_cmpr_test $2
                                 ;;
         * )                     usage
     esac
