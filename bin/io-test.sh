@@ -176,10 +176,18 @@ extract_par_info(){
 }
 
 clear(){
+    rm_env
+
     remove $DIR/logs
     remove $DIR/alluxio/logs
 
-    rm_env
+    workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
+    worker_num=(`cat /home/ec2-user/hadoop/conf/slaves | wc -l`)
+    worker_num=$(($worker_num-2))
+
+    for i in `seq 0 ${worker_num}`; do
+        ssh ec2-user@${workers[$i]} -o StrictHostKeyChecking=no "rm /home/ec2-user/alluxio/logs/*"
+    done
 }
 
 rm_env(){
@@ -319,25 +327,21 @@ all_policy_test(){
 
 }
 
-timeout=5
-
 
 #####################
 #  call python test script
 #####################
+limit=5000000
+DIST=2
 
 all_query_con_test(){
     rate=$1
-    limit=$2
+    timeout=$2
     query=0
-
-    interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
 
     df_log_dir_name=$(get_dir_index py_q${query}_rt${rate}_dft_)
 
-    timeout=$((interval/60 - 5))
-    start=$(date "+%s")
-
+    default_env
     init_alluxio_status
     limit_bandwidth ${limit}
 
@@ -349,32 +353,45 @@ all_query_con_test(){
         ${df_log_dir_name} \
         --policy ${PER_COL} \
         --fault ${FAULT} \
+        --gt True \
         --dist ${DIST}
+
+    free_limit
+
+    rm_env_except_pattern
+
+    policy_env
+
+    interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
+    start=$(date "+%s")
+
+    init_alluxio_status
 
     now=$(date "+%s")
     tm=$((now-start))
 
-    sleep_time=$((interval+600-tm))
+    sleep_time=$((interval+300-tm))
 
-    sleep ${sleep_time}
+    sleep ${sleep_time} # wait util replication finished
 
-    pl_log_dir_name=$(get_dir_index py_q${query}_rt${rate}_plc${PER_COL}_)
+    limit_bandwidth ${limit}
+
+    plc_log_dir_name=$(get_dir_index py_q${query}_rt${rate}_plc${PER_COL}_)
 
     cd ${DIR}/alluxio
     python con_query_test.py \
         ${rate} \
         ${timeout} \
         ${query} \
-        ${pl_log_dir_name} \
+        ${plc_log_dir_name} \
         --policy ${PER_COL} \
         --fault ${FAULT} \
+        --gt False \
         --dist ${DIST}
 
     free_limit
 }
 
-limit=5000000
-DIST=2
 
 auto_all_query_test(){
     rate=$1
