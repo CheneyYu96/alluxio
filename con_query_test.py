@@ -20,14 +20,6 @@ now = lambda: time.time()
 gap_time = lambda past_time : int((now() - past_time) * 1000)
 
 ALLUXIO_DIR = os.path.dirname(os.path.abspath(__file__))
-pop_file = '{}/{}'.format(ALLUXIO_DIR, 'pop.txt')
-
-query_pop_dict = {}
-if os.path.isfile(pop_file):
-    with open(pop_file, 'r') as f:
-        for line in f:
-            q_p = [ i for i in line.strip().split(',') if i ]
-            query_pop_dict[int(q_p[0])] = int(q_p[1])
 
 class ZipFGenerator:
 	def __init__(self, count, alpha):
@@ -54,11 +46,29 @@ class ZipFGenerator:
 @click.option('--policy', type=int, default=0) # 0: bundling, 1: column-wise, 2: table
 @click.option('--fault', type=int, default=0)
 @click.option('--gt', type=bool, default=True)
-def poisson_test(rate, timeout, query, logdir, policy, fault, gt):
+@click.option('--dist', type=int, default=2)
+def poisson_test(rate, timeout, query, logdir, policy, fault, gt, dist):
+
+    pop_files = {
+        0: 'pop-uniform.txt',
+        1: 'pop-zipf0.5.txt',
+        2: 'pop-zipf1.txt',
+        3: 'pop-zipf1.5.txt',
+    }
+
+    pop_file = '{}/{}'.format(ALLUXIO_DIR, pop_files[dist])
+
+    query_pop_dict = {}
+    if os.path.isfile(pop_file):
+        with open(pop_file, 'r') as f:
+            for line in f:
+                q_p = [ i for i in line.strip().split(',') if i ]
+                query_pop_dict[int(q_p[0])] = int(q_p[1])
+
 
     metrics = {}
 
-    pool = ThreadPoolExecutor(rate * 3)
+    pool = ThreadPoolExecutor(rate * 10)
     for _ in range(timeout):
         avg_interval = 60 * 1.0 / rate
         interval_samples = np.random.poisson(avg_interval, rate)
@@ -112,7 +122,7 @@ def mkdir(newdir):
 
 if __name__ == '__main__':
     poisson_test()
-    # g = ZipFGenerator(22, 1.)
+    # g = ZipFGenerator(22, 0.5)
     # pops = g.generate(size=100)
 
     # with open(pop_file, 'w') as f:

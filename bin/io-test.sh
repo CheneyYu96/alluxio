@@ -421,7 +421,7 @@ all_query_con_test(){
     free_limit
 }
 
-limit=3000000
+limit=5000000
 
 auto_all_query_test(){
     rate=$1
