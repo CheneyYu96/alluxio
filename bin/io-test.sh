@@ -457,11 +457,12 @@ auto_all_query_test(){
 
 skew_cmpr_test(){
     rate=$1
+    timeout=$2
 
     PER_COL=0
 
     for DIST in 0 1 2 3; do
-        all_query_con_test ${rate} ${limit}
+        all_query_con_test ${rate} ${timeout}
         rm_env
     done
 }
