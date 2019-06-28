@@ -400,26 +400,27 @@ auto_all_query_test(){
     timeout=$2
     query=0
 
-    df_log_dir_name=$(get_dir_index py_q${query}_rt${rate}_dft_)
+#    df_log_dir_name=$(get_dir_index py_q${query}_rt${rate}_dft_)
+#
+#    default_env
+#    init_alluxio_status
+#    limit_bandwidth ${limit}
+#
+#    cd ${DIR}/alluxio
+#    python con_query_test.py \
+#        ${rate} \
+#        ${timeout} \
+#        ${query} \
+#        ${df_log_dir_name} \
+#        --policy ${PER_COL} \
+#        --fault ${FAULT} \
+#        --gt True \
+#        --dist ${DIST}
+#
+#    free_limit
 
-    default_env
-    init_alluxio_status
-    limit_bandwidth ${limit}
-
-    cd ${DIR}/alluxio
-    python con_query_test.py \
-        ${rate} \
-        ${timeout} \
-        ${query} \
-        ${df_log_dir_name} \
-        --policy ${PER_COL} \
-        --fault ${FAULT} \
-        --gt True \
-        --dist ${DIST}
-
-    free_limit
-
-    for plc in 0 1 2; do
+#    for plc in 0 1 2; do
+    for plc in 2; do
         PER_COL=${plc}
 
         rm_env_except_pattern
