@@ -503,6 +503,8 @@ else
                                 ;;
         clear)                  clear
                                 ;;
+        rm-env)                 rm_env
+                                ;;
         cpjob)                   complie_job
                                 ;;
         band-all)               bandwidth_test_all $2 $3
