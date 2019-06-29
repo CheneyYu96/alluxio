@@ -478,7 +478,7 @@ band_cmpr_test(){
 
     PER_COL=1
 
-    for band in 1000000 3000000 5000000; do
+    for band in 5000000; do
         limit=${band}
         all_query_con_test ${rate} ${timeout}
         rm_env
