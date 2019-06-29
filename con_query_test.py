@@ -65,6 +65,7 @@ def poisson_test(rate, timeout, query, logdir, policy, fault, gt, dist):
                 q_p = [ i for i in line.strip().split(',') if i ]
                 query_pop_dict[int(q_p[0])] = int(q_p[1])
 
+    logging.info('pop distribution:{}, file: {}'.format(dist, pop_file))
 
     metrics = {}
 
