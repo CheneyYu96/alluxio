@@ -485,6 +485,17 @@ band_cmpr_test(){
     done
 }
 
+rate_auto_test(){
+    timeout=$1
+
+    for rt in 20 40 60; do
+        rate=${rt}
+        auto_all_query_test ${rate} ${timeout}
+        mv ${DIR}/logs ${DIR}/r${rt}logs
+        rm_env
+    done
+}
+
 loc_wait=$(cat ../spark/conf/spark-defaults.conf | grep locality | cut -d ' ' -f 2)
 
 
@@ -526,6 +537,8 @@ else
         skew)                   skew_cmpr_test $2 $3
                                 ;;
         band)                   band_cmpr_test $2 $3
+                                ;;
+        rate)                   rate_auto_test $2
                                 ;;
         * )                     usage
     esac
