@@ -190,6 +190,8 @@ clear(){
     for i in `seq 0 ${worker_num}`; do
         ssh ec2-user@${workers[$i]} -o StrictHostKeyChecking=no "rm /home/ec2-user/alluxio/logs/*"
     done
+
+    ps -aux | grep python | awk '{print $2}' | xargs kill -9
 }
 
 rm_env(){
