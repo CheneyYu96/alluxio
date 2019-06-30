@@ -27,10 +27,13 @@ public class ParquetInfo {
     public ParquetInfo() {
         mFileSystem = FileSystem.Factory.get();
         locationsFile = System.getProperty("user.dir") + "/origin-locs.txt";
-
     }
 
     public void sendInfo(String filePath, String infoPath) throws IOException{
+        sendInfo(filePath, infoPath, 1);
+    }
+
+    public void sendInfo(String filePath, String infoPath, int isRecord) throws IOException{
         long startTimeMs = CommonUtils.getCurrentMs();
 
         List<Long> offset = new ArrayList<>();
@@ -55,6 +58,13 @@ public class ParquetInfo {
 
         System.out.println("Send parquet file info. " + filePath + "; elapsed:" + (CommonUtils.getCurrentMs() - startTimeMs));
 
+        if (isRecord == 1) {
+            recordLoc(filePath);
+        }
+
+    }
+
+    private void recordLoc(String filePath) throws IOException {
         WorkerNetAddress address = FRUtils.getFileLocation(new AlluxioURI(filePath), mFileSystem, FileSystemContext.get());
         if (address == null){
             System.err.println("File block address is null");
@@ -63,7 +73,6 @@ public class ParquetInfo {
         FileWriter fw = new FileWriter(locationsFile, true);
         fw.write(filePath + "," + address.getHost() + "\n");
         fw.close();
-
     }
 
     public void writeParquet(String locationFile) throws IOException {
