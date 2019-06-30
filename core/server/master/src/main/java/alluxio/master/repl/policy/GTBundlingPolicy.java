@@ -125,14 +125,12 @@ public class GTBundlingPolicy implements ReplPolicy {
                 }
             }
 
-            double hotL = 0;
             if (coldIndex >= 0) {
                 double allL = loadSize.get(loadSize.size() - 1).getFirst();
-                hotL = allL - loadSize.get(coldIndex).getFirst();
+                double hotL = allL - loadSize.get(coldIndex).getFirst();
+                double hotS = loadSize.stream().skip(coldIndex).map(Pair::getSecond).reduce(0.0, Double::sum);
+                cost = cost + (int) Math.ceil(alpha * hotL) * hotS;
             }
-            double hotS = loadSize.stream().skip(coldIndex).map(Pair::getSecond).reduce(0.0, Double::sum);
-
-            cost = cost + (int) Math.ceil(alpha * hotL) * hotS;
         }
 
         return cost;
