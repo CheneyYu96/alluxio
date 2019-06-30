@@ -63,6 +63,12 @@ init_alluxio_status(){
         convert_test $scl
     fi
 
+    if [[ -f $DIR/alluxio/origin-locs.txt ]]; then
+        default_move_par=0
+    else
+        default_move_par=1
+    fi
+
     if [[ `cat ${ALLUXIO_ENV}` == "1" ]]; then
         echo 'Alluxio env already prepared'
     else
@@ -192,6 +198,7 @@ clear(){
 
     remove $DIR/logs
     remove $DIR/alluxio/logs
+    remove $DIR/alluxio/origin-locs.txt
 
     workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
     worker_num=(`cat /home/ec2-user/hadoop/conf/slaves | wc -l`)
@@ -210,7 +217,6 @@ rm_env(){
 
 rm_env_except_pattern(){
     remove $DIR/alluxio_env
-    remove $DIR/alluxio/origin-locs.txt
     remove $DIR/replica-locs.txt
 
     workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
