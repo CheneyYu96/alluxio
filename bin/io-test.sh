@@ -466,7 +466,7 @@ skew_cmpr_test(){
 
     PER_COL=0
 
-    for DIST in 0 1; do
+    for DIST in 0 1 2 3; do
         all_query_con_test ${rate} ${timeout}
         rm_env
     done
@@ -478,7 +478,7 @@ band_cmpr_test(){
 
     PER_COL=1
 
-    for band in 5000000; do
+    for band in 1000000 3000000 5000000; do
         limit=${band}
         all_query_con_test ${rate} ${timeout}
         rm_env
