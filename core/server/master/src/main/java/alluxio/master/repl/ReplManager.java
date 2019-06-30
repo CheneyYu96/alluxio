@@ -142,7 +142,10 @@ public class ReplManager {
 
         LOG.debug("Record access for file {}. offset {} length {}", requestFile.getPath(), pair.offset, pair.length);
 
-        Map<AlluxioURI, OffLenPair> mappedOffsets = new ConcurrentHashMap<>(ImmutableMap.of(requestFile, pair));
+        Map<AlluxioURI, OffLenPair> mappedOffsets = new ConcurrentHashMap<>();
+        if (!deleteOrigin){
+            mappedOffsets.put(requestFile, pair);
+        }
         FileRepInfo repInfo = fileReplicas.get(requestFile);
         if (repInfo != null){
             repInfo.getMappedPairs(pair).forEach(mappedOffsets::put);
