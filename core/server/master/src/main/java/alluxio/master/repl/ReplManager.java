@@ -143,9 +143,10 @@ public class ReplManager {
         LOG.debug("Record access for file {}. offset {} length {}", requestFile.getPath(), pair.offset, pair.length);
 
         Map<AlluxioURI, OffLenPair> mappedOffsets = new ConcurrentHashMap<>();
-        if (!deleteOrigin){
+        if (!deleteOrigin || !haveRepl){
             mappedOffsets.put(requestFile, pair);
         }
+
         FileRepInfo repInfo = fileReplicas.get(requestFile);
         if (repInfo != null){
             repInfo.getMappedPairs(pair).forEach(mappedOffsets::put);
@@ -224,9 +225,9 @@ public class ReplManager {
                         });
                     }
 
-                    if(deleteOrigin){
-                        frClient.deleteReplicas(new ArrayList<>(accessRecords.keySet()));
-                    }
+//                    if(deleteOrigin){
+//                        frClient.deleteReplicas(new ArrayList<>(accessRecords.keySet()));
+//                    }
 
                 }
 
