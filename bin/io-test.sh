@@ -336,7 +336,7 @@ all_policy_test(){
 #  call python test script
 #####################
 limit=5000000
-DIST=2
+DIST=0
 
 all_query_con_test(){
     rate=$1
