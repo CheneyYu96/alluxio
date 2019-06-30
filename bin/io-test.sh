@@ -466,7 +466,7 @@ skew_cmpr_test(){
 
     PER_COL=0
 
-    for DIST in 2 3; do
+    for DIST in 0 1; do
         all_query_con_test ${rate} ${timeout}
         rm_env
     done

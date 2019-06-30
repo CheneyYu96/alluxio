@@ -286,6 +286,25 @@ def col_wise_policy(table_col_dict, col_locs_dict):
         for p in part_files:
             avail_locs = [col_locs_dict[c][p] for c in cols ]
 
+            all_possible_locs = set()
+            for col_repl in [ l.replicas for l in avail_locs ]:
+                all_possible_locs = all_possible_locs.union(col_repl)
+
+            col_pair = [ c.path_off_dict[p] for c in cols ]
+            # random pick one replica to serve
+            all_possible_locs = list(all_possible_locs)
+            random.shuffle(all_possible_locs)
+            sched_res[p] = (all_possible_locs[0], col_pair, all_possible_locs[1:])
+
+    return sched_res
+
+def table_wise_policy(table_col_dict, col_locs_dict):
+    sched_res = {}
+    for t, cols in table_col_dict.items():
+        part_files = cols[0].pathes
+        for p in part_files:
+            avail_locs = [col_locs_dict[c][p] for c in cols ]
+
             all_possible_locs = set([origin_locs[p]])
             for col_repl in [ l.replicas for l in avail_locs ]:
                 all_possible_locs = all_possible_locs.union(col_repl)
@@ -299,9 +318,6 @@ def col_wise_policy(table_col_dict, col_locs_dict):
                 logging.info('Served by replica. table: {}, path: {}, loc: {}'.format(t, p, all_possible_locs[0]))
 
     return sched_res
-
-def table_wise_policy(table_col_dict, col_locs_dict):
-    return col_wise_policy(table_col_dict, col_locs_dict)
 
 policies = {
     0: bundling_policy,

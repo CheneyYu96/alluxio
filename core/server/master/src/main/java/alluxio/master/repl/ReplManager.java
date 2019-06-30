@@ -55,6 +55,7 @@ public class ReplManager {
 
     private boolean replGlobal;
     private boolean haveRepl;
+    private boolean deleteOrigin;
 
     /* init empty access info and record ground truth*/
     private boolean useAccessInfo;
@@ -77,6 +78,7 @@ public class ReplManager {
         haveRepl = false;
 
         useAccessInfo = Configuration.getBoolean(PropertyKey.FR_REPL_BUDGET_ACCESS);
+        deleteOrigin = Configuration.getBoolean(PropertyKey.FR_REPL_DEL_ORIGIN);
 
         frDir = Configuration.get(PropertyKey.FR_REPL_DIR);
         gtFilePath = "/home/ec2-user/alluxio/pattern-gt.txt";
@@ -217,6 +219,10 @@ public class ReplManager {
                             List<ReplUnit> replUnits = replPolicy.calcReplicas(accessInfo);
                             replicate(filePath, replUnits);
                         });
+                    }
+
+                    if(deleteOrigin){
+                        frClient.deleteReplicas(new ArrayList<>(accessRecords.keySet()));
                     }
 
                 }

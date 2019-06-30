@@ -4095,6 +4095,7 @@ public final class PropertyKey implements Comparable<PropertyKey> {
     public static final String FR_REPL_GLOBAL = "fr.repl.global";
     public static final String FR_REPL_BUDGET = "fr.repl.budget";
     public static final String FR_REPL_BUDGET_ACCESS = "fr.repl.budget.access";
+    public static final String FR_REPL_DEL_ORIGIN = "fr.repl.delorigin";
 
     public static final String FR_RECORD_INTERVAL = "fr.record.interval";
 
@@ -4626,6 +4627,11 @@ public final class PropertyKey implements Comparable<PropertyKey> {
 
   public static final PropertyKey FR_REPL_BUDGET_ACCESS =
           new Builder(Name.FR_REPL_BUDGET_ACCESS)
+                  .setDefaultValue(false)
+                  .build();
+
+  public static final PropertyKey FR_REPL_DEL_ORIGIN =
+          new Builder(Name.FR_REPL_DEL_ORIGIN)
                   .setDefaultValue(false)
                   .build();
 
