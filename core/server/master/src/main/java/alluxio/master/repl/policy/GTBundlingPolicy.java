@@ -52,18 +52,22 @@ public class GTBundlingPolicy implements ReplPolicy {
                 .map(info -> {
                     List<Pair<Double, OffLenPair>> loads = calcPatternLoad(allSize, info);
 
-                    int coldIndex = 0;
+                    int coldIndex = -1;
 
                     for(int i = 0; i < loads.size(); i++){
                         double coldLoad = loads.get(i).getFirst();
                         if (coldLoad > 1 / finalOptAlpha){
-                            coldIndex = i;
+                            coldIndex = i - 1;
                             break;
                         }
                     }
 
                     List<OffLenPair> hotOffs = loads.stream().skip(coldIndex).map(Pair::getSecond).collect(Collectors.toList());
-                    double hotL = loads.get(coldIndex).getFirst();
+                    double hotL = 0;
+                    if (coldIndex >= 0) {
+                        double allL = loads.get(loads.size() - 1).getFirst();
+                        hotL = allL - loads.get(coldIndex).getFirst();
+                    }
 
                     int replicas = (int) Math.ceil(finalOptAlpha * hotL);
 
@@ -111,17 +115,21 @@ public class GTBundlingPolicy implements ReplPolicy {
     private double calcReplCost(double alpha, Map<AlluxioURI, List<Pair<Double, Double>>> allLoads){
         double cost = 0;
         for (List<Pair<Double, Double>> loadSize : allLoads.values()){
-            int coldIndex = 0;
+            int coldIndex = -1;
 
             for(int i = 0; i < loadSize.size(); i++){
                 double coldLoad = loadSize.get(i).getFirst();
                 if (coldLoad > 1 / alpha){
-                    coldIndex = i;
+                    coldIndex = i - 1;
                     break;
                 }
             }
 
-            double hotL = loadSize.get(coldIndex).getFirst();
+            double hotL = 0;
+            if (coldIndex >= 0) {
+                double allL = loadSize.get(loadSize.size() - 1).getFirst();
+                hotL = allL - loadSize.get(coldIndex).getFirst();
+            }
             double hotS = loadSize.stream().skip(coldIndex).map(Pair::getSecond).reduce(0.0, Double::sum);
 
             cost = cost + (int) Math.ceil(alpha * hotL) * hotS;
