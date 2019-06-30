@@ -526,6 +526,20 @@ rate_auto_test(){
 loc_wait=$(cat ../spark/conf/spark-defaults.conf | grep locality | cut -d ' ' -f 2)
 
 
+skew_band_test(){
+    rate=$1
+    timeout=$2
+
+    skew_cmpr_test ${rate} ${timeout}
+
+    mv $DIR/logs $DIR/skewlogs
+    clear
+
+    band_cmpr_test ${rate} ${timeout}
+
+}
+
+
 if [[ "$#" -lt 3 ]]; then
     usage
     exit 1
@@ -566,6 +580,8 @@ else
         band)                   band_cmpr_test $2 $3
                                 ;;
         rate)                   rate_auto_test $2
+                                ;;
+        skew-band)              skew_band_test $2 $3
                                 ;;
         * )                     usage
     esac
