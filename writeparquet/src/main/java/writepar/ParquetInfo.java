@@ -6,8 +6,6 @@ import alluxio.client.file.FileSystemContext;
 import alluxio.util.CommonUtils;
 import alluxio.wire.WorkerNetAddress;
 import fr.client.utils.FRUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -20,9 +18,6 @@ public class ParquetInfo {
     private FileSystem mFileSystem;
 
     private final String locationsFile;
-
-    private static final Logger LOG = LoggerFactory.getLogger(ParquetInfo.class);
-
 
     public ParquetInfo() {
         mFileSystem = FileSystem.Factory.get();
