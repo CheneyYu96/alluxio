@@ -1,10 +1,15 @@
 package writepar;
 
 import alluxio.AlluxioURI;
+import alluxio.client.WriteType;
 import alluxio.client.file.FileSystem;
 import alluxio.client.file.FileSystemContext;
+import alluxio.client.file.options.CreateFileOptions;
+import alluxio.client.file.policy.SpecificHostPolicy;
+import alluxio.exception.AlluxioException;
 import alluxio.util.CommonUtils;
 import alluxio.wire.WorkerNetAddress;
+import fr.client.file.FRFileWriter;
 import fr.client.utils.FRUtils;
 
 import java.io.*;
@@ -58,6 +63,34 @@ public class ParquetInfo {
         FileWriter fw = new FileWriter(locationsFile, true);
         fw.write(filePath + "," + address.getHost() + "\n");
         fw.close();
+
+    }
+
+    public void writeParquet(String locationFile) throws IOException, AlluxioException {
+
+        FileInputStream is = new FileInputStream(locationFile);
+        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+        String line;
+        while ((line = reader.readLine()) != null) {
+            String[] splitLine = line.split(",");
+            String path = splitLine[0];
+            String address = splitLine[1];
+
+            FRFileWriter writer = new FRFileWriter(new AlluxioURI(path));
+            writer.setWriteOption(CreateFileOptions.defaults().setWriteType(WriteType.MUST_CACHE).setLocationPolicy(new SpecificHostPolicy(address)));
+
+            FileInputStream localFileStream = new FileInputStream(path);
+            File file = new File(path);
+
+            int len = (int) file.length();
+            byte[] tBuf = new byte[len];
+            int tBytesRead = localFileStream.read(tBuf);
+            writer.writeFile(tBuf);
+
+            localFileStream.close();
+
+        }
+        is.close();
 
     }
 }

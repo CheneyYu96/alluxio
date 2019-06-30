@@ -237,10 +237,12 @@ non_fr_env(){
 }
 
 default_env(){
+    default_move_par=1
     sed -i '/^fr.repl.interval=/cfr.repl.interval=300000' $DIR/alluxio/conf/alluxio-site.properties
 }
 
 policy_env(){
+    default_move_par=0
     sed -i '/^fr.repl.interval=/cfr.repl.interval=300' $DIR/alluxio/conf/alluxio-site.properties
 }
 

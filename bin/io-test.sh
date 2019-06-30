@@ -55,7 +55,10 @@ convert(){
     fi
 }
 
+default_move_par=1
+
 init_alluxio_status(){
+
     if [[ ! -d $DIR/tpch_parquet ]]; then
         convert_test $scl
     fi
@@ -74,7 +77,12 @@ init_alluxio_status(){
         fr_env
 #        $DIR/alluxio/bin/alluxio logLevel --logName=alluxio.master.repl.ReplManager --target=master --level=DEBUG
 
-        move_par_data
+        if [[ "${default_move_par}" -eq "1" ]]; then
+            move_par_data
+        else
+            java -jar ${DIR}/alluxio/writeparquet/target/writeparquet-2.0.0-SNAPSHOT.jar ${DIR}/alluxio/origin-locs.txt
+        fi
+
         if [[ "${NEED_PAR_INFO}" -eq "1" ]]; then
              send_par_info
         fi
@@ -496,7 +504,7 @@ band_cmpr_test(){
 rate_auto_test(){
     timeout=$1
 
-    for rt in 20 40 60; do
+    for rt in 20 40 50; do
         rate=${rt}
         auto_all_query_test ${rate} ${timeout}
 

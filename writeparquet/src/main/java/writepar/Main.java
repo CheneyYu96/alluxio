@@ -14,8 +14,12 @@ public class Main {
                 parquetInfo.sendInfo(args[i], args[i+1]);
             }
         }
+        else if (args.length == 1){
+            ParquetInfo parquetInfo = new ParquetInfo();
+            parquetInfo.writeParquet(args[0]);
+        }
         else {
-            System.out.println("Require <file path, info path>");
+            System.out.println("Require <file path, info path> or <location path>");
         }
     }
 }
