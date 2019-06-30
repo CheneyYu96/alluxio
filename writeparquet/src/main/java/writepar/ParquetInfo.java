@@ -66,7 +66,7 @@ public class ParquetInfo {
 
     }
 
-    public void writeParquet(String locationFile) throws IOException, AlluxioException {
+    public void writeParquet(String locationFile) throws IOException {
 
         FileInputStream is = new FileInputStream(locationFile);
         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
@@ -85,7 +85,11 @@ public class ParquetInfo {
             int len = (int) file.length();
             byte[] tBuf = new byte[len];
             int tBytesRead = localFileStream.read(tBuf);
-            writer.writeFile(tBuf);
+            try {
+                writer.writeFile(tBuf);
+            } catch (AlluxioException e) {
+                e.printStackTrace();
+            }
 
             localFileStream.close();
 
