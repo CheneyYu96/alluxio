@@ -46,7 +46,7 @@ public class ColFullReplPolicy implements ReplPolicy{
                     for (Pair<Double, OffLenPair> p : loads){
                         double l = p.getFirst();
 
-                        int replicas = (int) Math.ceil(finalOptAlpha * l);
+                        int replicas = Math.max(1, (int) Math.ceil(finalOptAlpha * l));
                         replUnits.add(new MultiReplUnit(
                                 info.getFilePath(),
                                 Collections.singletonList(p.getSecond()),
@@ -73,7 +73,8 @@ public class ColFullReplPolicy implements ReplPolicy{
                 double l = p.getFirst();
                 double s = p.getSecond();
 
-                cost = cost + (int) Math.ceil(alpha * l) * s;
+                int replica = Math.max(1, (int) Math.ceil(alpha * l));
+                cost = cost + replica * s;
 
             }
         }
