@@ -62,11 +62,13 @@ public class GTBundlingPolicy implements ReplPolicy {
                         }
                     }
 
-                    List<OffLenPair> hotOffs = loads.stream().skip(coldIndex).map(Pair::getSecond).collect(Collectors.toList());
                     double hotL = 0;
+                    List<OffLenPair> hotOffs = new ArrayList<>();
+
                     if (coldIndex >= 0) {
                         double allL = loads.get(loads.size() - 1).getFirst();
                         hotL = allL - loads.get(coldIndex).getFirst();
+                        hotOffs = loads.stream().skip(coldIndex).map(Pair::getSecond).collect(Collectors.toList());
                     }
 
                     int replicas = (int) Math.ceil(finalOptAlpha * hotL);
