@@ -356,7 +356,7 @@ all_query_con_test(){
         ${timeout} \
         ${query} \
         ${df_log_dir_name} \
-        --policy ${PER_COL} \
+        --policy 2 \
         --fault ${FAULT} \
         --gt True \
         --dist ${DIST}
@@ -415,7 +415,7 @@ auto_all_query_test(){
         ${timeout} \
         ${query} \
         ${df_log_dir_name} \
-        --policy ${PER_COL} \
+        --policy 2 \
         --fault ${FAULT} \
         --gt True \
         --dist ${DIST}
