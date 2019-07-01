@@ -514,10 +514,10 @@ band_cmpr_test(){
 rate_auto_test(){
     timeout=$1
 
-    for bdgt in 1 2; do
+    for bdgt in "0.5" "1" "2"; do
         sed -i "/^fr.repl.budget=/cfr.repl.budget=${bdgt}" ${DIR}/alluxio/conf/alluxio-site.properties
 
-        for rt in 20 40 50; do
+        for rt in 20 40; do
             rate=${rt}
             auto_all_query_test ${rate} ${timeout}
 
