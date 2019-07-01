@@ -268,7 +268,7 @@ public class ReplManager {
         if (replUnits != null && replUnits.size() > 0) {
 //            LOG.info("Make replication decision for file : {} ", filePath.getPath());
 
-            FileRepInfo repInfo = new FileRepInfo(filePath);
+            FileRepInfo repInfo = fileReplicas.getOrDefault(filePath, new FileRepInfo(filePath));
 
             replUnits.forEach(unit -> {
                 LOG.info("File : {}. Replication : {}", filePath.getPath(), unit);
