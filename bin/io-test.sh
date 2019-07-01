@@ -514,17 +514,20 @@ band_cmpr_test(){
 rate_auto_test(){
     timeout=$1
 
-#    for rt in 20 40 50; do
-    for rt in 50; do
-        rate=${rt}
-        auto_all_query_test ${rate} ${timeout}
+    for bdgt in 1 2; do
+        sed -i "/^fr.repl.budget=/cfr.repl.budget=${bdgt}" ${DIR}/alluxio/conf/alluxio-site.properties
 
-        mkdir -p $DIR/logs/r${rt}
-        mv $DIR/logs/py* $DIR/logs/r${rt}
-        mv $DIR/alluxio/logs/master.log $DIR/logs/r${rt}/
+        for rt in 20 40 50; do
+            rate=${rt}
+            auto_all_query_test ${rate} ${timeout}
 
-        rm_env
-        remove $DIR/alluxio/logs
+            mkdir -p $DIR/logs/r${rt}_b${bdgt}
+            mv $DIR/logs/py* $DIR/logs/r${rt}_b${bdgt}
+            mv $DIR/alluxio/logs/master.log $DIR/logs/r${rt}_b${bdgt}/
+
+            rm_env
+            remove $DIR/alluxio/logs
+        done
     done
 }
 
@@ -535,12 +538,13 @@ skew_band_test(){
     rate=$1
     timeout=$2
 
-    skew_cmpr_test ${rate} ${timeout}
-
-    mv $DIR/logs $DIR/skewlogs
-    clear
-
     band_cmpr_test ${rate} ${timeout}
+
+    mv $DIR/logs $DIR/bandlogs
+    clear 0
+
+    skew_cmpr_test ${rate} ${timeout}
+    mv $DIR/logs $DIR/skewlogs
 
 }
 
