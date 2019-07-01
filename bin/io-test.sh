@@ -510,7 +510,8 @@ band_cmpr_test(){
 rate_auto_test(){
     timeout=$1
 
-    for rt in 20 40 50; do
+#    for rt in 20 40 50; do
+    for rt in 50; do
         rate=${rt}
         auto_all_query_test ${rate} ${timeout}
 
