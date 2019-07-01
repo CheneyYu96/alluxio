@@ -192,13 +192,17 @@ extract_par_info(){
 }
 
 clear(){
+    clear_origin=$1
     ps -aux | grep python | awk '{print $2}' | xargs kill -9
 
     rm_env
 
     remove $DIR/logs
     remove $DIR/alluxio/logs
-    remove $DIR/alluxio/origin-locs.txt
+
+    if [[ "${clear_origin}" -eq "1" ]]; then
+        remove $DIR/alluxio/origin-locs.txt
+    fi
 
     workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
     worker_num=(`cat /home/ec2-user/hadoop/conf/slaves | wc -l`)
@@ -554,7 +558,7 @@ else
                                 ;;
         all)                    all_test $2 $3
                                 ;;
-        clear)                  clear
+        clear)                  clear $2
                                 ;;
         rm-env)                 rm_env
                                 ;;
