@@ -150,6 +150,10 @@ public class ReplManager {
         FileRepInfo repInfo = fileReplicas.get(requestFile);
         if (repInfo != null){
             repInfo.getMappedPairs(pair).forEach(mappedOffsets::put);
+
+            if (deleteOrigin && haveRepl){
+                LOG.info("replica for file {}. offset {} length {}. replica: {}", requestFile.getPath(), pair.offset, pair.length, repInfo.getMappedPairs(pair));
+            }
         }
 
         // update access counts
