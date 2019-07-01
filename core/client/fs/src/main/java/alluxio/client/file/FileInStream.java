@@ -217,6 +217,10 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     // decide segment to read
     WorkerNetAddress localWorker = mContext.getLocalWorker();
 
+    if(allSegs.size() == 0){
+      LOG.error("No segments. path: {}; off: {}; len: {}", mStatus.getPath(), offset, length);
+    }
+
     // no replicas
     if(allSegs.size() == 1){
       // reading orginal table currently
