@@ -517,7 +517,8 @@ rate_auto_test(){
     for bdgt in "0.5" "1" "2"; do
         sed -i "/^fr.repl.budget=/cfr.repl.budget=${bdgt}" ${DIR}/alluxio/conf/alluxio-site.properties
 
-        for rt in 20 40; do
+#        for rt in 20 40; do
+        for rt in 40; do
             rate=${rt}
             auto_all_query_test ${rate} ${timeout}
 
