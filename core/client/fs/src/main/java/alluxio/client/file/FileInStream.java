@@ -224,9 +224,14 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     // no replicas
     if(allSegs.size() == 1){
       // reading orginal table currently
-      if (mNewStatus.getPath().equals(mStatus.getPath())){
-        mNewPosition = mPosition;
-        updateNewBlockStream();
+      if(allSegs.get(0).getFilePath().equals(mStatus.getPath())){
+        if (mNewStatus.getPath().equals(mStatus.getPath())){
+          mNewPosition = mPosition;
+          updateNewBlockStream();
+        }
+        else {
+          updateMetadata(allSegs.get(0));
+        }
       }
       else {
         updateMetadata(allSegs.get(0));
