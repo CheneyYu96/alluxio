@@ -354,7 +354,7 @@ all_policy_test(){
 #####################
 #  call python test script
 #####################
-limit=3000000
+limit=1000000
 DIST=0
 
 all_query_con_test(){
