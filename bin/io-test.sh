@@ -350,11 +350,13 @@ rate_auto_test(){
                 remove $DIR/alluxio/logs
             done
 
-            mv $DIR/logs/py* $DIR/logs/r${rt}_b${bdgt}
+            mv $DIR/logs/py_q0_rt${rt}_plc* $DIR/logs/r${rt}_b${bdgt}
+            cp $DIR/logs/py_q0_rt${rt}_dft* $DIR/logs/r${rt}_b${bdgt}
 
         done
 
         rm_env
+        rm -r $DIR/logs/py_q0_rt${rt}_dft*
 
     done
 }
