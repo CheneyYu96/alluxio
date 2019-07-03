@@ -337,6 +337,8 @@ rate_auto_test(){
 
             sed -i "/^fr.repl.budget=/cfr.repl.budget=${bdgt}" ${DIR}/alluxio/conf/alluxio-site.properties
 
+            mkdir -p $DIR/logs/r${rt}_b${bdgt}
+
             for plc in 0 1 2 3; do
                 PER_COL=${plc}
 
@@ -344,14 +346,12 @@ rate_auto_test(){
 
                 run_policy ${rate} ${timeout}
 
+                mv $DIR/alluxio/logs/master.log $DIR/logs/r${rt}_b${bdgt}/master_${plc}.log
+                remove $DIR/alluxio/logs
             done
 
-            mkdir -p $DIR/logs/r${rt}_b${bdgt}
             mv $DIR/logs/py* $DIR/logs/r${rt}_b${bdgt}
-            mv $DIR/alluxio/logs/master.log $DIR/logs/r${rt}_b${bdgt}/
 
-            rm_env_except_pattern
-            remove $DIR/alluxio/logs
         done
 
         rm_env
