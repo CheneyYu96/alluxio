@@ -247,17 +247,26 @@ policy_env(){
 bundle_env(){
     sed -i '/^fr.repl.policy.class=/cfr.repl.policy.class=alluxio.master.repl.policy.GTBundlingPolicy' $DIR/alluxio/conf/alluxio-site.properties
     sed -i '/^fr.repl.delorigin=/cfr.repl.delorigin=false' $DIR/alluxio/conf/alluxio-site.properties
+    sed -i '/^fr.repl.budget.access=/cfr.repl.budget.access=false' $DIR/alluxio/conf/alluxio-site.properties
 }
 
 per_col_env(){
 #    sed -i '/^fr.repl.policy.class=/cfr.repl.policy.class=alluxio.master.repl.policy.ColReplPolicy' $DIR/alluxio/conf/alluxio-site.properties
     sed -i '/^fr.repl.policy.class=/cfr.repl.policy.class=alluxio.master.repl.policy.ColFullReplPolicy' $DIR/alluxio/conf/alluxio-site.properties
     sed -i '/^fr.repl.delorigin=/cfr.repl.delorigin=true' $DIR/alluxio/conf/alluxio-site.properties
+    sed -i '/^fr.repl.budget.access=/cfr.repl.budget.access=false' $DIR/alluxio/conf/alluxio-site.properties
 }
 
 table_repl_env(){
     sed -i '/^fr.repl.policy.class=/cfr.repl.policy.class=alluxio.master.repl.policy.TableReplPolicy' $DIR/alluxio/conf/alluxio-site.properties
     sed -i '/^fr.repl.delorigin=/cfr.repl.delorigin=false' $DIR/alluxio/conf/alluxio-site.properties
+    sed -i '/^fr.repl.budget.access=/cfr.repl.budget.access=false' $DIR/alluxio/conf/alluxio-site.properties
+}
+
+bundle_infer_env(){
+    sed -i '/^fr.repl.policy.class=/cfr.repl.policy.class=alluxio.master.repl.policy.GTBundlingPolicy' $DIR/alluxio/conf/alluxio-site.properties
+    sed -i '/^fr.repl.delorigin=/cfr.repl.delorigin=false' $DIR/alluxio/conf/alluxio-site.properties
+    sed -i '/^fr.repl.budget.access=/cfr.repl.budget.access=false' $DIR/alluxio/conf/alluxio-site.properties
 }
 
 get_dir_index(){

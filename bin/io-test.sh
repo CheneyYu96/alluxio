@@ -78,6 +78,8 @@ init_alluxio_status(){
             per_col_env
         elif [[ "${PER_COL}" -eq "2" ]]; then
             table_repl_env
+        elif [[ "${PER_COL}" -eq "3" ]]; then
+            bundle_infer_env
         fi
 
         fr_env

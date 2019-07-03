@@ -175,12 +175,12 @@ public class ReplManager {
                 LOG.error("File {}'s offset and length does not match", filePath);
             }
 
-            if(useAccessInfo){
+//            if(useAccessInfo){
                 List<OffLenPair> allPairs = IntStream.range(0, offset.size())
                         .mapToObj(i -> new OffLenPair(offset.get(i), length.get(i)))
                         .collect(Collectors.toList());
                 accessRecords.put(filePath, new FileAccessInfo(filePath, allPairs));
-            }
+//            }
         }
     }
 
