@@ -3,10 +3,12 @@ package alluxio.master.repl.policy;
 import alluxio.AlluxioURI;
 import alluxio.collections.Pair;
 import alluxio.master.repl.meta.FileAccessInfo;
+import fr.client.utils.MultiReplUnit;
 import fr.client.utils.OffLenPair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -121,7 +123,92 @@ public class ReplPolicyUtils {
                 .reduce(0, Long::sum);
     }
 
+    public static double calcBundReplCost(double alpha, Map<AlluxioURI, List<Pair<Double, Double>>> allLoads){
+        double cost = 0;
+        for (List<Pair<Double, Double>> loadSize : allLoads.values()){
+            int coldIndex = -1;
+
+            for(int i = 0; i < loadSize.size(); i++){
+                double coldLoad = loadSize.get(i).getFirst();
+                if (coldLoad > 1 / alpha){
+                    coldIndex = i - 1;
+                    break;
+                }
+            }
+
+            if (coldIndex >= 0) {
+                double allL = loadSize.get(loadSize.size() - 1).getFirst();
+                double hotL = allL - loadSize.get(coldIndex).getFirst();
+                double hotS = loadSize.stream().skip(coldIndex + 1).map(Pair::getSecond).reduce(0.0, Double::sum);
+                cost = cost + (int) Math.ceil(alpha * hotL) * hotS;
+            }
+        }
+
+        return cost;
+    }
+
+    public static List<MultiReplUnit> calcBundGlobReplicas(List<FileAccessInfo> fileAccessInfos, PatternCalculator patternCalculator, double budget){
+        long allSize = calcAllSize(fileAccessInfos);
+
+        Map<AlluxioURI, List<Pair<Double, Double>>> allLoadSize = fileAccessInfos
+                .stream()
+                .collect(Collectors.toMap(
+                        FileAccessInfo::getFilePath,
+                        info -> patternCalculator.calcPatternLoad(allSize, info)
+                                .stream()
+                                .map(p -> new Pair<>(p.getFirst(), p.getSecond().length * 1.0 / allSize))
+                                .collect(Collectors.toList())));
+
+        double finalOptAlpha = calcGlobalAlpha(allLoadSize, budget, ReplPolicyUtils::calcBundReplCost);
+
+        return fileAccessInfos
+                .stream()
+                .map(info -> {
+                    List<Pair<Double, OffLenPair>> loads = patternCalculator.calcPatternLoad(allSize, info);
+
+                    int coldIndex = -1;
+
+                    for(int i = 0; i < loads.size(); i++){
+                        double coldLoad = loads.get(i).getFirst();
+                        if (coldLoad > 1 / finalOptAlpha){
+                            coldIndex = i - 1;
+                            break;
+                        }
+                    }
+
+                    double hotL = 0;
+                    List<OffLenPair> hotOffs = new ArrayList<>();
+
+                    if (coldIndex >= 0) {
+                        double allL = loads.get(loads.size() - 1).getFirst();
+                        hotL = allL - loads.get(coldIndex).getFirst();
+                        hotOffs = loads.stream().skip(coldIndex + 1).map(Pair::getSecond).collect(Collectors.toList());
+                    }
+
+                    int replicas = (int) Math.ceil(finalOptAlpha * hotL);
+
+                    String loadStr = loads.stream().map(p -> p.getSecond().offset + "," + p.getSecond().length + "," + p.getFirst() + "|").reduce("", String::concat);
+
+                    LOG.info("Log all loads. load: {}. path: {}", loadStr, info.getFilePath().getPath());
+
+                    LOG.info("File: {}. all columns: {}. cold index: {}. bundle columns: {}. replicas: {}.",
+                            info.getFilePath().getPath(),
+                            loads.size(),
+                            coldIndex,
+                            hotOffs.size(),
+                            replicas);
+
+                    return new MultiReplUnit(info.getFilePath(), hotOffs, replicas);
+                })
+                .collect(Collectors.toList());
+    }
+
     interface CostCalculator{
         double calcReplCost(double alpha, Map<AlluxioURI, List<Pair<Double, Double>>> allLoads);
     }
+
+    interface PatternCalculator{
+        List<Pair<Double, OffLenPair>> calcPatternLoad(long allSize, FileAccessInfo accessInfo);
+    }
+
 }

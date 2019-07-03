@@ -1,6 +1,5 @@
 package alluxio.master.repl.policy;
 
-import alluxio.AlluxioURI;
 import alluxio.Configuration;
 import alluxio.PropertyKey;
 import alluxio.collections.Pair;
@@ -33,60 +32,7 @@ public class GTBundlingPolicy implements ReplPolicy {
 
     @Override
     public List<MultiReplUnit> calcMultiReplicas(List<FileAccessInfo> fileAccessInfos) {
-
-        long allSize = ReplPolicyUtils.calcAllSize(fileAccessInfos);
-
-        Map<AlluxioURI, List<Pair<Double, Double>>> allLoadSize = fileAccessInfos
-                .stream()
-                .collect(Collectors.toMap(
-                        FileAccessInfo::getFilePath,
-                        info -> calcPatternLoad(allSize, info)
-                            .stream()
-                            .map(p -> new Pair<>(p.getFirst(), p.getSecond().length * 1.0 / allSize))
-                            .collect(Collectors.toList())));
-
-        double finalOptAlpha = ReplPolicyUtils.calcGlobalAlpha(allLoadSize, budget, this::calcReplCost);
-
-        return fileAccessInfos
-                .stream()
-                .map(info -> {
-                    List<Pair<Double, OffLenPair>> loads = calcPatternLoad(allSize, info);
-
-                    int coldIndex = -1;
-
-                    for(int i = 0; i < loads.size(); i++){
-                        double coldLoad = loads.get(i).getFirst();
-                        if (coldLoad > 1 / finalOptAlpha){
-                            coldIndex = i - 1;
-                            break;
-                        }
-                    }
-
-                    double hotL = 0;
-                    List<OffLenPair> hotOffs = new ArrayList<>();
-
-                    if (coldIndex >= 0) {
-                        double allL = loads.get(loads.size() - 1).getFirst();
-                        hotL = allL - loads.get(coldIndex).getFirst();
-                        hotOffs = loads.stream().skip(coldIndex).map(Pair::getSecond).collect(Collectors.toList());
-                    }
-
-                    int replicas = (int) Math.ceil(finalOptAlpha * hotL);
-
-                    String loadStr = loads.stream().map(p -> p.getSecond().offset + "," + p.getSecond().length + "," + p.getFirst() + "|").reduce("", String::concat);
-
-                    LOG.info("Log all loads. load: {}. path: {}", loadStr, info.getFilePath().getPath());
-
-                    LOG.info("File: {}. all columns: {}. cold index: {}. bundle columns: {}. replicas: {}.",
-                            info.getFilePath().getPath(),
-                            loads.size(),
-                            coldIndex,
-                            hotOffs.size(),
-                            replicas);
-
-                    return new MultiReplUnit(info.getFilePath(), hotOffs, replicas);
-                })
-                .collect(Collectors.toList());
+        return ReplPolicyUtils.calcBundGlobReplicas(fileAccessInfos, this::calcPatternLoad, budget);
     }
 
     private List<Pair<Double, OffLenPair>> calcPatternLoad(long allSize, FileAccessInfo accessInfo){
@@ -114,27 +60,5 @@ public class GTBundlingPolicy implements ReplPolicy {
 
     }
 
-    private double calcReplCost(double alpha, Map<AlluxioURI, List<Pair<Double, Double>>> allLoads){
-        double cost = 0;
-        for (List<Pair<Double, Double>> loadSize : allLoads.values()){
-            int coldIndex = -1;
 
-            for(int i = 0; i < loadSize.size(); i++){
-                double coldLoad = loadSize.get(i).getFirst();
-                if (coldLoad > 1 / alpha){
-                    coldIndex = i - 1;
-                    break;
-                }
-            }
-
-            if (coldIndex >= 0) {
-                double allL = loadSize.get(loadSize.size() - 1).getFirst();
-                double hotL = allL - loadSize.get(coldIndex).getFirst();
-                double hotS = loadSize.stream().skip(coldIndex).map(Pair::getSecond).reduce(0.0, Double::sum);
-                cost = cost + (int) Math.ceil(alpha * hotL) * hotS;
-            }
-        }
-
-        return cost;
-    }
 }

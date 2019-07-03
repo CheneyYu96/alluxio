@@ -101,57 +101,6 @@ init_alluxio_status(){
     mkdir -p ${DIR}/logs
 }
 
-trace_test(){
-    scl=$1
-    query=$2
-
-    init_alluxio_status
-
-    dir_name=$(get_dir_index scale${scl}_query${query}_trace)
-    mkdir -p ${dir_name}
-
-    from=${query}
-    to=${query}
-
-    if [[ "${query}" -eq "0" ]]; then
-        from=1
-        to=22
-    fi
-
-    for((q=${from};q<=${to};q++)); do
-        cd ${DIR}/alluxio
-
-        for((c_tm=1;c_tm<=${con_times};c_tm++)); do
-            log_dir_name=${dir_name}/con${c_tm}
-            mkdir -p ${log_dir_name}
-
-            python query_scheduler.py ${q} ${log_dir_name} --policy ${PER_COL} --fault ${FAULT} > ${log_dir_name}/master.log 2>&1 &
-        done
-        wait
-
-    done
-
-    tmp_dir=${dir_name}
-}
-
-trace_range_test(){
-    scl=$(cat $DATA_SCALE)
-    start=$1
-    end=$2
-
-    for((qry=$start;qry<=$end;qry++)); do
-        trace_test $scl $qry
-    done
-}
-
-all_test(){
-    scl=$1
-    times=$2
-
-    for((t=0;t<${times};t++)); do
-        trace_test $scl 0
-    done
-}
 
 usage() {
     echo "Usage: $0 shffl|noshffl scale #query"
@@ -241,125 +190,13 @@ complie_job(){
 }
 
 
-bandwidth_test(){
-    limit=$1
-    qry=$2
-
-    init_alluxio_status
-
-    scl=`cat ${DATA_SCALE}`
-
-    upname=$(get_dir_index band${limit}_qry${qry}_)
-    mkdir -p ${upname}
-
-    limit_bandwidth $limit
-
-#    test_bandwidth $DIR/logs
-
-    for((t=0;t<${times};t++)); do
-        trace_test $scl $qry
-        dname[${t}]=${tmp_dir}
-    done
-
-    for((t=0;t<${times};t++)); do
-        mv ${dname[t]} ${upname}
-    done
-
-    free_limit
-
-    tmp_dir=${upname}
-}
-
-
-bandwidth_test_all(){
-    limit=$1
-    times=$2
-
-    bandwidth_test ${limit} 0
-}
-
-con_all_test(){
-    qry=$1
-    up_times=$2
-
-
-    for((con_times=1;con_times<=up_times;con_times=con_times+1)); do
-        bandwidth_test 1000000 ${qry}
-    done
-}
-
-con_test(){
-    qry=$1
-    con_times=$2
-
-    bandwidth_test 1000000 ${qry}
-}
-
-compare_test(){
-    qry=$1
-    times=$2
-
-    for useper in `seq 0 1`; do
-        PER_COL=$useper
-        policy_test 1000000 $qry
-        rm_env
-    done
-}
-
-policy_test(){
-    qry=$1
-    up_times=$2
-
-    bdgt=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.budget=' | cut -d "=" -f 2)
-
-    p_dir=$(get_dir_index q${qry}_b${bdgt}_dft_)
-    mkdir -p ${p_dir}
-
-    default_env
-
-    con_all_test ${qry} ${up_times}
-    mv ${DIR}/logs/band* ${p_dir}
-
-    policy_env
-    rm_env
-
-#    warm up
-    con_times=1
-    bandwidth_test 1000000 ${qry}
-    rm -r $DIR/logs/band*
-
-    sleep 300
-
-    p_dir=$(get_dir_index q${qry}_b${bdgt}_plc${PER_COL}_)
-    mkdir -p ${p_dir}
-
-    con_all_test ${qry} ${up_times}
-    mv ${DIR}/logs/band* ${p_dir}
-
-}
-
-all_policy_test(){
-    up_times=$1
-
-    for((qr=1;qr<=22;qr++)); do
-        mkdir ${DIR}/logs/q${qr}
-
-        policy_test ${qr} ${up_times}
-        rm_env
-
-        mv ${DIR}/logs/q${qr}* ${DIR}/logs/q${qr}
-    done
-
-}
-
-
 #####################
 #  call python test script
 #####################
 limit=1000000
 DIST=0
 
-all_query_con_test(){
+run_default(){
     rate=$1
     timeout=$2
     query=0
@@ -382,8 +219,12 @@ all_query_con_test(){
         --dist ${DIST}
 
     free_limit
+}
 
-    rm_env_except_pattern
+run_policy(){
+    rate=$1
+    timeout=$2
+    query=0
 
     policy_env
 
@@ -415,32 +256,27 @@ all_query_con_test(){
         --dist ${DIST}
 
     free_limit
+
+}
+
+all_query_con_test(){
+    rate=$1
+    timeout=$2
+
+    run_default ${rate} ${timeout}
+
+    rm_env_except_pattern
+
+    run_policy ${rate} ${timeout}
+
 }
 
 
 auto_all_query_test(){
     rate=$1
     timeout=$2
-    query=0
 
-    df_log_dir_name=$(get_dir_index py_q${query}_rt${rate}_dft_)
-
-    default_env
-    init_alluxio_status
-    limit_bandwidth ${limit}
-
-    cd ${DIR}/alluxio
-    python con_query_test.py \
-        ${rate} \
-        ${timeout} \
-        ${query} \
-        ${df_log_dir_name} \
-        --policy 2 \
-        --fault ${FAULT} \
-        --gt True \
-        --dist ${DIST}
-
-    free_limit
+    run_default ${rate} ${timeout}
 
     for plc in 0 1 2; do
 #    for plc in 2; do
@@ -448,36 +284,8 @@ auto_all_query_test(){
 
         rm_env_except_pattern
 
-        policy_env
+        run_policy ${rate} ${timeout}
 
-        interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
-        start=$(date "+%s")
-
-        init_alluxio_status
-
-        now=$(date "+%s")
-        tm=$((now-start))
-
-        sleep_time=$((interval+300-tm))
-
-        sleep ${sleep_time} # wait util replication finished
-
-        limit_bandwidth ${limit}
-
-        plc_log_dir_name=$(get_dir_index py_q${query}_rt${rate}_plc${PER_COL}_)
-
-        cd ${DIR}/alluxio
-        python con_query_test.py \
-            ${rate} \
-            ${timeout} \
-            ${query} \
-            ${plc_log_dir_name} \
-            --policy ${PER_COL} \
-            --fault ${FAULT} \
-            --gt False \
-            --dist ${DIST}
-
-        free_limit
     done
 }
 
@@ -505,33 +313,49 @@ band_cmpr_test(){
     rate=$1
     timeout=$2
 
+    run_default ${rate} ${timeout}
+
     PER_COL=1
 
     for band in 1000000 3000000 5000000; do
         limit=${band}
-        all_query_con_test ${rate} ${timeout}
-        rm_env
+
+        rm_env_except_pattern
+
+        run_policy ${rate} ${timeout}
     done
 }
 
 rate_auto_test(){
     timeout=$1
 
-    for bdgt in "0.5" "1" "2"; do
-        sed -i "/^fr.repl.budget=/cfr.repl.budget=${bdgt}" ${DIR}/alluxio/conf/alluxio-site.properties
+    for rt in 20 30 40; do
 
-        for rt in 30 20; do
-#        for rt in 40; do
-            rate=${rt}
-            auto_all_query_test ${rate} ${timeout}
+        run_default ${rt} ${timeout}
+
+        for bdgt in "0.5" "1" "2"; do
+
+            sed -i "/^fr.repl.budget=/cfr.repl.budget=${bdgt}" ${DIR}/alluxio/conf/alluxio-site.properties
+
+            for plc in 0 1 2 3; do
+                PER_COL=${plc}
+
+                rm_env_except_pattern
+
+                run_policy ${rate} ${timeout}
+
+            done
 
             mkdir -p $DIR/logs/r${rt}_b${bdgt}
             mv $DIR/logs/py* $DIR/logs/r${rt}_b${bdgt}
             mv $DIR/alluxio/logs/master.log $DIR/logs/r${rt}_b${bdgt}/
 
-            rm_env
+            rm_env_except_pattern
             remove $DIR/alluxio/logs
         done
+
+        rm_env
+
     done
 }
 
@@ -560,29 +384,11 @@ else
     case $1 in
         conv)                   convert_test $2
                                 ;;
-        trace)                  trace_test $2 $3
-                                ;;
-        trace-range)            trace_range_test $2 $3
-                                ;;
-        all)                    all_test $2 $3
-                                ;;
         clear)                  clear $2
                                 ;;
         rm-env)                 rm_env
                                 ;;
         cpjob)                   complie_job
-                                ;;
-        band-all)               bandwidth_test_all $2 $3
-                                ;;
-        cmpr)                   compare_test $2 $3
-                                ;;
-        policy)                 policy_test $2 $3
-                                ;;
-        policy-all)             all_policy_test $2 $3
-                                ;;
-        con)                    con_test $2 $3
-                                ;;
-        con-all)                con_all_test $2 $3
                                 ;;
         py-all)                 all_query_con_test $2 $3
                                 ;;
