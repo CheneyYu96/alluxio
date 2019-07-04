@@ -369,7 +369,7 @@ skew_band_test(){
 
     sed -i "/^fr.repl.budget=/cfr.repl.budget=1" ${DIR}/alluxio/conf/alluxio-site.properties
 
-    for rt in 40 30 20; do
+    for rt in 20 30 40; do
 
         run_default ${rt} ${timeout}
 
