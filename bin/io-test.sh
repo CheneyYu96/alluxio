@@ -369,7 +369,7 @@ skew_band_test(){
 
     sed -i "/^fr.repl.budget=/cfr.repl.budget=1" ${DIR}/alluxio/conf/alluxio-site.properties
 
-    for rt in 20 30 40; do
+    for rt in 40 30 20; do
 
         run_default ${rt} ${timeout}
 
@@ -437,7 +437,7 @@ else
                                 ;;
         rate)                   rate_auto_test $2
                                 ;;
-        skew-band)              skew_band_test $2 $3
+        skew-band)              skew_band_test $2
                                 ;;
         * )                     usage
     esac
