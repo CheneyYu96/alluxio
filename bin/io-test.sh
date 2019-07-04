@@ -351,7 +351,7 @@ rate_auto_test(){
             done
 
             mv $DIR/logs/py_q0_rt${rt}_plc* $DIR/logs/r${rt}_b${bdgt}
-            cp $DIR/logs/py_q0_rt${rt}_dft* $DIR/logs/r${rt}_b${bdgt}
+            cp -r $DIR/logs/py_q0_rt${rt}_dft* $DIR/logs/r${rt}_b${bdgt}
 
         done
 
@@ -365,16 +365,51 @@ loc_wait=$(cat ../spark/conf/spark-defaults.conf | grep locality | cut -d ' ' -f
 
 
 skew_band_test(){
-    rate=$1
-    timeout=$2
+    timeout=$1
 
-    band_cmpr_test ${rate} ${timeout}
+    sed -i "/^fr.repl.budget=/cfr.repl.budget=1" ${DIR}/alluxio/conf/alluxio-site.properties
 
-    mv $DIR/logs $DIR/bandlogs
-    clear 0
+    for rt in 20 30 40; do
 
-    skew_cmpr_test ${rate} ${timeout}
-    mv $DIR/logs $DIR/skewlogs
+        run_default ${rt} ${timeout}
+
+        PER_COL=1
+
+        mkdir -p $DIR/logs/band_r${rt}
+
+        for band in 1000000 3000000 5000000; do
+            limit=${band}
+
+            rm_env_except_pattern
+
+            run_policy ${rt} ${timeout}
+        done
+
+        mv $DIR/logs/py_q0_rt${rt}_plc* $DIR/logs/band_r${rt}
+        cp -r $DIR/logs/py_q0_rt${rt}_dft* $DIR/logs/band_r${rt}
+
+        remove $DIR/alluxio/logs
+
+        PER_COL=0
+        mkdir -p $DIR/logs/skew_r${rt}
+
+        for DIST in 0 1 2; do
+
+            rm_env_except_pattern
+
+            run_policy ${rt} ${timeout}
+
+            mv $DIR/alluxio/logs/master.log $DIR/logs/skew_r${rt}/master_${DIST}.log
+            remove $DIR/alluxio/logs
+        done
+
+        mv $DIR/logs/py_q0_rt${rt}_plc* $DIR/logs/skew_r${rt}
+        mv $DIR/logs/py_q0_rt${rt}_dft* $DIR/logs/skew_r${rt}
+
+        rm_env
+
+    done
+
 
 }
 
