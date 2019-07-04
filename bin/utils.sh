@@ -264,7 +264,7 @@ table_repl_env(){
 }
 
 bundle_infer_env(){
-    sed -i '/^fr.repl.policy.class=/cfr.repl.policy.class=alluxio.master.repl.policy.GTBundlingPolicy' $DIR/alluxio/conf/alluxio-site.properties
+    sed -i '/^fr.repl.policy.class=/cfr.repl.policy.class=alluxio.master.repl.policy.BundleHottestKPolicy' $DIR/alluxio/conf/alluxio-site.properties
     sed -i '/^fr.repl.delorigin=/cfr.repl.delorigin=false' $DIR/alluxio/conf/alluxio-site.properties
     sed -i '/^fr.repl.budget.access=/cfr.repl.budget.access=true' $DIR/alluxio/conf/alluxio-site.properties
 }

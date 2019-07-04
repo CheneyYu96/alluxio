@@ -139,7 +139,7 @@ public class ReplPolicyUtils {
             if (coldIndex >= 0) {
                 double allL = loadSize.get(loadSize.size() - 1).getFirst();
                 double hotL = allL - loadSize.get(coldIndex).getFirst();
-                double hotS = loadSize.stream().skip(coldIndex + 1).map(Pair::getSecond).reduce(0.0, Double::sum);
+                double hotS = loadSize.stream().skip(coldIndex).map(Pair::getSecond).reduce(0.0, Double::sum);
                 cost = cost + (int) Math.ceil(alpha * hotL) * hotS;
             }
         }
@@ -182,7 +182,7 @@ public class ReplPolicyUtils {
                     if (coldIndex >= 0) {
                         double allL = loads.get(loads.size() - 1).getFirst();
                         hotL = allL - loads.get(coldIndex).getFirst();
-                        hotOffs = loads.stream().skip(coldIndex + 1).map(Pair::getSecond).collect(Collectors.toList());
+                        hotOffs = loads.stream().skip(coldIndex).map(Pair::getSecond).collect(Collectors.toList());
                     }
 
                     int replicas = (int) Math.ceil(finalOptAlpha * hotL);
