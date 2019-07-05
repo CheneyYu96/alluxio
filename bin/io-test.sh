@@ -443,6 +443,41 @@ skew_band_test(){
 
 }
 
+spec_test(){
+    timeout=$1
+    for rt in 40 30 20; do
+
+        run_default ${rt} ${timeout}
+
+        for bdgt in "0.5" "1" "2"; do
+
+            sed -i "/^fr.repl.budget=/cfr.repl.budget=${bdgt}" ${DIR}/alluxio/conf/alluxio-site.properties
+
+            mkdir -p $DIR/logs/r${rt}_b${bdgt}
+
+            for plc in 0 3; do
+                PER_COL=${plc}
+
+                rm_env_except_pattern
+
+                run_policy ${rate} ${timeout}
+
+                mv $DIR/alluxio/logs/master.log $DIR/logs/r${rt}_b${bdgt}/master_${plc}.log
+                remove $DIR/alluxio/logs
+            done
+
+            mv $DIR/logs/py_q0_rt${rt}_plc* $DIR/logs/r${rt}_b${bdgt}
+            cp -r $DIR/logs/py_q0_rt${rt}_dft* $DIR/logs/r${rt}_b${bdgt}
+
+        done
+
+        rm_env
+        rm -r $DIR/logs/py_q0_rt${rt}_dft*
+
+    done
+
+}
+
 
 if [[ "$#" -lt 3 ]]; then
     usage
@@ -468,6 +503,8 @@ else
         rate)                   rate_auto_test $2
                                 ;;
         skew-band)              skew_band_test $2
+                                ;;
+        spec)                   spec_test $2
                                 ;;
         * )                     usage
     esac
