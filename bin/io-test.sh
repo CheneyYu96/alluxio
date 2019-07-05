@@ -312,17 +312,47 @@ skew_cmpr_test(){
 band_cmpr_test(){
     rate=$1
     timeout=$2
+    query=0
 
     run_default ${rate} ${timeout}
 
     PER_COL=1
 
+    rm_env_except_pattern
+
+    policy_env
+
+    interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
+    start=$(date "+%s")
+
+    init_alluxio_status
+
+    now=$(date "+%s")
+    tm=$((now-start))
+
+    sleep_time=$((interval+300-tm))
+
+    sleep ${sleep_time} # wait util replication finished
+
     for band in 1000000 3000000 5000000; do
         limit=${band}
 
-        rm_env_except_pattern
+        limit_bandwidth ${limit}
 
-        run_policy ${rate} ${timeout}
+        plc_log_dir_name=$(get_dir_index py_q${query}_rt${rate}_plc${PER_COL}_)
+
+        cd ${DIR}/alluxio
+        python con_query_test.py \
+            ${rate} \
+            ${timeout} \
+            ${query} \
+            ${plc_log_dir_name} \
+            --policy ${PER_COL} \
+            --fault ${FAULT} \
+            --gt False \
+            --dist ${DIST}
+
+        free_limit
     done
 }
 
