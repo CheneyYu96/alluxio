@@ -144,9 +144,13 @@ extract_par_info(){
 
 clear(){
     clear_origin=$1
+    clear_pattern=$2
     ps -aux | grep python | awk '{print $2}' | xargs kill -9
 
-    rm_env
+    rm_env_except_pattern
+    if [[ "${clear_pattern}" -eq "1" ]]; then
+        remove $DIR/alluxio/pattern-gt.txt
+    fi
 
     remove $DIR/logs
     remove $DIR/alluxio/logs
@@ -445,35 +449,49 @@ skew_band_test(){
 
 spec_test(){
     timeout=$1
-    for rt in 40 30 20; do
+    PER_COL=2
 
-        run_default ${rt} ${timeout}
+    for bdgt in "0.5" "1" "2"; do
+        sed -i "/^fr.repl.budget=/cfr.repl.budget=${bdgt}" ${DIR}/alluxio/conf/alluxio-site.properties
 
-        for bdgt in "0.5" "1" "2"; do
+        policy_env
 
-            sed -i "/^fr.repl.budget=/cfr.repl.budget=${bdgt}" ${DIR}/alluxio/conf/alluxio-site.properties
+        interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
+        start=$(date "+%s")
+
+        init_alluxio_status
+
+        now=$(date "+%s")
+        tm=$((now-start))
+
+        sleep_time=$((interval+300-tm))
+
+        sleep ${sleep_time} # wait util replication finished
+
+        for rt in 20 30 40; do
 
             mkdir -p $DIR/logs/r${rt}_b${bdgt}
 
-            for plc in 0 3; do
-                PER_COL=${plc}
+#            limit_bandwidth ${limit}
 
-                rm_env_except_pattern
+            plc_log_dir_name=$(get_dir_index py_q${query}_rt${rate}_plc${PER_COL}_)
 
-                run_policy ${rate} ${timeout}
+            cd ${DIR}/alluxio
+            python con_query_test.py \
+                ${rate} \
+                ${timeout} \
+                ${query} \
+                ${plc_log_dir_name} \
+                --policy ${PER_COL} \
+                --fault ${FAULT} \
+                --gt False \
+                --dist ${DIST}
 
-                mv $DIR/alluxio/logs/master.log $DIR/logs/r${rt}_b${bdgt}/master_${plc}.log
-                remove $DIR/alluxio/logs
-            done
-
+#            free_limit
             mv $DIR/logs/py_q0_rt${rt}_plc* $DIR/logs/r${rt}_b${bdgt}
-            cp -r $DIR/logs/py_q0_rt${rt}_dft* $DIR/logs/r${rt}_b${bdgt}
-
         done
 
-        rm_env
-        rm -r $DIR/logs/py_q0_rt${rt}_dft*
-
+        rm_env_except_pattern
     done
 
 }

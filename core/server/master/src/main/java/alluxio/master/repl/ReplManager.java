@@ -208,13 +208,17 @@ public class ReplManager {
 
                     // allow bundling offsets from different tables
                     if(replGlobal){
-
                         List<MultiReplUnit> replUnits = replPolicy.calcMultiReplicas(new ArrayList<>(accessRecords.values()));
+
+                        long startMs = CommonUtils.getCurrentMs();
 
                         // TODO: treat as ReplUnit now. May allow more complicated ops.
                         for (MultiReplUnit unit : replUnits){
                             unit.toReplUnit().forEach((key, value) -> replicate(key, Collections.singletonList(value)));
                         }
+
+                        long endMs = CommonUtils.getCurrentMs();
+                        LOG.info("Finish replication. elapsed: {}", endMs - startMs);
 
                     }
                     else {

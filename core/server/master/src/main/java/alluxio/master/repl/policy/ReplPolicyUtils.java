@@ -3,6 +3,7 @@ package alluxio.master.repl.policy;
 import alluxio.AlluxioURI;
 import alluxio.collections.Pair;
 import alluxio.master.repl.meta.FileAccessInfo;
+import alluxio.util.CommonUtils;
 import fr.client.utils.MultiReplUnit;
 import fr.client.utils.OffLenPair;
 import org.slf4j.Logger;
@@ -38,6 +39,8 @@ public class ReplPolicyUtils {
     }
 
     public static double calcGlobalAlpha(Map<AlluxioURI, List<Pair<Double, Double>>> allLoadSize, double budget, CostCalculator costCalculator) {
+        long startMs = CommonUtils.getCurrentMs();
+
         // ascending order
         List<Double> sortedLoads = allLoadSize
                 .values()
@@ -99,7 +102,9 @@ public class ReplPolicyUtils {
             }
         }
 
-        LOG.info("Attemps: {}. Optimal alpha: {}, cost; {}", attemp, optAlpha, optCost);
+        long endMs = CommonUtils.getCurrentMs();
+
+        LOG.info("Attemps: {}. Optimal alpha: {}, cost; {}; elapsed: {}", attemp, optAlpha, optCost, endMs - startMs);
 
         return optAlpha;
     }
