@@ -480,7 +480,7 @@ spec_test(){
             python con_query_test.py \
                 ${rt} \
                 ${timeout} \
-                ${query} \
+                0 \
                 ${plc_log_dir_name} \
                 --policy ${PER_COL} \
                 --fault ${FAULT} \
