@@ -504,7 +504,7 @@ else
     case $1 in
         conv)                   convert_test $2
                                 ;;
-        clear)                  clear $2
+        clear)                  clear $2 $3
                                 ;;
         rm-env)                 rm_env
                                 ;;
