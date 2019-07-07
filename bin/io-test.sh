@@ -197,7 +197,7 @@ complie_job(){
 #####################
 #  call python test script
 #####################
-limit=3000000
+limit=1000000
 DIST=0
 
 run_default(){
@@ -456,7 +456,7 @@ spec_test(){
 #    rm_env_except_pattern
 
 #    for bdgt in "0.5" "1" "2"; do
-    for bdgt in "1"; do
+    for bdgt in "0.5"; do
         sed -i "/^fr.repl.budget=/cfr.repl.budget=${bdgt}" ${DIR}/alluxio/conf/alluxio-site.properties
 
         policy_env
