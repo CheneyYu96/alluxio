@@ -451,6 +451,10 @@ spec_test(){
     timeout=$1
     PER_COL=1
 
+    run_default 30 ${timeout}
+
+    rm_env_except_pattern
+
 #    for bdgt in "0.5" "1" "2"; do
     for bdgt in "0.5" "2"; do
         sed -i "/^fr.repl.budget=/cfr.repl.budget=${bdgt}" ${DIR}/alluxio/conf/alluxio-site.properties
@@ -476,7 +480,7 @@ spec_test(){
 
 #            limit_bandwidth ${limit}
 
-            plc_log_dir_name=$(get_dir_index py_q${query}_rt${rt}_plc${PER_COL}_)
+            plc_log_dir_name=$(get_dir_index py_q0_rt${rt}_plc${PER_COL}_)
 
             cd ${DIR}/alluxio
             python con_query_test.py \
