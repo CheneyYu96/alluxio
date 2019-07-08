@@ -455,8 +455,8 @@ spec_test(){
 
 #    rm_env_except_pattern
 
-    for bdgt in "0.5" "1" "2"; do
-#    for bdgt in "0.5" "1"; do
+#    for bdgt in "0.5" "1" "2"; do
+    for bdgt in "0.5" "1"; do
         sed -i "/^fr.repl.budget=/cfr.repl.budget=${bdgt}" ${DIR}/alluxio/conf/alluxio-site.properties
 
         policy_env
