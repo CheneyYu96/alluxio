@@ -474,7 +474,7 @@ spec_test(){
         sleep ${sleep_time} # wait util replication finished
 
 #        for rt in 20 30 40; do
-        for rt in 40; do
+        for rt in 30; do
 
             mkdir -p $DIR/logs/r${rt}_b${bdgt}
 
