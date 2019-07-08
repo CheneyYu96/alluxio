@@ -449,7 +449,7 @@ skew_band_test(){
 
 spec_test(){
     timeout=$1
-    PER_COL=3
+    PER_COL=1
 
 #    run_default 30 ${timeout}
 
@@ -474,7 +474,7 @@ spec_test(){
         sleep ${sleep_time} # wait util replication finished
 
 #        for rt in 20 30 40; do
-        for rt in 30; do
+        for rt in 40; do
 
             mkdir -p $DIR/logs/r${rt}_b${bdgt}
 
