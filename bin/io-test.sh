@@ -545,7 +545,8 @@ overhead_test(){
 
         mv $DIR/alluxio/logs/master.log ${log_name}
 
-        clear 1 1
+        rm_env
+        remove $DIR/alluxio/logs
 
     done
 }
