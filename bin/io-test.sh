@@ -17,6 +17,7 @@ times=1
 con_times=10
 tmp_dir=
 
+SIZE=$((1073741824))
 check_from_hdfs(){
     if [[ "${FROM_HDFS}" -eq "1" ]]; then
         echo --from-hdfs
@@ -32,6 +33,7 @@ convert_test(){
 }
 
 convert(){
+
     if [[ ! -f ${DATA_SCALE} ]]; then
         touch ${DATA_SCALE}
     fi
@@ -39,7 +41,9 @@ convert(){
     if [[ `cat ${DATA_SCALE}` == "$SCL" && -d $DIR/tpch_parquet ]]; then
         echo "Parquet exist"
     else
-        conv_env
+        size_in_mb=$((SIZE * 8/1048576))
+        size_in_mb=$((size_in_mb/10))
+        conv_env ${size_in_mb}
         move_data
 
         $DIR/spark/bin/spark-submit \
@@ -48,6 +52,7 @@ convert(){
             --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
             $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar \
                 --convert-table \
+                --size ${SIZE}\
                 $(check_from_hdfs ${FROM_HDFS})
         clean_data
 
@@ -449,7 +454,7 @@ skew_band_test(){
 
 spec_test(){
     timeout=$1
-    PER_COL=1
+    PER_COL=3
 
 #    run_default 30 ${timeout}
 
@@ -502,6 +507,45 @@ spec_test(){
 
 }
 
+overhead_test(){
+    SIZE=$((1024*1024*100))
+
+    PER_COL=3
+
+#    for factor in `seq 0 9`; do
+    for factor in 1 2; do
+        scale=$((factor+1))
+        scale=$((scale*2))
+
+        remove ${DIR}/tpch_parquet
+
+        convert_test ${scale}
+
+        log_name=$(get_dir_index oh_s${scale}_)
+
+        run_policy 40 5
+
+        rm_env_except_pattern
+
+        policy_env
+
+        interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
+        start=$(date "+%s")
+
+        init_alluxio_status
+
+        now=$(date "+%s")
+        tm=$((now-start))
+
+        sleep_time=$((interval+300-tm))
+
+        sleep ${sleep_time}
+
+        mv $DIR/alluxio/logs/master.log ${log_name}
+
+    done
+}
+
 
 if [[ "$#" -lt 3 ]]; then
     usage
@@ -529,6 +573,8 @@ else
         skew-band)              skew_band_test $2
                                 ;;
         spec)                   spec_test $2
+                                ;;
+        overhead)               overhead_test
                                 ;;
         * )                     usage
     esac

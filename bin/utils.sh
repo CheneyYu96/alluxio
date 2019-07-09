@@ -200,10 +200,12 @@ nonshuffle_env(){
 }
 
 conv_env(){
+    size_in_mb=$1
+
     sed -i "/fr.client.translation=true/c\fr.client.translation=false" $DIR/alluxio/conf/alluxio-site.properties
     sed -i "/fr.client.block.location=true/c\fr.client.block.location=false" $DIR/alluxio/conf/alluxio-site.properties
 
-    sed -i '/^alluxio.user.block.size.bytes.default=/calluxio.user.block.size.bytes.default=800MB' $DIR/alluxio/conf/alluxio-site.properties
+    sed -i "/^alluxio.user.block.size.bytes.default=/calluxio.user.block.size.bytes.default=${size_in_mb}MB" $DIR/alluxio/conf/alluxio-site.properties
 
      ${DIR}/alluxio/bin/restart.sh
 }
