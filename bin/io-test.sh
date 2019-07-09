@@ -524,9 +524,10 @@ overhead_test(){
         log_name=$(get_dir_index oh_s${scale}_)
         mkdir -p ${log_name}
 
-        run_policy 40 5
+        run_default 40 5
 
         rm_env_except_pattern
+        remove $DIR/alluxio/logs
 
         policy_env
 
@@ -538,7 +539,7 @@ overhead_test(){
         now=$(date "+%s")
         tm=$((now-start))
 
-        sleep_time=$((interval+300-tm))
+        sleep_time=$((interval+180-tm))
 
         sleep ${sleep_time}
 
