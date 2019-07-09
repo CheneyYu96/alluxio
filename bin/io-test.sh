@@ -449,7 +449,7 @@ skew_band_test(){
 
 spec_test(){
     timeout=$1
-    PER_COL=1
+    PER_COL=3
 
 #    run_default 30 ${timeout}
 
