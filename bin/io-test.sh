@@ -522,6 +522,7 @@ overhead_test(){
         convert_test ${scale}
 
         log_name=$(get_dir_index oh_s${scale}_)
+        mkdir -p ${log_name}
 
         run_policy 40 5
 
