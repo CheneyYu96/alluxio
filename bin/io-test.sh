@@ -451,9 +451,9 @@ spec_test(){
     timeout=$1
     PER_COL=3
 
-#    run_default 30 ${timeout}
+    run_default 30 ${timeout}
 
-#    rm_env_except_pattern
+    rm_env_except_pattern
 
 #    for bdgt in "0.5" "1" "2"; do
     for bdgt in "1"; do
