@@ -525,7 +525,8 @@ overhead_test(){
     USE_PATTERN=0
 
 #    for factor in `seq 0 9`; do
-    for factor in `seq 4 9`; do
+#    for factor in `seq 4 9`; do
+    for factor in 2; do
         scale=$((factor+1))
         scale=$((scale*2))
 
