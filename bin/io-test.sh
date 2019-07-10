@@ -539,7 +539,7 @@ overhead_test(){
         log_name=$(get_dir_index oh_s${scale}_)
         mkdir -p ${log_name}
 
-        interval=$((scale*300))
+        interval=$((scale*200+120))
         sed -i "/^fr.repl.interval=/cfr.repl.interval=${interval}" $DIR/alluxio/conf/alluxio-site.properties
 
 #        interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
@@ -563,7 +563,7 @@ overhead_test(){
 
         df_log_dir_name=$(get_dir_index py_q${query}_rt${rate}_dft_)
         python con_query_test.py \
-            40 \
+            20 \
             ${timeout} \
             0 \
             ${df_log_dir_name} \
