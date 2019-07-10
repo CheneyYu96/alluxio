@@ -74,6 +74,10 @@ init_alluxio_status(){
         default_move_par=1
     fi
 
+    if [[ ! -f ${ALLUXIO_ENV} ]]; then
+        touch ${ALLUXIO_ENV}
+    fi
+
     if [[ `cat ${ALLUXIO_ENV}` == "1" ]]; then
         echo 'Alluxio env already prepared'
     else
@@ -528,6 +532,9 @@ overhead_test(){
         remove ${DIR}/tpch_parquet
         convert_test ${scale}
 
+        rm_env
+        remove $DIR/alluxio/logs
+
         log_name=$(get_dir_index oh_s${scale}_)
         mkdir -p ${log_name}
 
@@ -535,9 +542,6 @@ overhead_test(){
 
         interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
         start=$(date "+%s")
-
-        rm_env
-        remove $DIR/alluxio/logs
 
         init_alluxio_status
 
