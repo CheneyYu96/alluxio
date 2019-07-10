@@ -579,6 +579,7 @@ overhead_test(){
         rm -r ${df_log_dir_name}
         rm_env
         remove $DIR/alluxio/logs
+        remove $DIR/alluxio/origin-locs.txt
 
     done
 }
