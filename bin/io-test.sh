@@ -543,7 +543,8 @@ overhead_test(){
         tm=$((now-start))
 
         timeout=$((interval-tm))
-        timeout=$((timeout/60-1))
+        timeout=$((timeout-30))
+        timeout=$((timeout/60))
 
         if [[ ${timeout} -le 0 ]]; then
             echo "non-positive timeout. scale ${scale}"
