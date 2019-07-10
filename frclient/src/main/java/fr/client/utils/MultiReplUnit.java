@@ -1,6 +1,7 @@
 package fr.client.utils;
 
 import alluxio.AlluxioURI;
+import alluxio.collections.Pair;
 import com.google.common.collect.ImmutableMap;
 
 import java.util.List;
@@ -41,4 +42,13 @@ public class MultiReplUnit {
                         Map.Entry::getKey,
                         e -> new ReplUnit(e.getValue(), replicas)));
     }
+
+    public List<Pair<AlluxioURI, ReplUnit>> toReplUnitPairs(){
+        return offLenPairsWithFile
+                .entrySet()
+                .stream()
+                .map( o -> new Pair<>(o.getKey(), new ReplUnit(o.getValue(), replicas)))
+                .collect(Collectors.toList());
+    }
+
 }

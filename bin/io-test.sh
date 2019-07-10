@@ -526,6 +526,7 @@ overhead_test(){
 
         run_default 40 5
 
+        rm -r $DIR/logs/py_q0_rt40_dft*
         rm_env_except_pattern
         remove $DIR/alluxio/logs
 
@@ -544,6 +545,15 @@ overhead_test(){
         sleep ${sleep_time}
 
         mv $DIR/alluxio/logs/master.log ${log_name}
+
+        count=0
+        for f in $(ls $DIR/tpch_parquet); do
+            for sf in $(ls $DIR/tpch_parquet/$f); do
+                count=$((count+1))
+            done
+            count=$((count-1)) # remove SUCCESS
+        done
+        echo "${count}" > ${log_name}/count.txt
 
         rm_env
         remove $DIR/alluxio/logs
