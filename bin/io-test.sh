@@ -524,13 +524,8 @@ overhead_test(){
         log_name=$(get_dir_index oh_s${scale}_)
         mkdir -p ${log_name}
 
-        run_default 40 5
-
-        rm -r $DIR/logs/py_q0_rt40_dft*
-        rm_env_except_pattern
-        remove $DIR/alluxio/logs
-
-        policy_env
+        sed -i '/^fr.repl.interval=/cfr.repl.interval=300' $DIR/alluxio/conf/alluxio-site.properties
+        sed -i '/^fr.repl.budget.access=/cfr.repl.budget.access=false' $DIR/alluxio/conf/alluxio-site.properties
 
         interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
         start=$(date "+%s")
@@ -540,9 +535,22 @@ overhead_test(){
         now=$(date "+%s")
         tm=$((now-start))
 
-        sleep_time=$((interval+180-tm))
+        timeout=$((interval-tm))
+        timeout=$((timeout/60-1))
 
-        sleep ${sleep_time}
+        cd ${DIR}/alluxio
+        df_log_dir_name=$(get_dir_index py_q${query}_rt${rate}_dft_)
+        python con_query_test.py \
+            40 \
+            ${timeout} \
+            0 \
+            ${df_log_dir_name} \
+            --policy 2 \
+            --fault ${FAULT} \
+            --gt True \
+            --dist ${DIST}
+
+        sleep 180
 
         mv $DIR/alluxio/logs/master.log ${log_name}
 
@@ -555,6 +563,7 @@ overhead_test(){
         done
         echo "${count}" > ${log_name}/count.txt
 
+        rm -r ${df_log_dir_name}
         rm_env
         remove $DIR/alluxio/logs
 
