@@ -95,7 +95,7 @@ init_alluxio_status(){
         fi
 
         fr_env
-        $DIR/alluxio/bin/alluxio logLevel --logName=alluxio.master.repl.ReplManager --target=master --level=DEBUG
+#        $DIR/alluxio/bin/alluxio logLevel --logName=alluxio.master.repl.ReplManager --target=master --level=DEBUG
 
         if [[ "${default_move_par}" -eq "1" ]]; then
             move_par_data
@@ -525,8 +525,8 @@ overhead_test(){
         scale=$((factor+1))
         scale=$((scale*2))
 
-#        remove ${DIR}/tpch_parquet
-#        convert_test ${scale}
+        remove ${DIR}/tpch_parquet
+        convert_test ${scale}
 
         log_name=$(get_dir_index oh_s${scale}_)
         mkdir -p ${log_name}
@@ -535,6 +535,9 @@ overhead_test(){
 
         interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
         start=$(date "+%s")
+
+        rm_env
+        remove $DIR/alluxio/logs
 
         init_alluxio_status
 
@@ -575,10 +578,10 @@ overhead_test(){
         done
         echo "${count}" > ${log_name}/count.txt
 
-#        rm -r ${df_log_dir_name}
-#        rm_env
-#        remove $DIR/alluxio/logs
-#        remove $DIR/alluxio/origin-locs.txt
+        rm -r ${df_log_dir_name}
+        rm_env
+        remove $DIR/alluxio/logs
+        remove $DIR/alluxio/origin-locs.txt
 
     done
 }
