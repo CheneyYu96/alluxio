@@ -98,7 +98,8 @@ init_alluxio_status(){
             sed -i '/^fr.repl.budget.access=/cfr.repl.budget.access=false' $DIR/alluxio/conf/alluxio-site.properties
         fi
 
-        fr_env
+        size_in_mb=$((SIZE/1048576))
+        fr_env ${size_in_mb}
 #        $DIR/alluxio/bin/alluxio logLevel --logName=alluxio.master.repl.ReplManager --target=master --level=DEBUG
 
         if [[ "${default_move_par}" -eq "1" ]]; then
@@ -519,13 +520,13 @@ spec_test(){
 }
 
 overhead_test(){
-    SIZE=$((1024*1024*100))
+    SIZE=$((1024*1024*30))
 
     PER_COL=3
     USE_PATTERN=0
 
-#    for factor in `seq 0 9`; do
-    for factor in `seq 4 9`; do
+    for factor in `seq 0 9`; do
+#    for factor in `seq 4 9`; do
         scale=$((factor+1))
         scale=$((scale*2))
 
@@ -538,9 +539,10 @@ overhead_test(){
         log_name=$(get_dir_index oh_s${scale}_)
         mkdir -p ${log_name}
 
-        sed -i '/^fr.repl.interval=/cfr.repl.interval=900' $DIR/alluxio/conf/alluxio-site.properties
+        interval=$((scale*100))
+        sed -i "/^fr.repl.interval=/cfr.repl.interval=${interval}" $DIR/alluxio/conf/alluxio-site.properties
 
-        interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
+#        interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
         start=$(date "+%s")
 
         cd ${DIR}/alluxio

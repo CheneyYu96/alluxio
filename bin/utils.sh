@@ -211,7 +211,8 @@ conv_env(){
 }
 
 fr_env(){
-    sed -i '/^alluxio.user.block.size.bytes.default=/calluxio.user.block.size.bytes.default=1GB' $DIR/alluxio/conf/alluxio-site.properties
+    size_in_mb=$1
+    sed -i "/^alluxio.user.block.size.bytes.default=/calluxio.user.block.size.bytes.default=${size_in_mb}MB" $DIR/alluxio/conf/alluxio-site.properties
 
     sed -i "/fr.client.translation=false/c\fr.client.translation=true" $DIR/alluxio/conf/alluxio-site.properties
 
