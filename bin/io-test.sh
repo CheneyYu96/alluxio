@@ -593,6 +593,8 @@ else
                                 ;;
         clear)                  clear $2 $3
                                 ;;
+        init)                   init_alluxio_status
+                                ;;
         rm-env)                 rm_env
                                 ;;
         cpjob)                   complie_job
