@@ -524,7 +524,7 @@ overhead_test(){
         log_name=$(get_dir_index oh_s${scale}_)
         mkdir -p ${log_name}
 
-        sed -i '/^fr.repl.interval=/cfr.repl.interval=300' $DIR/alluxio/conf/alluxio-site.properties
+        sed -i '/^fr.repl.interval=/cfr.repl.interval=420' $DIR/alluxio/conf/alluxio-site.properties
         sed -i '/^fr.repl.budget.access=/cfr.repl.budget.access=false' $DIR/alluxio/conf/alluxio-site.properties
 
         interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
@@ -537,6 +537,11 @@ overhead_test(){
 
         timeout=$((interval-tm))
         timeout=$((timeout/60-1))
+
+        if [[ ${timeout} -le 0 ]]; then
+            echo "non-positive timeout. scale ${scale}"
+            exit 1
+        fi
 
         cd ${DIR}/alluxio
         df_log_dir_name=$(get_dir_index py_q${query}_rt${rate}_dft_)
