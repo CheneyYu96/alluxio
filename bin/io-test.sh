@@ -95,7 +95,7 @@ init_alluxio_status(){
         fi
 
         fr_env
-#        $DIR/alluxio/bin/alluxio logLevel --logName=alluxio.master.repl.ReplManager --target=master --level=DEBUG
+        $DIR/alluxio/bin/alluxio logLevel --logName=alluxio.master.repl.ReplManager --target=master --level=DEBUG
 
         if [[ "${default_move_par}" -eq "1" ]]; then
             move_par_data
