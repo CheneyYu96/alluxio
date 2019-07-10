@@ -525,7 +525,7 @@ overhead_test(){
     USE_PATTERN=0
 
 #    for factor in `seq 0 9`; do
-    for factor in `seq 2 9`; do
+    for factor in `seq 4 9`; do
         scale=$((factor+1))
         scale=$((scale*2))
 
@@ -538,7 +538,7 @@ overhead_test(){
         log_name=$(get_dir_index oh_s${scale}_)
         mkdir -p ${log_name}
 
-        sed -i '/^fr.repl.interval=/cfr.repl.interval=600' $DIR/alluxio/conf/alluxio-site.properties
+        sed -i '/^fr.repl.interval=/cfr.repl.interval=900' $DIR/alluxio/conf/alluxio-site.properties
 
         interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
         start=$(date "+%s")
