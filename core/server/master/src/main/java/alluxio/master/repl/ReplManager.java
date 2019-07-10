@@ -159,7 +159,7 @@ public class ReplManager {
         // update access counts
         if (!useAccessInfo) {
 
-            LOG.info("Record access for file {}. offset {} length {}", requestFile.getPath(), pair.offset, pair.length);
+            LOG.debug("Record access for file {}. offset {} length {}", requestFile.getPath(), pair.offset, pair.length);
             if (accessRecords.containsKey(requestFile)) {
                 accessRecords.get(requestFile).incCount(pair);
             } else {
