@@ -539,7 +539,7 @@ overhead_test(){
         log_name=$(get_dir_index oh_s${scale}_)
         mkdir -p ${log_name}
 
-        interval=$((scale*100))
+        interval=$((scale*300))
         sed -i "/^fr.repl.interval=/cfr.repl.interval=${interval}" $DIR/alluxio/conf/alluxio-site.properties
 
 #        interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
