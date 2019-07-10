@@ -61,7 +61,7 @@ convert(){
 }
 
 default_move_par=1
-
+USE_PATTERN=1
 init_alluxio_status(){
 
     if [[ ! -d $DIR/tpch_parquet ]]; then
@@ -85,6 +85,13 @@ init_alluxio_status(){
             table_repl_env
         elif [[ "${PER_COL}" -eq "3" ]]; then
             bundle_infer_env
+        fi
+
+
+        if [[ "${USE_PATTERN}" -eq "1" ]]; then
+            sed -i '/^fr.repl.budget.access=/cfr.repl.budget.access=true' $DIR/alluxio/conf/alluxio-site.properties
+        else
+            sed -i '/^fr.repl.budget.access=/cfr.repl.budget.access=false' $DIR/alluxio/conf/alluxio-site.properties
         fi
 
         fr_env
@@ -511,6 +518,7 @@ overhead_test(){
     SIZE=$((1024*1024*100))
 
     PER_COL=3
+    USE_PATTERN=0
 
 #    for factor in `seq 0 9`; do
     for factor in 0; do
@@ -525,7 +533,6 @@ overhead_test(){
         mkdir -p ${log_name}
 
         sed -i '/^fr.repl.interval=/cfr.repl.interval=420' $DIR/alluxio/conf/alluxio-site.properties
-        sed -i '/^fr.repl.budget.access=/cfr.repl.budget.access=false' $DIR/alluxio/conf/alluxio-site.properties
 
         interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
         start=$(date "+%s")
