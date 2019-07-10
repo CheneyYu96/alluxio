@@ -543,6 +543,8 @@ overhead_test(){
         interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
         start=$(date "+%s")
 
+        cd ${DIR}/alluxio
+
         init_alluxio_status
 
         now=$(date "+%s")
@@ -557,7 +559,6 @@ overhead_test(){
             exit 1
         fi
 
-        cd ${DIR}/alluxio
         df_log_dir_name=$(get_dir_index py_q${query}_rt${rate}_dft_)
         python con_query_test.py \
             40 \
