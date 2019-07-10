@@ -73,6 +73,7 @@ public class ParquetInfo {
         FileWriter fw = new FileWriter(locationsFile, true);
         fw.write(filePath + "," + address.getHost() + "\n");
         fw.close();
+        System.out.println("Write loc for file " + filePath);
     }
 
     public void writeParquet(String locationFile) throws IOException {

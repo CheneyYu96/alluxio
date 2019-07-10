@@ -566,7 +566,7 @@ overhead_test(){
             ${df_log_dir_name} \
             --policy 2 \
             --fault ${FAULT} \
-            --gt True \
+            --gt False \
             --dist ${DIST}
 
         sleep 180
