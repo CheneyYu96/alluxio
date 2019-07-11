@@ -521,13 +521,13 @@ overhead_test(){
     USE_PATTERN=0
 
 #    for bdgt in `seq 1 5`; do
-    for bdgt in `seq 4 5`; do
+    for bdgt in 5; do
         sed -i "/^fr.repl.budget=/cfr.repl.budget=${bdgt}" ${DIR}/alluxio/conf/alluxio-site.properties
 
         log_name=$(get_dir_index oh_b${bdgt}_)
         mkdir -p ${log_name}
 
-        sed -i '/^fr.repl.interval=/cfr.repl.interval=400' $DIR/alluxio/conf/alluxio-site.properties
+        sed -i '/^fr.repl.interval=/cfr.repl.interval=360' $DIR/alluxio/conf/alluxio-site.properties
 
         interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
         start=$(date "+%s")
@@ -560,7 +560,8 @@ overhead_test(){
             --dist ${DIST} \
             --log False
 
-        sleep 180
+        sleep_time=$((bdgt*20+60))
+        sleep ${sleep_time}
 
         mv $DIR/alluxio/logs/master.log ${log_name}
 
