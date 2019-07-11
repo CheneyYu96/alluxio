@@ -560,7 +560,7 @@ overhead_test(){
             --dist ${DIST} \
             --log False
 
-        sleep_time=$((bdgt*20+120))
+        sleep_time=$((bdgt*20+150))
         sleep ${sleep_time}
 
         mv $DIR/alluxio/logs/master.log ${log_name}
