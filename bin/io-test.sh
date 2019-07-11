@@ -527,7 +527,7 @@ overhead_test(){
         log_name=$(get_dir_index oh_b${bdgt}_)
         mkdir -p ${log_name}
 
-        sed -i '/^fr.repl.interval=/cfr.repl.interval=360' $DIR/alluxio/conf/alluxio-site.properties
+        sed -i '/^fr.repl.interval=/cfr.repl.interval=400' $DIR/alluxio/conf/alluxio-site.properties
 
         interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
         start=$(date "+%s")
