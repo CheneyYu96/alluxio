@@ -520,8 +520,8 @@ overhead_test(){
     PER_COL=3
     USE_PATTERN=0
 
-#    for bdgt in `seq 1 5`; do
-    for bdgt in 5; do
+    for bdgt in `seq 1 5`; do
+#    for bdgt in 5; do
         sed -i "/^fr.repl.budget=/cfr.repl.budget=${bdgt}" ${DIR}/alluxio/conf/alluxio-site.properties
 
         log_name=$(get_dir_index oh_b${bdgt}_)
@@ -568,7 +568,7 @@ overhead_test(){
 
         rm -r ${df_log_dir_name}
         rm_env
-#        remove $DIR/alluxio/logs
+        remove $DIR/alluxio/logs
     done
 }
 
