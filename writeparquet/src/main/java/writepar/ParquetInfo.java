@@ -15,6 +15,8 @@ import fr.client.utils.FRUtils;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  *
@@ -29,8 +31,12 @@ public class ParquetInfo {
         locationsFile = System.getProperty("user.dir") + "/origin-locs.txt";
     }
 
-    public void sendInfo(String filePath, String infoPath) throws IOException{
-        sendInfo(filePath, infoPath, 1);
+    public void alphaTest(int fileNum, int offNum) throws IOException{
+        List<Long> lengthes = IntStream.range(0, offNum).mapToLong( i -> 100).boxed().collect(Collectors.toList());
+        List<Long> offsets = IntStream.range(0, offNum).mapToLong( i -> i * 100).boxed().collect(Collectors.toList());
+
+        String tag = "<alpha>" + fileNum;
+        mFileSystem.sendParquetInfo(new AlluxioURI(tag), offsets, lengthes);
     }
 
     public void sendInfo(String filePath, String infoPath, int isRecord) throws IOException{

@@ -3103,7 +3103,14 @@ public final class DefaultFileSystemMaster extends CoreMaster implements FileSys
 
   @Override
   public void recordOffsetInfo(String UFSPath, List<Long> offset, List<Long> length) {
-    mReplManager.recordParInfo(new AlluxioURI(UFSPath), offset, length);
+    if(UFSPath.startsWith("<alpha>")){
+      // check reading column data
+      int fileNum = Integer.parseInt(UFSPath.substring(UFSPath.indexOf('>') + 1));
+      mReplManager.alphaTest(fileNum, offset, length);
+    }
+    else {
+      mReplManager.recordParInfo(new AlluxioURI(UFSPath), offset, length);
+    }
   }
 
   private boolean syncMetadata(RpcContext rpcContext, LockedInodePath inodePath,

@@ -8,17 +8,17 @@ import java.io.IOException;
 public class Main {
 
     public static void main(String[] args) throws IOException {
+        ParquetInfo parquetInfo = new ParquetInfo();
         if (args.length == 3){
             int isRecord = Integer.parseInt(args[0]);
-            ParquetInfo parquetInfo = new ParquetInfo();
             parquetInfo.sendInfo(args[1], args[2], isRecord);
         }
         else if (args.length == 2){
-            ParquetInfo parquetInfo = new ParquetInfo();
-            parquetInfo.sendInfo(args[0], args[1]);
+            int fileNum = Integer.parseInt(args[0]);
+            int offNum = Integer.parseInt(args[1]);
+            parquetInfo.alphaTest(fileNum, offNum);
         }
         else if (args.length == 1){
-            ParquetInfo parquetInfo = new ParquetInfo();
             parquetInfo.writeParquet(args[0]);
         }
         else {

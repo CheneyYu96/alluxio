@@ -57,31 +57,34 @@ public class ReplPolicyUtils {
 
         double optCost = 0;
         // TODO binary search
-        for (int i = 0; i < sortedLoads.size(); i++){
 
-            double coldLoad = sortedLoads
-                    .stream()
-                    .limit(i + 1)
-                    .reduce(0.0, Double::sum);
-
-            lastAlpha = optAlpha;
-            optAlpha = 1 / coldLoad;
-
-            double cost = costCalculator.calcReplCost(optAlpha, allLoadSize);
-
-            LOG.info("Calculating alpha: {}; cost: {}", optAlpha, cost);
-
-            if (cost <= budget){
-                optCost = cost;
-                LOG.info("Suboptimal alpha: {}; cost: {}", optAlpha, optCost);
-                break;
-            }
-        }
+//        for (int i = 0; i < sortedLoads.size(); i++){
+//
+//            double coldLoad = sortedLoads
+//                    .stream()
+//                    .limit(i + 1)
+//                    .reduce(0.0, Double::sum);
+//
+//            lastAlpha = optAlpha;
+//            optAlpha = 1 / coldLoad;
+//
+//            double cost = costCalculator.calcReplCost(optAlpha, allLoadSize);
+//
+//            LOG.info("Calculating alpha: {}; cost: {}", optAlpha, cost);
+//
+//            if (cost <= budget){
+//                optCost = cost;
+//                LOG.info("Suboptimal alpha: {}; cost: {}", optAlpha, optCost);
+//                break;
+//            }
+//        }
 
         // Tuning alpha
         int attemp = 0;
-        double upperAlpha = lastAlpha;
-        double lowerAlpha = optAlpha;
+//        double upperAlpha = lastAlpha;
+//        double lowerAlpha = optAlpha;
+        double upperAlpha = 1 / sortedLoads.stream().reduce(0.0, Double::sum);
+        double lowerAlpha = 0.0;
 
         while( Math.abs(optCost - budget) / budget > 0.05){
 

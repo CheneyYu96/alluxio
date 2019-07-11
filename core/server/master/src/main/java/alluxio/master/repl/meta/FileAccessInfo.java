@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.IntStream;
 
 /**
  * Record intra-file access info
@@ -50,6 +51,12 @@ public class FileAccessInfo {
         for (OffLenPair pair: allEmptyPair){
             offsetCount.put(pair, (long) 0);
         }
+    }
+
+    public FileAccessInfo(AlluxioURI mFilePath, List<OffLenPair> allEmptyPair, List<Long> counts) {
+        this(mFilePath);
+        IntStream.range(0, allEmptyPair.size())
+                .forEach( i -> offsetCount.put(allEmptyPair.get(i), counts.get(i)));
     }
 
     public AlluxioURI getFilePath() {

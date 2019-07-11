@@ -181,13 +181,31 @@ public class ReplManager {
                 LOG.error("File {}'s offset and length does not match", filePath);
             }
 
-//            if(useAccessInfo){
-                List<OffLenPair> allPairs = IntStream.range(0, offset.size())
-                        .mapToObj(i -> new OffLenPair(offset.get(i), length.get(i)))
-                        .collect(Collectors.toList());
-                accessRecords.put(filePath, new FileAccessInfo(filePath, allPairs));
-//            }
+            List<OffLenPair> allPairs = IntStream.range(0, offset.size())
+                    .mapToObj(i -> new OffLenPair(offset.get(i), length.get(i)))
+                    .collect(Collectors.toList());
+            accessRecords.put(filePath, new FileAccessInfo(filePath, allPairs));
         }
+    }
+
+    public void alphaTest(int fileNum, List<Long> offset, List<Long> length){
+        LOG.info("Begin alpha test. fileNum: {}", fileNum);
+        String testDir = "/alpha/";
+
+        List<OffLenPair> allPairs = IntStream.range(0, offset.size())
+                .mapToObj(i -> new OffLenPair(offset.get(i), length.get(i)))
+                .collect(Collectors.toList());
+
+        for(int i = 0; i < fileNum; i++){
+            AlluxioURI filePath = new AlluxioURI(testDir + i);
+            List<Long> counts = IntStream.range(0, offset.size())
+                    .mapToLong( num -> (int) (Math.random() * 100)).boxed().collect(Collectors.toList());
+            accessRecords.put(filePath, new FileAccessInfo(filePath, allPairs, counts));
+        }
+
+        List<MultiReplUnit> replUnits = replPolicy.calcMultiReplicas(new ArrayList<>(accessRecords.values()));
+
+        LOG.info("Finish alpha test. replicaNum: {}", replUnits.size());
     }
 
     public void checkStats(){

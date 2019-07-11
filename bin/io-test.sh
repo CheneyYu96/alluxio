@@ -520,29 +520,19 @@ spec_test(){
 }
 
 overhead_test(){
-    SIZE=$((1024*1024*30))
 
     PER_COL=3
     USE_PATTERN=0
 
-#    for factor in `seq 0 9`; do
-    for factor in `seq 2 9`; do
-        scale=$((factor+1))
-        scale=$((scale*2))
+    for bdgt in `seq 1 5`; do
+        sed -i "/^fr.repl.budget=/cfr.repl.budget=${bdgt}" ${DIR}/alluxio/conf/alluxio-site.properties
 
-        remove ${DIR}/tpch_parquet
-        convert_test ${scale}
-
-        rm_env
-        remove $DIR/alluxio/logs
-
-        log_name=$(get_dir_index oh_s${scale}_)
+        log_name=$(get_dir_index oh_b${bdgt}_)
         mkdir -p ${log_name}
 
-        interval=$((scale*200+120))
-        sed -i "/^fr.repl.interval=/cfr.repl.interval=${interval}" $DIR/alluxio/conf/alluxio-site.properties
+        policy_env
 
-#        interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
+        interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
         start=$(date "+%s")
 
         cd ${DIR}/alluxio
@@ -557,13 +547,13 @@ overhead_test(){
         timeout=$((timeout/60))
 
         if [[ ${timeout} -le 0 ]]; then
-            echo "non-positive timeout. scale ${scale}"
+            echo "non-positive timeout. bdgt ${bdgt}"
             exit 1
         fi
 
         df_log_dir_name=$(get_dir_index py_q${query}_rt${rate}_dft_)
         python con_query_test.py \
-            5 \
+            20 \
             ${timeout} \
             0 \
             ${df_log_dir_name} \
@@ -577,21 +567,30 @@ overhead_test(){
 
         mv $DIR/alluxio/logs/master.log ${log_name}
 
-        count=0
-        for f in $(ls $DIR/tpch_parquet); do
-            for sf in $(ls $DIR/tpch_parquet/$f); do
-                count=$((count+1))
-            done
-            count=$((count-1)) # remove SUCCESS
-        done
-        echo "${count}" > ${log_name}/count.txt
 
         rm -r ${df_log_dir_name}
         rm_env
         remove $DIR/alluxio/logs
-        remove $DIR/alluxio/origin-locs.txt
-
     done
+}
+
+alpha_test(){
+    PER_COL=3
+    for num in `seq 1 10`; do
+        file_num=$((num*1000))
+
+        log_dir_name=$(get_dir_index alpha_f${num}_)
+
+        default_env
+        init_alluxio_status
+
+        java -jar ${DIR}/alluxio/writeparquet/target/writeparquet-2.0.0-SNAPSHOT.jar ${file_num} 10
+
+        mv $DIR/alluxio/logs/master.log ${log_dir_name}
+        remove $DIR/alluxio_env
+        remove $DIR/alluxio/logs
+    done
+
 }
 
 
@@ -625,6 +624,8 @@ else
         spec)                   spec_test $2
                                 ;;
         overhead)               overhead_test
+                                ;;
+        alpha)                  alpha_test
                                 ;;
         * )                     usage
     esac
