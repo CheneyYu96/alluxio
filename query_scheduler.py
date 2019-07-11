@@ -190,10 +190,11 @@ gap_time = lambda past_time : int((now() - past_time) * 1000)
 @click.option('--policy', type=int, default=0) # 0: bundling, 1: column-wise, 2: table
 @click.option('--fault', type=int, default=0)
 @click.option('--gt', type=bool, default=True)
-def submit_query(query, logs_dir, policy, fault, gt):
-    submit_query_internal(query, logs_dir, policy, fault, gt)
+@click.option('--log', type=bool, default=True)
+def submit_query(query, logs_dir, policy, fault, gt, log):
+    submit_query_internal(query, logs_dir, policy, fault, gt, log)
 
-def submit_query_internal(query, logs_dir, policy, fault, gt):
+def submit_query_internal(query, logs_dir, policy, fault, gt, log):
     all_queries = parse_all_queries()
     if query < 1 or query > len(all_queries):
         print('Invalid query')
@@ -239,15 +240,16 @@ def submit_query_internal(query, logs_dir, policy, fault, gt):
     if all(all_res):
         logging.info('All reading task finished. elapsed: {}'.format(gap_time(start)))
 
-        # collect worker log
-        start = now()
+        if log:
+            # collect worker log
+            start = now()
 
-        for log_name, ssh_client in log_info.items():
-            sftp = ssh_client.open_sftp()
-            sftp.get('{}/{}'.format(LOG_PREFIX, log_name), '{}/{}'.format(logs_dir, log_name))
-            ssh_client.close()
-        
-        logging.info('Finish log collection. elapsed: {}'.format(gap_time(start)))
+            for log_name, ssh_client in log_info.items():
+                sftp = ssh_client.open_sftp()
+                sftp.get('{}/{}'.format(LOG_PREFIX, log_name), '{}/{}'.format(logs_dir, log_name))
+                ssh_client.close()
+            
+            logging.info('Finish log collection. elapsed: {}'.format(gap_time(start)))
     else:
         logging.info('Fail task. count: {}'.format(len([r for r in all_res if not r])))
 
