@@ -64,10 +64,6 @@ default_move_par=1
 USE_PATTERN=1
 init_alluxio_status(){
 
-    if [[ ! -d $DIR/tpch_parquet ]]; then
-        convert_test $scl
-    fi
-
     if [[ -f $DIR/alluxio/origin-locs.txt ]]; then
         default_move_par=0
     else
@@ -563,7 +559,7 @@ overhead_test(){
             --dist ${DIST} \
             --log False
 
-        sleep 180
+        sleep 240
 
         mv $DIR/alluxio/logs/master.log ${log_name}
 
