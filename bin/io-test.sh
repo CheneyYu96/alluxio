@@ -563,7 +563,7 @@ overhead_test(){
 
         df_log_dir_name=$(get_dir_index py_q${query}_rt${rate}_dft_)
         python con_query_test.py \
-            10 \
+            5 \
             ${timeout} \
             0 \
             ${df_log_dir_name} \
