@@ -100,7 +100,7 @@ public class ReplPolicyUtils {
                 lowerAlpha = optAlpha;
             }
 
-            if (attemp > 1000){
+            if (attemp > 3000){
                 break;
             }
         }

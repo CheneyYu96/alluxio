@@ -198,7 +198,8 @@ public class ReplManager {
 
         for(int i = 0; i < fileNum; i++){
             AlluxioURI filePath = new AlluxioURI(testDir + i);
-            List<Long> counts = IntStream.range(1, offset.size() + 1).mapToLong(num -> (long)num).boxed().collect(Collectors.toList());
+            List<Long> counts = IntStream.range(1, offset.size() + 1)
+                    .mapToLong(num -> (int) (Math.random() * 100) + 1).boxed().collect(Collectors.toList());
             accessRecords.put(filePath, new FileAccessInfo(filePath, allPairs, counts));
         }
 
