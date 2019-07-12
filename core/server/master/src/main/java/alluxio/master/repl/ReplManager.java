@@ -199,7 +199,7 @@ public class ReplManager {
         for(int i = 0; i < fileNum; i++){
             AlluxioURI filePath = new AlluxioURI(testDir + i);
             List<Long> counts = IntStream.range(0, offset.size())
-                    .mapToLong( num -> (int) (Math.random() * 100)).boxed().collect(Collectors.toList());
+                    .mapToLong( num -> 1 + (int) (Math.random() * 100)).boxed().collect(Collectors.toList());
             accessRecords.put(filePath, new FileAccessInfo(filePath, allPairs, counts));
         }
 

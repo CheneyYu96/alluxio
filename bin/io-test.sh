@@ -578,6 +578,7 @@ alpha_test(){
         file_num=$((num*1000))
 
         log_dir_name=$(get_dir_index alpha_f${num}_)
+        mkdir -p ${log_dir_name}
 
         default_env
         init_alluxio_status
