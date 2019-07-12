@@ -57,6 +57,7 @@ public class FileAccessInfo {
         this(mFilePath);
         IntStream.range(0, allEmptyPair.size())
                 .forEach( i -> offsetCount.put(allEmptyPair.get(i), counts.get(i)));
+        queryNum = counts.get(counts.size() - 1);
     }
 
     public AlluxioURI getFilePath() {

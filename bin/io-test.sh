@@ -574,7 +574,8 @@ overhead_test(){
 
 alpha_test(){
     PER_COL=3
-    for num in `seq 1 10`; do
+#    for num in `seq 1 10`; do
+    for num in 1; do
         file_num=$((num*1000))
 
         log_dir_name=$(get_dir_index alpha_f${num}_)
