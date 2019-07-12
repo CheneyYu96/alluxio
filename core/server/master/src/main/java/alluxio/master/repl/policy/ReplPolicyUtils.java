@@ -86,7 +86,7 @@ public class ReplPolicyUtils {
         double upperAlpha = 1 / sortedLoads.stream().filter(l -> l > 0.0).findFirst().get();
         double lowerAlpha = 1 / sortedLoads.stream().reduce(0.0, Double::sum);
 
-        while( Math.abs(optCost - budget) / budget > 0.05){
+        while( Math.abs(optCost - budget) / budget > 0.01){
 
             attemp += 1;
 
