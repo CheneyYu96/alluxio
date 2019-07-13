@@ -218,7 +218,7 @@ fr_env(){
     sed -i "/^alluxio.user.block.size.bytes.default=/calluxio.user.block.size.bytes.default=${size_in_mb}MB" $DIR/alluxio/conf/alluxio-site.properties
 #    sed -i "/^alluxio.user.block.size.bytes.default=/calluxio.user.block.size.bytes.default=600MB" $DIR/alluxio/conf/alluxio-site.properties
 
-    sed -i "/fr.client.translation=false/c\fr.client.translation=true" $DIR/alluxio/conf/alluxio-site.properties
+#    sed -i "/fr.client.translation=false/c\fr.client.translation=true" $DIR/alluxio/conf/alluxio-site.properties
 
     sed -i "/fr.client.block.location=false/c\fr.client.block.location=true" $DIR/alluxio/conf/alluxio-site.properties
 
@@ -230,9 +230,6 @@ fr_env(){
 #        "/alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.TimerPolicy/c\alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.RoundRobinPolicy" \
 #        $DIR/alluxio/conf/alluxio-site.properties
 
-    sed -i \
-        "/alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.RoundRobinPolicy/c\alluxio.user.file.copyfromlocal.write.location.policy.class=alluxio.client.file.policy.TimerPolicy" \
-        $DIR/alluxio/conf/alluxio-site.properties
 
      ${DIR}/alluxio/bin/restart.sh
 }
