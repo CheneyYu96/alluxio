@@ -68,7 +68,9 @@ move_par_data(){
     for f in $(ls $DIR/tpch_parquet); do
         $DIR/alluxio/bin/alluxio fs mkdir $DIR/tpch_parquet/$f
         for sf in $(ls $DIR/tpch_parquet/$f); do
-            $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/tpch_parquet/$f/$sf $DIR/tpch_parquet/$f/$sf
+            if [[ "${sf}" != "_SUCCESS" ]]; then
+                $DIR/alluxio/bin/alluxio fs copyFromLocal $DIR/tpch_parquet/$f/$sf $DIR/tpch_parquet/$f/$sf
+            fi
         done
     done
 }

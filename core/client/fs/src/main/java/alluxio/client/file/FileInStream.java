@@ -38,6 +38,7 @@ import alluxio.retry.CountingRetry;
 import alluxio.util.CommonUtils;
 import alluxio.util.proto.ProtoMessage;
 import alluxio.wire.BlockInfo;
+import alluxio.wire.BlockLocation;
 import alluxio.wire.FileSegmentsInfo;
 import alluxio.wire.WorkerNetAddress;
 import com.google.common.base.Preconditions;
@@ -190,10 +191,12 @@ public class FileInStream extends InputStream implements BoundedStream, Position
           info = masterClientResource.get().getBlockInfo(blockId);
         }
 
-        WorkerNetAddress blockLocation = info
-                .getLocations()
-                .get(0)
-                .getWorkerAddress();
+        WorkerNetAddress blockLocation = null;
+        List<BlockLocation> blockLocationList = info.getLocations();
+
+        if(blockLocationList.size() > 0){
+          blockLocation = blockLocationList.get(0).getWorkerAddress();
+        }
 
         mReplicaLocations.put(segmentsInfo, blockLocation);
         mReplicaStatus.put(segmentsInfo, replicaStatus);

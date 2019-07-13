@@ -60,7 +60,9 @@ public class FRClient {
     public List<AlluxioURI> copyFileOffset(AlluxioURI sourceFilePath, ReplUnit replUnit, List<WorkerNetAddress> availWorkers) {
 
         WorkerNetAddress blockLocation = FRUtils.getFileLocation(sourceFilePath, mFileSystem, mContext);
-        availWorkers.remove(blockLocation);
+        if (blockLocation != null) {
+            availWorkers.remove(blockLocation);
+        }
 
         int replicaNum = Math.min(replUnit.getReplicas(), availWorkers.size());
         List<Integer> indexList = IntStream

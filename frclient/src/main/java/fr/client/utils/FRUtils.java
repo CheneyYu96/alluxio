@@ -8,9 +8,11 @@ import alluxio.client.file.URIStatus;
 import alluxio.exception.AlluxioException;
 import alluxio.resource.CloseableResource;
 import alluxio.wire.BlockInfo;
+import alluxio.wire.BlockLocation;
 import alluxio.wire.WorkerNetAddress;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  *
@@ -29,10 +31,14 @@ public class FRUtils {
                 info = masterClientResource.get().getBlockInfo(blockId);
             }
 
-            return info
-                    .getLocations()
-                    .get(0)
-                    .getWorkerAddress();
+            List<BlockLocation> blockLocationList =  info.getLocations();
+
+            if(blockLocationList.size() > 0){
+                return blockLocationList.get(0).getWorkerAddress();
+            }
+            else {
+                return null;
+            }
 
         } catch (IOException | AlluxioException e) {
             e.printStackTrace();
