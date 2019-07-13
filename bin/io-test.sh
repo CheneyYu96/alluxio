@@ -577,8 +577,15 @@ alpha_test(){
 
 
 throttle_test(){
-    sed -i "/^fr.repl.throttle=/cfr.repl.throttle=true" ${DIR}/alluxio/conf/alluxio-site.properties
+    rate=$1
+    timeout=$2
 
+    sed -i "/^fr.repl.throttle=/cfr.repl.throttle=true" ${DIR}/alluxio/conf/alluxio-site.properties
+    sed -i "/^fr.repl.budget=/cfr.repl.budget=0.5" ${DIR}/alluxio/conf/alluxio-site.properties
+
+    run_default ${rate} ${timeout}
+    rm_env_except_pattern
+    run_policy ${rate} ${timeout}
 }
 
 if [[ "$#" -lt 3 ]]; then
@@ -611,6 +618,8 @@ else
         overhead)               overhead_test
                                 ;;
         alpha)                  alpha_test
+                                ;;
+        thrt)                   throttle_test $2 $3
                                 ;;
         * )                     usage
     esac
