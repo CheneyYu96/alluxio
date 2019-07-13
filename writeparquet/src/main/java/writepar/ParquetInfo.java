@@ -102,6 +102,8 @@ public class ParquetInfo {
             try (CloseableResource<BlockMasterClient> masterClientResource =
                          FileSystemContext.get().acquireBlockMasterClientResource()) {
                 info = masterClientResource.get().getBlockInfo(blockId);
+
+                System.out.println(masterClientResource.get().getWorkerInfoList());
             }
 
             System.out.println(info);
@@ -110,6 +112,7 @@ public class ParquetInfo {
         } catch (AlluxioException e) {
             e.printStackTrace();
         }
+
     }
 
     public void writeParquet(String locationFile) throws IOException {
