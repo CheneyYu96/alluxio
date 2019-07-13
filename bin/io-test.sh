@@ -306,26 +306,6 @@ auto_all_query_test(){
     done
 }
 
-skew_cmpr_test(){
-    rate=$1
-    timeout=$2
-
-    PER_COL=0
-
-#    for DIST in 0 1 2 3; do
-    for DIST in 0 1 2; do
-        all_query_con_test ${rate} ${timeout}
-
-        mkdir -p $DIR/logs/skew_${DIST}
-        mv $DIR/logs/py* $DIR/logs/skew_${DIST}
-        mv $DIR/alluxio/logs/master.log $DIR/logs/skew_${DIST}/
-
-        rm_env
-        remove $DIR/alluxio/logs
-
-    done
-}
-
 band_cmpr_test(){
     rate=$1
     timeout=$2
@@ -593,6 +573,10 @@ alpha_test(){
 
 }
 
+
+throttle_test(){
+
+}
 
 if [[ "$#" -lt 3 ]]; then
     usage

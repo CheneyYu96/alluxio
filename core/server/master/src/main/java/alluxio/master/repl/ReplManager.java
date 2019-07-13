@@ -27,8 +27,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -234,31 +232,31 @@ public class ReplManager {
                     if(replGlobal){
                         List<MultiReplUnit> replUnits = replPolicy.calcMultiReplicas(new ArrayList<>(accessRecords.values()));
 
-                        // TODO: treat as ReplUnit now. May allow more complicated ops.
-//                        for (MultiReplUnit unit : replUnits){
-//                            unit.toReplUnit().forEach((key, value) -> replicate(key, Collections.singletonList(value)));
-//                        }
-
-                        ExecutorService executorService = Executors.newCachedThreadPool();
-
-                        List<Pair<AlluxioURI, ReplUnit>> singleReplUnits = replUnits
-                                .stream()
-                                .map(MultiReplUnit::toReplUnitPairs)
-                                .flatMap(Collection::stream)
-                                .collect(Collectors.toList());
-
                         long startMs = CommonUtils.getCurrentMs();
 
-                        for (Pair<AlluxioURI, ReplUnit> pair : singleReplUnits){
-                            executorService.execute(() -> replicate(pair.getFirst(), Collections.singletonList(pair.getSecond())));
+                        for (MultiReplUnit unit : replUnits){
+                            unit.toReplUnit().forEach((key, value) -> replicate(key, Collections.singletonList(value)));
                         }
 
-                        executorService.shutdown();
-                        try {
-                            executorService.awaitTermination(1, TimeUnit.HOURS);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
+//                        ExecutorService executorService = Executors.newCachedThreadPool();
+//
+//                        List<Pair<AlluxioURI, ReplUnit>> singleReplUnits = replUnits
+//                                .stream()
+//                                .map(MultiReplUnit::toReplUnitPairs)
+//                                .flatMap(Collection::stream)
+//                                .collect(Collectors.toList());
+//
+//
+//                        for (Pair<AlluxioURI, ReplUnit> pair : singleReplUnits){
+//                            executorService.execute(() -> replicate(pair.getFirst(), Collections.singletonList(pair.getSecond())));
+//                        }
+//
+//                        executorService.shutdown();
+//                        try {
+//                            executorService.awaitTermination(1, TimeUnit.HOURS);
+//                        } catch (InterruptedException e) {
+//                            e.printStackTrace();
+//                        }
 
                         long endMs = CommonUtils.getCurrentMs();
                         LOG.info("Finish replication. elapsed: {}", endMs - startMs);
@@ -271,10 +269,6 @@ public class ReplManager {
                             replicate(filePath, replUnits);
                         });
                     }
-
-//                    if(deleteOrigin){
-//                        frClient.deleteReplicas(new ArrayList<>(accessRecords.keySet()));
-//                    }
 
                 }
 
