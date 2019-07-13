@@ -171,6 +171,9 @@ clear(){
         remove $DIR/alluxio/origin-locs.txt
     fi
 
+    ${DIR}/alluxio/bin/alluxio fs rm -R '/home'
+    ${DIR}/alluxio/bin/alluxio fs rm -R '/fr_dir'
+
     workers=(`cat /home/ec2-user/hadoop/conf/slaves`)
     worker_num=(`cat /home/ec2-user/hadoop/conf/slaves | wc -l`)
     worker_num=$(($worker_num-2))
