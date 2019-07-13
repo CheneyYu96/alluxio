@@ -61,7 +61,8 @@ public class FRClient {
 
         WorkerNetAddress blockLocation = FRUtils.getFileLocation(sourceFilePath, mFileSystem, mContext);
         if (blockLocation != null) {
-            availWorkers.remove(blockLocation);
+            availWorkers = availWorkers.stream()
+                    .filter(addr -> !addr.getHost().equals(blockLocation.getHost())).collect(Collectors.toList());
         }
 
         int replicaNum = Math.min(replUnit.getReplicas(), availWorkers.size());
@@ -72,10 +73,11 @@ public class FRClient {
 
         Collections.shuffle(indexList);
 
+        List<WorkerNetAddress> finalAvailWorkers = availWorkers;
         List<String> hostNames = indexList
                 .stream()
                 .limit(replicaNum)
-                .map(i -> availWorkers.get(i).getHost())
+                .map(i -> finalAvailWorkers.get(i).getHost())
                 .collect(Collectors.toList());
 
         return hostNames

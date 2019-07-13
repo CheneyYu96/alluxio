@@ -4,19 +4,15 @@ import alluxio.AlluxioURI;
 import alluxio.Configuration;
 import alluxio.PropertyKey;
 import alluxio.client.WriteType;
-import alluxio.client.block.BlockMasterClient;
 import alluxio.client.file.FileSystem;
 import alluxio.client.file.FileSystemContext;
-import alluxio.client.file.URIStatus;
 import alluxio.client.file.options.CreateFileOptions;
 import alluxio.client.file.policy.SpecificHostPolicy;
 import alluxio.exception.AlluxioException;
-import alluxio.resource.CloseableResource;
 import alluxio.util.CommonUtils;
-import alluxio.wire.BlockInfo;
-import alluxio.wire.BlockLocation;
-import alluxio.wire.FileBlockInfo;
+import alluxio.wire.WorkerNetAddress;
 import fr.client.file.FRFileWriter;
+import fr.client.utils.FRUtils;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -82,40 +78,29 @@ public class ParquetInfo {
     }
 
     private void recordLoc(String filePath) throws IOException {
-//        WorkerNetAddress address = FRUtils.getFileLocation(new AlluxioURI(filePath), mFileSystem, FileSystemContext.get());
-//        if (address == null){
-//            System.err.println("File block address is null");
-//            return;
-//        }
-//        FileWriter fw = new FileWriter(locationsFile, true);
-//        fw.write(filePath + "," + address.getHost() + "\n");
-//        fw.close();
-//        System.out.println("Write loc for file " + filePath);
-
-        URIStatus orginStatus = null;
-        try {
-            orginStatus = mFileSystem.getStatus(new AlluxioURI(filePath));
-
-            System.out.println("block ids: " + orginStatus.getBlockIds());
-            long blockId = orginStatus.getBlockIds().get(0);
-
-            BlockInfo info;
-            try (CloseableResource<BlockMasterClient> masterClientResource =
-                         FileSystemContext.get().acquireBlockMasterClientResource()) {
-                info = masterClientResource.get().getBlockInfo(blockId);
-            }
-
-            System.out.println(info);
-            List<BlockLocation> blockLocationList =  info.getLocations();
-
-
-            List<FileBlockInfo> fileBlockInfos = orginStatus.getFileBlockInfos();
-            System.out.println(fileBlockInfos);
-
-
-        } catch (AlluxioException e) {
-            e.printStackTrace();
+        WorkerNetAddress address = FRUtils.getFileLocation(new AlluxioURI(filePath), mFileSystem, FileSystemContext.get());
+        if (address == null){
+            System.err.println("File block address is null");
+            return;
         }
+        FileWriter fw = new FileWriter(locationsFile, true);
+        fw.write(filePath + "," + address.getHost() + "\n");
+        fw.close();
+        System.out.println("Write loc for file " + filePath);
+//
+//        URIStatus orginStatus = null;
+//        try {
+//            orginStatus = mFileSystem.getStatus(new AlluxioURI(filePath));
+//
+//            System.out.println("block ids: " + orginStatus.getBlockIds());
+//
+//            List<FileBlockInfo> fileBlockInfos = orginStatus.getFileBlockInfos();
+//            System.out.println(fileBlockInfos);
+//
+//
+//        } catch (AlluxioException e) {
+//            e.printStackTrace();
+//        }
 
     }
 

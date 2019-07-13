@@ -19,7 +19,6 @@ import alluxio.annotation.PublicApi;
 import alluxio.client.BoundedStream;
 import alluxio.client.PositionedReadable;
 import alluxio.client.block.AlluxioBlockStore;
-import alluxio.client.block.BlockMasterClient;
 import alluxio.client.block.stream.BlockInStream;
 import alluxio.client.file.options.InStreamOptions;
 import alluxio.client.file.options.OpenFileOptions;
@@ -33,14 +32,10 @@ import alluxio.exception.status.UnavailableException;
 import alluxio.network.netty.NettyRPC;
 import alluxio.network.netty.NettyRPCContext;
 import alluxio.proto.dataserver.Protocol;
-import alluxio.resource.CloseableResource;
 import alluxio.retry.CountingRetry;
 import alluxio.util.CommonUtils;
 import alluxio.util.proto.ProtoMessage;
-import alluxio.wire.BlockInfo;
-import alluxio.wire.BlockLocation;
-import alluxio.wire.FileSegmentsInfo;
-import alluxio.wire.WorkerNetAddress;
+import alluxio.wire.*;
 import com.google.common.base.Preconditions;
 import io.netty.channel.Channel;
 import org.slf4j.Logger;
@@ -155,7 +150,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
 
   class ReplicasInfo{
     // TODO: fresh replicas info periodical
-    private Map<FileSegmentsInfo, WorkerNetAddress> mReplicaLocations = new ConcurrentHashMap<>();
+    private Map<FileSegmentsInfo, String> mReplicaLocations = new ConcurrentHashMap<>();
     private Map<FileSegmentsInfo, URIStatus> mReplicaStatus = new ConcurrentHashMap<>();
 
     private FileSystem localFileSystem;
@@ -171,7 +166,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
       return mReplicaStatus.get(segmentsInfo);
     }
 
-    public WorkerNetAddress getFileSegLocation(FileSegmentsInfo segmentsInfo){
+    public String getFileSegLocation(FileSegmentsInfo segmentsInfo){
       if (!mReplicaLocations.containsKey(segmentsInfo)){
         updateReplicaInfo(segmentsInfo);
       }
@@ -181,24 +176,19 @@ public class FileInStream extends InputStream implements BoundedStream, Position
     private void updateReplicaInfo(FileSegmentsInfo segmentsInfo){
       try {
         URIStatus replicaStatus = localFileSystem.getStatus(new AlluxioURI(segmentsInfo.getFilePath()));
-        long blockId = replicaStatus
-                .getBlockIds()
-                .get(Math.toIntExact(segmentsInfo.getOffset() / replicaStatus.getBlockSizeBytes()));
 
-        BlockInfo info;
-        try (CloseableResource<BlockMasterClient> masterClientResource =
-                     mContext.acquireBlockMasterClientResource()) {
-          info = masterClientResource.get().getBlockInfo(blockId);
-        }
+        List<FileBlockInfo> fileBlockInfos = replicaStatus.getFileBlockInfos();
+        BlockInfo info = fileBlockInfos.get(0).getBlockInfo();
 
-        WorkerNetAddress blockLocation = null;
         List<BlockLocation> blockLocationList = info.getLocations();
 
-        if(blockLocationList.size() > 0){
-          blockLocation = blockLocationList.get(0).getWorkerAddress();
+        if (blockLocationList.size() > 0){
+          mReplicaLocations.put(segmentsInfo, blockLocationList.get(0).getWorkerAddress().getHost());
+        }
+        else {
+          mReplicaLocations.put(segmentsInfo, fileBlockInfos.get(0).getUfsLocations().get(0));
         }
 
-        mReplicaLocations.put(segmentsInfo, blockLocation);
         mReplicaStatus.put(segmentsInfo, replicaStatus);
 
       } catch (IOException | AlluxioException e) {
@@ -240,12 +230,12 @@ public class FileInStream extends InputStream implements BoundedStream, Position
         updateMetadata(allSegs.get(0));
       }
 
-      WorkerNetAddress workerToRead = mReplicasInfo.getFileSegLocation(allSegs.get(0));
-      if (localWorker != null && localWorker.getHost().equals(workerToRead.getHost())){
+      String workerToRead = mReplicasInfo.getFileSegLocation(allSegs.get(0));
+      if (localWorker != null && localWorker.getHost().equals(workerToRead)){
         LOG.info("Read local worker. addr: {}; len: {}; originalFile: {}", localWorker.getHost(), length, mNewStatus.getPath());
       }
       else {
-        LOG.info("Read nonlocal worker. addr: {}; len: {}; originalFile: {}", workerToRead.getHost(), length, mNewStatus.getPath());
+        LOG.info("Read nonlocal worker. addr: {}; len: {}; originalFile: {}", workerToRead, length, mNewStatus.getPath());
       }
       return;
     }
@@ -257,14 +247,14 @@ public class FileInStream extends InputStream implements BoundedStream, Position
       return;
     }
 
-    List<Pair<FileSegmentsInfo, WorkerNetAddress>> allSegWithLoc = allSegs
+    List<Pair<FileSegmentsInfo, String>> allSegWithLoc = allSegs
             .stream()
             .map(seg -> new Pair<>(seg, mReplicasInfo.getFileSegLocation(seg)))
             .collect(Collectors.toList());
 
-    Pair<FileSegmentsInfo, WorkerNetAddress> segToReadWithLoc = allSegWithLoc
+    Pair<FileSegmentsInfo, String> segToReadWithLoc = allSegWithLoc
             .stream()
-            .filter( p -> localWorker.getHost().equals(p.getSecond().getHost()))
+            .filter( p -> localWorker.getHost().equals(p.getSecond()))
             .findFirst().orElse(null);
 
 
@@ -282,13 +272,13 @@ public class FileInStream extends InputStream implements BoundedStream, Position
       LOG.info("Read local worker. addr: {}; len: {}; newFile: {}", localWorker.getHost(), length, mNewStatus.getPath());
     }
     else {
-      Pair<FileSegmentsInfo, WorkerNetAddress> sameSegToRead = allSegWithLoc
+      Pair<FileSegmentsInfo, String> sameSegToRead = allSegWithLoc
               .stream()
               .filter(p -> mNewStatus.getPath().equals(p.getFirst().getFilePath()))
               .findFirst()
               .orElse(null);
 
-      WorkerNetAddress workerToRead;
+      String workerToRead;
 
       if (sameSegToRead != null){
         // choose the same seg
@@ -303,7 +293,7 @@ public class FileInStream extends InputStream implements BoundedStream, Position
         updateMetadata(allSegWithLoc.get(index).getFirst());
       }
 
-      LOG.info("Read nonlocal worker. addr: {}; len: {}; newFile: {}", workerToRead.getHost(), length, mNewStatus.getPath());
+      LOG.info("Read nonlocal worker. addr: {}; len: {}; newFile: {}", workerToRead, length, mNewStatus.getPath());
 
     }
 
