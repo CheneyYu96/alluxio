@@ -17,7 +17,7 @@ times=1
 con_times=10
 tmp_dir=
 
-SIZE=$((1073741824))
+SIZE=$((536870912))
 check_from_hdfs(){
     if [[ "${FROM_HDFS}" -eq "1" ]]; then
         echo --from-hdfs
@@ -26,13 +26,15 @@ check_from_hdfs(){
 
 convert_test(){
     scl=$1
-    gen_data $scl
+    size=$2
+    gen_data ${scl}
 
-    convert
+    convert ${size}
 
 }
 
 convert(){
+    size=$2
 
     if [[ ! -f ${DATA_SCALE} ]]; then
         touch ${DATA_SCALE}
@@ -41,9 +43,7 @@ convert(){
     if [[ `cat ${DATA_SCALE}` == "$SCL" && -d $DIR/tpch_parquet ]]; then
         echo "Parquet exist"
     else
-        size_in_mb=$((SIZE * 8/1048576))
-        size_in_mb=$((size_in_mb/10))
-        conv_env ${size_in_mb}
+        conv_env ${size}
         move_data
 
         $DIR/spark/bin/spark-submit \
@@ -52,7 +52,6 @@ convert(){
             --master spark://$(cat /home/ec2-user/hadoop/conf/masters):7077 \
             $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar \
                 --convert-table \
-                --size ${SIZE}\
                 $(check_from_hdfs ${FROM_HDFS})
         clean_data
 
