@@ -65,16 +65,16 @@ def init_from_file():
     with open('{}/{}'.format(ALLUXIO_DIR, ORIGIN_LOC_FILE), 'r') as f:
         for line in f:
             path_loc = [ i for i in line.strip().split(',') if i ]
-            origin_locs[path_loc[0]] = path_loc[1]
-            # origin_locs[path_loc[0]] = name_ip_dict[path_loc[1]]
+            # origin_locs[path_loc[0]] = path_loc[1]
+            origin_locs[path_loc[0]] = name_ip_dict[path_loc[1]]
 
     # init replica locs
     if os.path.isfile(replica_file_path):
         with open(replica_file_path, 'r') as f:
             for line in f:
                 info = [ i for i in line.strip().split(',') if i ]
-                repl_loc = ReplicaLoc(info[0], info[1], info[2], [ (i.split(':')[0], i.split(':')[1]) for i in info[3:] ] )
-                # repl_loc = ReplicaLoc(info[0], name_ip_dict[info[1]], info[2], [ (i.split(':')[0], i.split(':')[1]) for i in info[3:] ] )
+                # repl_loc = ReplicaLoc(info[0], info[1], info[2], [ (i.split(':')[0], i.split(':')[1]) for i in info[3:] ] )
+                repl_loc = ReplicaLoc(info[0], name_ip_dict[info[1]], info[2], [ (i.split(':')[0], i.split(':')[1]) for i in info[3:] ] )
                 replica_locs[info[2]] = replica_locs[info[2]] + [repl_loc] if info[2] in replica_locs else [repl_loc]
 
 # finish init from txt

@@ -501,7 +501,7 @@ overhead_test(){
     USE_PATTERN=0
 
 #    for bdgt in `seq 1 5`; do
-    for bdgt in 2; do
+    for bdgt in 1; do
         sed -i "/^fr.repl.budget=/cfr.repl.budget=${bdgt}" ${DIR}/alluxio/conf/alluxio-site.properties
 
         log_name=$(get_dir_index oh_b${bdgt}_)
