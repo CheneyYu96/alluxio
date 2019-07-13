@@ -15,6 +15,7 @@ import alluxio.resource.CloseableResource;
 import alluxio.util.CommonUtils;
 import alluxio.wire.BlockInfo;
 import alluxio.wire.BlockLocation;
+import alluxio.wire.FileBlockInfo;
 import fr.client.file.FRFileWriter;
 
 import java.io.*;
@@ -102,12 +103,15 @@ public class ParquetInfo {
             try (CloseableResource<BlockMasterClient> masterClientResource =
                          FileSystemContext.get().acquireBlockMasterClientResource()) {
                 info = masterClientResource.get().getBlockInfo(blockId);
-
-                System.out.println(masterClientResource.get().getWorkerInfoList());
             }
 
             System.out.println(info);
             List<BlockLocation> blockLocationList =  info.getLocations();
+
+
+            List<FileBlockInfo> fileBlockInfos = orginStatus.getFileBlockInfos();
+            System.out.println(fileBlockInfos);
+
 
         } catch (AlluxioException e) {
             e.printStackTrace();
