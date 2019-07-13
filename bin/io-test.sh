@@ -521,7 +521,7 @@ overhead_test(){
     USE_PATTERN=0
 
 #    for bdgt in `seq 1 5`; do
-    for bdgt in 1; do
+    for bdgt in 2; do
         sed -i "/^fr.repl.budget=/cfr.repl.budget=${bdgt}" ${DIR}/alluxio/conf/alluxio-site.properties
 
         log_name=$(get_dir_index oh_b${bdgt}_)
@@ -566,9 +566,9 @@ overhead_test(){
         mv $DIR/alluxio/logs/master.log ${log_name}
 
 
-        rm -r ${df_log_dir_name}
-        rm_env
-        remove $DIR/alluxio/logs
+#        rm -r ${df_log_dir_name}
+#        rm_env
+#        remove $DIR/alluxio/logs
     done
 }
 
