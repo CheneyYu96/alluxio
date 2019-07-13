@@ -34,7 +34,7 @@ convert_test(){
 }
 
 convert(){
-    size=$2
+    size=$1
 
     if [[ ! -f ${DATA_SCALE} ]]; then
         touch ${DATA_SCALE}
@@ -583,7 +583,7 @@ if [[ "$#" -lt 3 ]]; then
     exit 1
 else
     case $1 in
-        conv)                   convert_test $2
+        conv)                   convert_test $2 $3
                                 ;;
         clear)                  clear $2 $3
                                 ;;
