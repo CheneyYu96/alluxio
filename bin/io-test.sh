@@ -255,7 +255,7 @@ run_policy(){
     now=$(date "+%s")
     tm=$((now-start))
 
-    sleep_time=$((interval+300-tm))
+    sleep_time=$((interval+180-tm))
 
     sleep ${sleep_time} # wait util replication finished
 
@@ -579,6 +579,8 @@ alpha_test(){
 throttle_test(){
     rate=$1
     timeout=$2
+    PER_COL=3
+
 
     sed -i "/^fr.repl.throttle=/cfr.repl.throttle=true" ${DIR}/alluxio/conf/alluxio-site.properties
     sed -i "/^fr.repl.budget=/cfr.repl.budget=0.5" ${DIR}/alluxio/conf/alluxio-site.properties
