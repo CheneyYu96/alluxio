@@ -33,13 +33,17 @@ public class FRClient {
     public final String FR_DIR;
     private FileSystem mFileSystem;
     private FileSystemContext mContext;
-
+    private WriteType mWriteTpye;
     private final String replicaLocsFile;
 
     public FRClient() {
         mFileSystem = FileSystem.Factory.get();
         mContext = FileSystemContext.get();
         FR_DIR = Configuration.get(PropertyKey.FR_REPL_DIR);
+
+        boolean isThrottle = Configuration.getBoolean(PropertyKey.FR_REPL_THROTTHLE);
+        mWriteTpye = isThrottle ? WriteType.CACHE_THROUGH : WriteType.MUST_CACHE;
+
         replicaLocsFile = System.getProperty("user.dir") + "/replica-locs.txt";
     }
 
@@ -77,7 +81,7 @@ public class FRClient {
                 .map(name -> getOneReplica(
                         sourceFilePath,
                         replUnit.getOffLenPairs(),
-                        CreateFileOptions.defaults().setWriteType(WriteType.MUST_CACHE).setLocationPolicy(new SpecificHostPolicy(name)))
+                        CreateFileOptions.defaults().setWriteType(mWriteTpye).setLocationPolicy(new SpecificHostPolicy(name)))
                 )
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
@@ -92,7 +96,7 @@ public class FRClient {
     }
 
     private AlluxioURI getOneReplica(AlluxioURI sourceFilePath, List<OffLenPair> pairs){
-        return getOneReplica(sourceFilePath, pairs, CreateFileOptions.defaults().setWriteType(WriteType.MUST_CACHE));
+        return getOneReplica(sourceFilePath, pairs, CreateFileOptions.defaults().setWriteType(mWriteTpye));
     }
 
     private AlluxioURI getOneReplica(AlluxioURI sourceFilePath, List<OffLenPair> pairs, CreateFileOptions writeOptions) {
