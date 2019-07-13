@@ -1,6 +1,8 @@
 package writepar;
 
 import alluxio.AlluxioURI;
+import alluxio.Configuration;
+import alluxio.PropertyKey;
 import alluxio.client.WriteType;
 import alluxio.client.file.FileSystem;
 import alluxio.client.file.FileSystemContext;
@@ -24,11 +26,16 @@ import java.util.stream.IntStream;
 public class ParquetInfo {
     private FileSystem mFileSystem;
 
+    private WriteType mWriteTpye;
+
     private final String locationsFile;
 
     public ParquetInfo() {
         mFileSystem = FileSystem.Factory.get();
         locationsFile = System.getProperty("user.dir") + "/origin-locs.txt";
+        boolean isThrottle = Configuration.getBoolean(PropertyKey.FR_REPL_THROTTHLE);
+        mWriteTpye = isThrottle ? WriteType.CACHE_THROUGH : WriteType.MUST_CACHE;
+
     }
 
     public void alphaTest(int fileNum, int offNum) throws IOException{
@@ -93,7 +100,7 @@ public class ParquetInfo {
             String address = splitLine[1];
 
             FRFileWriter writer = new FRFileWriter(new AlluxioURI(path));
-            writer.setWriteOption(CreateFileOptions.defaults().setWriteType(WriteType.MUST_CACHE).setLocationPolicy(new SpecificHostPolicy(address)));
+            writer.setWriteOption(CreateFileOptions.defaults().setWriteType(mWriteTpye).setLocationPolicy(new SpecificHostPolicy(address)));
 
             FileInputStream localFileStream = new FileInputStream(path);
             File file = new File(path);
