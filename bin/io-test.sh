@@ -575,6 +575,7 @@ alpha_test(){
 
 
 throttle_test(){
+    sed -i "/^fr.repl.throttle=/cfr.repl.throttle=true" ${DIR}/alluxio/conf/alluxio-site.properties
 
 }
 
@@ -596,8 +597,6 @@ else
         py-all)                 all_query_con_test $2 $3
                                 ;;
         auto)                   auto_all_query_test $2 $3
-                                ;;
-        skew)                   skew_cmpr_test $2 $3
                                 ;;
         band)                   band_cmpr_test $2 $3
                                 ;;
