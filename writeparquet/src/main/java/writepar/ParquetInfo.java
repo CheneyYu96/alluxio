@@ -141,6 +141,8 @@ public class ParquetInfo {
                         .mapToLong( o -> o.length)
                         .sum();
 
+                System.out.println("Source: " + sourceFile + ". len: " + length);
+
                 tBuf = new byte[(int) length];
                 int tBytesRead = localFileStream.read(tBuf);
 
