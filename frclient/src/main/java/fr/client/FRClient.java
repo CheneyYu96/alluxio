@@ -116,11 +116,8 @@ public class FRClient {
         String parentPath = sourceFilePath.getParent().getPath();
 
         String replicaParent = parentPath == null ? FR_DIR : FR_DIR + parentPath;
-        String midName = pairs
-                .stream()
-                .map(o -> o.offset + ":" + o.length)
-                .reduce("", (f, s) -> f + "-" + s);
-        String replicaName = sourceFilePath.getName() + midName + "-" + CommonUtils.getCurrentMs();
+
+        String replicaName = sourceFilePath.getName() + "-" + CommonUtils.getCurrentMs();
 
         AlluxioURI destFilePath = new AlluxioURI(String.format("%s/%s", replicaParent, replicaName));
 
