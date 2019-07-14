@@ -1,8 +1,6 @@
 package writepar;
 
 import alluxio.AlluxioURI;
-import alluxio.Configuration;
-import alluxio.PropertyKey;
 import alluxio.client.WriteType;
 import alluxio.client.file.FileSystem;
 import alluxio.client.file.FileSystemContext;
@@ -106,7 +104,13 @@ public class ParquetInfo {
     }
 
     public void writeParquet(String locationFile) throws IOException {
-        boolean isThrottle = Configuration.getBoolean(PropertyKey.FR_REPL_THROTTHLE);
+        boolean isThrottle = false;
+        if (locationFile.contains(",")){
+            String[] splits = locationFile.split(",");
+            isThrottle = splits[0].equals("1");
+            locationFile = splits[1];
+        }
+
         WriteType writeTpye = isThrottle ? WriteType.CACHE_THROUGH : WriteType.MUST_CACHE;
 
         System.out.println("Throttle: " + isThrottle + ". Write Type: " + writeTpye);
