@@ -627,7 +627,7 @@ throttle_test(){
         --gt False \
         --dist ${DIST}
 
-    sleep 200
+    sleep 100
 
 #    remove $DIR/alluxio_env
 #    ${DIR}/alluxio/bin/alluxio fs rm -R '/home'
