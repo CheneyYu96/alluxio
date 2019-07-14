@@ -123,6 +123,8 @@ public class FRClient {
         FRFileWriter writer = new FRFileWriter(destFilePath);
         writer.setWriteOption(writeOptions);
 
+        LOG.info("File replicas: {}. write type: {}", destFilePath.getPath(), writeOptions.getWriteType());
+
         try {
             int toRead = reader.readFile(pairs);
             writer.writeFile(reader.getBuf());
@@ -134,7 +136,7 @@ public class FRClient {
 
             WorkerNetAddress address = FRUtils.getFileLocation(destFilePath, mFileSystem, mContext);
 
-            LOG.info("File replicas: {}. write type: {}. location: {}", destFilePath.getPath(), mWriteTpye, address.getHost());
+            LOG.info("File replicas: {}. location: {}", destFilePath.getPath(), address.getHost());
             FileWriter fw = new FileWriter(replicaLocsFile, true);
             fw.write(destFilePath.getPath() + "," +
                     address.getHost() + "," +
