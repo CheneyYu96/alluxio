@@ -586,7 +586,10 @@ throttle_test(){
     sed -i "/^fr.repl.budget=/cfr.repl.budget=0.5" ${DIR}/alluxio/conf/alluxio-site.properties
 
     run_default ${rate} ${timeout}
+
     rm_env_except_pattern
+    remove $DIR/alluxio/origin-locs.txt
+
     run_policy ${rate} ${timeout}
 }
 
