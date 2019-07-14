@@ -14,9 +14,14 @@ public class Main {
             parquetInfo.sendInfo(args[1], args[2], isRecord);
         }
         else if (args.length == 2){
-            int fileNum = Integer.parseInt(args[0]);
-            int offNum = Integer.parseInt(args[1]);
-            parquetInfo.alphaTest(fileNum, offNum);
+            if (args[0].equals("test")){
+                parquetInfo.test(args[1]);
+            }
+            else {
+                int fileNum = Integer.parseInt(args[0]);
+                int offNum = Integer.parseInt(args[1]);
+                parquetInfo.alphaTest(fileNum, offNum);
+            }
         }
         else if (args.length == 1){
             parquetInfo.writeParquet(args[0]);

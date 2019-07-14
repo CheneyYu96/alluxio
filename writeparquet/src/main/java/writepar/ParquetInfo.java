@@ -6,10 +6,14 @@ import alluxio.PropertyKey;
 import alluxio.client.WriteType;
 import alluxio.client.file.FileSystem;
 import alluxio.client.file.FileSystemContext;
+import alluxio.client.file.URIStatus;
 import alluxio.client.file.options.CreateFileOptions;
 import alluxio.client.file.policy.SpecificHostPolicy;
 import alluxio.exception.AlluxioException;
 import alluxio.util.CommonUtils;
+import alluxio.wire.BlockInfo;
+import alluxio.wire.BlockLocation;
+import alluxio.wire.FileBlockInfo;
 import alluxio.wire.WorkerNetAddress;
 import fr.client.file.FRFileWriter;
 import fr.client.utils.FRUtils;
@@ -87,20 +91,29 @@ public class ParquetInfo {
         fw.write(filePath + "," + address.getHost() + "\n");
         fw.close();
         System.out.println("Write loc for file " + filePath);
-//
-//        URIStatus orginStatus = null;
-//        try {
-//            orginStatus = mFileSystem.getStatus(new AlluxioURI(filePath));
-//
-//            System.out.println("block ids: " + orginStatus.getBlockIds());
-//
-//            List<FileBlockInfo> fileBlockInfos = orginStatus.getFileBlockInfos();
-//            System.out.println(fileBlockInfos);
-//
-//
-//        } catch (AlluxioException e) {
-//            e.printStackTrace();
-//        }
+
+    }
+
+    public void test(String filePath){
+        try {
+            URIStatus orginStatus = mFileSystem.getStatus(new AlluxioURI(filePath));
+
+            List<FileBlockInfo> fileBlockInfos = orginStatus.getFileBlockInfos();
+            BlockInfo info = fileBlockInfos.get(0).getBlockInfo();
+            System.out.println("file block info sizes: " + fileBlockInfos.size());
+
+            List<BlockLocation> blockLocationList = info.getLocations();
+
+            if (blockLocationList.size() > 0){
+                System.out.println(blockLocationList.get(0).getWorkerAddress().getHost());
+            }
+            else {
+                System.out.println(fileBlockInfos.get(0).getUfsLocations());
+            }
+
+        } catch (IOException | AlluxioException e) {
+            e.printStackTrace();
+        }
 
     }
 
