@@ -162,6 +162,10 @@ public class BundleHottestKPolicy implements ReplPolicy {
         List<Pair<Double, OffLenPair>> resLoads = new ArrayList<>();
 
         long queryNum = accessInfo.getQueryNum();
+        if(queryNum <= 0){
+            return resLoads;
+        }
+
         Map<OffLenPair, Long> offCounts = accessInfo.getOffsetCount();
 
         List<Pair<Double, OffLenPair>> sortedLoads = ReplPolicyUtils.calcLoad(allSize, accessInfo.getOffsetCount());
