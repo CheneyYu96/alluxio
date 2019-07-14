@@ -630,6 +630,9 @@ throttle_test(){
     sleep 200
 
     remove $DIR/alluxio_env
+    ${DIR}/alluxio/bin/alluxio fs rm -R '/home'
+    ${DIR}/alluxio/bin/alluxio fs rm -R '/fr_dir'
+
     default_env
     init_alluxio_status
 
