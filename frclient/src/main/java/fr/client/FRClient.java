@@ -16,6 +16,8 @@ import fr.client.file.FRFileWriter;
 import fr.client.utils.FRUtils;
 import fr.client.utils.OffLenPair;
 import fr.client.utils.ReplUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -35,6 +37,8 @@ public class FRClient {
     private FileSystemContext mContext;
     private WriteType mWriteTpye;
     private final String replicaLocsFile;
+
+    private static final Logger LOG = LoggerFactory.getLogger(FRClient.class);
 
     public FRClient() {
         mFileSystem = FileSystem.Factory.get();
@@ -130,6 +134,7 @@ public class FRClient {
 
             WorkerNetAddress address = FRUtils.getFileLocation(destFilePath, mFileSystem, mContext);
 
+            LOG.info("File replicas: {}. location: {}", destFilePath.getPath(), address.getHost());
             FileWriter fw = new FileWriter(replicaLocsFile, true);
             fw.write(destFilePath.getPath() + "," +
                     address.getHost() + "," +

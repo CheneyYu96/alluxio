@@ -11,7 +11,6 @@ import alluxio.client.file.options.CreateFileOptions;
 import alluxio.client.file.policy.SpecificHostPolicy;
 import alluxio.exception.AlluxioException;
 import alluxio.util.CommonUtils;
-import alluxio.wire.BlockInfo;
 import alluxio.wire.FileBlockInfo;
 import alluxio.wire.WorkerNetAddress;
 import fr.client.file.FRFileWriter;
@@ -118,6 +117,8 @@ public class ParquetInfo {
             String[] splitLine = line.split(",");
             String path = splitLine[0];
             String address = splitLine[1];
+
+            System.out.println("Write file: " + path + " on address: " + address);
 
             FRFileWriter writer = new FRFileWriter(new AlluxioURI(path));
             writer.setWriteOption(CreateFileOptions.defaults().setWriteType(mWriteTpye).setLocationPolicy(new SpecificHostPolicy(address)));
