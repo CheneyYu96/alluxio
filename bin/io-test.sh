@@ -17,7 +17,7 @@ times=1
 con_times=10
 tmp_dir=
 
-SIZE=$((536870912))
+SIZE=$((1073741824))
 check_from_hdfs(){
     if [[ "${FROM_HDFS}" -eq "1" ]]; then
         echo --from-hdfs
