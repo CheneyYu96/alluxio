@@ -28,15 +28,12 @@ import java.util.stream.IntStream;
 public class ParquetInfo {
     private FileSystem mFileSystem;
 
-    private WriteType mWriteTpye;
-
     private final String locationsFile;
 
     public ParquetInfo() {
         mFileSystem = FileSystem.Factory.get();
         locationsFile = System.getProperty("user.dir") + "/origin-locs.txt";
-        boolean isThrottle = Configuration.getBoolean(PropertyKey.FR_REPL_THROTTHLE);
-        mWriteTpye = isThrottle ? WriteType.CACHE_THROUGH : WriteType.MUST_CACHE;
+
 
     }
 
@@ -109,8 +106,10 @@ public class ParquetInfo {
     }
 
     public void writeParquet(String locationFile) throws IOException {
+        boolean isThrottle = Configuration.getBoolean(PropertyKey.FR_REPL_THROTTHLE);
+        WriteType writeTpye = isThrottle ? WriteType.CACHE_THROUGH : WriteType.MUST_CACHE;
 
-        System.out.println("Write Type: " + mWriteTpye);
+        System.out.println("Throttle: " + isThrottle + ". Write Type: " + writeTpye);
 
         FileInputStream is = new FileInputStream(locationFile);
         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
@@ -123,7 +122,7 @@ public class ParquetInfo {
             System.out.println("Write file: " + path + " on address: " + address);
 
             FRFileWriter writer = new FRFileWriter(new AlluxioURI(path));
-            writer.setWriteOption(CreateFileOptions.defaults().setWriteType(mWriteTpye).setLocationPolicy(new SpecificHostPolicy(address)));
+            writer.setWriteOption(CreateFileOptions.defaults().setWriteType(writeTpye).setLocationPolicy(new SpecificHostPolicy(address)));
 
             FileInputStream localFileStream = new FileInputStream(path);
             File file = new File(path);
