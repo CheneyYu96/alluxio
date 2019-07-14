@@ -134,7 +134,7 @@ public class FRClient {
 
             WorkerNetAddress address = FRUtils.getFileLocation(destFilePath, mFileSystem, mContext);
 
-            LOG.info("File replicas: {}. location: {}", destFilePath.getPath(), address.getHost());
+            LOG.info("File replicas: {}. write type: {}. location: {}", destFilePath.getPath(), mWriteTpye, address.getHost());
             FileWriter fw = new FileWriter(replicaLocsFile, true);
             fw.write(destFilePath.getPath() + "," +
                     address.getHost() + "," +
