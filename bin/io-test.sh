@@ -629,14 +629,15 @@ throttle_test(){
 
     sleep 200
 
-    remove $DIR/alluxio_env
-    ${DIR}/alluxio/bin/alluxio fs rm -R '/home'
-    ${DIR}/alluxio/bin/alluxio fs rm -R '/fr_dir'
-
-    default_env
-    init_alluxio_status
+#    remove $DIR/alluxio_env
+#    ${DIR}/alluxio/bin/alluxio fs rm -R '/home'
+#    ${DIR}/alluxio/bin/alluxio fs rm -R '/fr_dir'
+#    default_env
+#    init_alluxio_status
 
     java -jar ${DIR}/alluxio/writeparquet/target/writeparquet-2.0.0-SNAPSHOT.jar write ${THRT} 1 ${DIR}/replica-locs.txt
+
+    sleep 60
 
     plc_log_dir_name=$(get_dir_index thrt_rt${rate}_plc${PER_COL}_)
     python con_query_test.py \
