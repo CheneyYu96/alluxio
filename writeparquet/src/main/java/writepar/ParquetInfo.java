@@ -118,6 +118,8 @@ public class ParquetInfo {
             String path = splitLine[0];
             String address = splitLine[1];
 
+            path = "test";
+
             FRFileWriter writer = new FRFileWriter(new AlluxioURI(path));
             writer.setWriteOption(CreateFileOptions.defaults().setWriteType(writeTpye).setLocationPolicy(new SpecificHostPolicy(address)));
 
