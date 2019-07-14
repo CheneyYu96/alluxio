@@ -576,15 +576,20 @@ alpha_test(){
 }
 
 
+thrt_env(){
+    sed -i "/^fr.repl.throttle=/cfr.repl.throttle=true" ${DIR}/alluxio/conf/alluxio-site.properties
+    sed -i "/^alluxio.user.file.writetype.default=/calluxio.user.file.writetype.default=CACHE_THROUGH" ${DIR}/alluxio/conf/alluxio-site.properties
+    sed -i "/^alluxio.worker.memory.size=/calluxio.worker.memory.size=1GB" ${DIR}/alluxio/conf/alluxio-site.properties
+}
 throttle_test(){
     rate=$1
     PER_COL=$2
 
     USE_PATTERN=0
 
-    sed -i "/^fr.repl.throttle=/cfr.repl.throttle=true" ${DIR}/alluxio/conf/alluxio-site.properties
-    sed -i "/^fr.repl.budget=/cfr.repl.budget=0.5" ${DIR}/alluxio/conf/alluxio-site.properties
+    thrt_env
 
+    sed -i "/^fr.repl.budget=/cfr.repl.budget=0.5" ${DIR}/alluxio/conf/alluxio-site.properties
     sed -i '/^fr.repl.interval=/cfr.repl.interval=360' $DIR/alluxio/conf/alluxio-site.properties
 
     interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
