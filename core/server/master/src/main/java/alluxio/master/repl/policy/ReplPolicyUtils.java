@@ -83,7 +83,7 @@ public class ReplPolicyUtils {
         int attemp = 0;
 //        double upperAlpha = lastAlpha;
 //        double lowerAlpha = optAlpha;
-        double upperAlpha = 1 / sortedLoads.stream().filter(l -> l > 0.0).findFirst().get();
+        double upperAlpha = 1 / sortedLoads.stream().filter(l -> l > Double.MIN_VALUE).findFirst().get();
         double lowerAlpha = 1 / sortedLoads.stream().reduce(0.0, Double::sum);
 
         while( Math.abs(optCost - budget) / budget > 0.01){
