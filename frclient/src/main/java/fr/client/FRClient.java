@@ -83,6 +83,7 @@ public class FRClient {
                 .limit(replicaNum)
                 .map(i -> finalAvailWorkers.get(i).getHost())
                 .collect(Collectors.toList());
+        LOG.info("Target replica locations: {}. source file: {}", hostNames, sourceFilePath.getPath());
 
         return hostNames
                 .stream()
