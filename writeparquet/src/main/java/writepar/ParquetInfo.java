@@ -110,6 +110,8 @@ public class ParquetInfo {
 
     public void writeParquet(String locationFile) throws IOException {
 
+        System.out.println("Write Type: " + mWriteTpye);
+
         FileInputStream is = new FileInputStream(locationFile);
         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
         String line;
