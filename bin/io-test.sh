@@ -595,7 +595,7 @@ throttle_test(){
 
 
     sed -i "/^fr.repl.budget=/cfr.repl.budget=0.5" ${DIR}/alluxio/conf/alluxio-site.properties
-    sed -i '/^fr.repl.interval=/cfr.repl.interval=300' $DIR/alluxio/conf/alluxio-site.properties
+    sed -i '/^fr.repl.interval=/cfr.repl.interval=360' $DIR/alluxio/conf/alluxio-site.properties
 
     interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
     start=$(date "+%s")
@@ -627,7 +627,7 @@ throttle_test(){
         --gt False \
         --dist ${DIST}
 
-    sleep 100
+    sleep 120
 
 #    remove $DIR/alluxio_env
 #    ${DIR}/alluxio/bin/alluxio fs rm -R '/home'
