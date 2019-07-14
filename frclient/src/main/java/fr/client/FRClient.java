@@ -45,8 +45,7 @@ public class FRClient {
         mContext = FileSystemContext.get();
         FR_DIR = Configuration.get(PropertyKey.FR_REPL_DIR);
 
-        boolean isThrottle = Configuration.getBoolean(PropertyKey.FR_REPL_THROTTHLE);
-        mWriteTpye = isThrottle ? WriteType.CACHE_THROUGH : WriteType.MUST_CACHE;
+        mWriteTpye = WriteType.MUST_CACHE;
 
         replicaLocsFile = System.getProperty("user.dir") + "/replica-locs.txt";
     }
@@ -85,15 +84,24 @@ public class FRClient {
                 .collect(Collectors.toList());
         LOG.info("Target replica locations: {}. source file: {}", hostNames, sourceFilePath.getPath());
 
-        return hostNames
-                .stream()
-                .map(name -> getOneReplica(
-                        sourceFilePath,
-                        replUnit.getOffLenPairs(),
-                        CreateFileOptions.defaults().setWriteType(mWriteTpye).setLocationPolicy(new SpecificHostPolicy(name)))
-                )
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+        boolean isThrottle = Configuration.getBoolean(PropertyKey.FR_REPL_THROTTHLE);
+
+        if (isThrottle){
+            return hostNames.stream()
+                    .map(name -> getReplicaForThrt(sourceFilePath, replUnit.getOffLenPairs(), name))
+                    .collect(Collectors.toList());
+        }
+        else {
+            return hostNames
+                    .stream()
+                    .map(name -> getOneReplica(
+                            sourceFilePath,
+                            replUnit.getOffLenPairs(),
+                            CreateFileOptions.defaults().setWriteType(mWriteTpye).setLocationPolicy(new SpecificHostPolicy(name)))
+                    )
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+        }
     }
 
     public List<AlluxioURI> copyFileOffset(AlluxioURI sourceFilePath, ReplUnit replUnit){
@@ -102,6 +110,41 @@ public class FRClient {
                 .mapToObj(i ->  getOneReplica(sourceFilePath, replUnit.getOffLenPairs()))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
+    }
+
+    private AlluxioURI getReplicaForThrt(AlluxioURI sourceFilePath, List<OffLenPair> pairs, String address){
+        String parentPath = sourceFilePath.getParent().getPath();
+
+        String replicaParent = parentPath == null ? FR_DIR : FR_DIR + parentPath;
+        String midName = pairs
+                .stream()
+                .map(o -> o.offset + ":" + o.length)
+                .reduce("", (f, s) -> f + "-" + s);
+        String replicaName = sourceFilePath.getName() + midName + "-" + CommonUtils.getCurrentMs();
+
+        AlluxioURI destFilePath = new AlluxioURI(String.format("%s/%s", replicaParent, replicaName));
+
+        try {
+            String pairStr = pairs
+                    .stream()
+                    .map(o -> o.offset + ":" + o.length)
+                    .reduce("", (f, s) -> f + "," + s);
+
+            LOG.info("File replicas: {}. location: {}", destFilePath.getPath(), address);
+            FileWriter fw = new FileWriter(replicaLocsFile, true);
+            fw.write(destFilePath.getPath() + "," +
+                    address + "," +
+                    sourceFilePath.getPath() + pairStr +
+                    "\n");
+            fw.close();
+
+            return destFilePath;
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+
     }
 
     private AlluxioURI getOneReplica(AlluxioURI sourceFilePath, List<OffLenPair> pairs){

@@ -9,23 +9,31 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
         ParquetInfo parquetInfo = new ParquetInfo();
-        if (args.length == 3){
-            int isRecord = Integer.parseInt(args[0]);
-            parquetInfo.sendInfo(args[1], args[2], isRecord);
-        }
-        else if (args.length == 2){
-            if (args[0].equals("test")){
-                parquetInfo.test(args[1]);
+        if (args.length > 0){
+            switch (args[0]){
+                case "test":
+                    parquetInfo.test(args[1]);
+                    break;
+
+                case "alpha":
+                    int fileNum = Integer.parseInt(args[1]);
+                    int offNum = Integer.parseInt(args[2]);
+                    parquetInfo.alphaTest(fileNum, offNum);
+                    break;
+
+                case "info":
+                    int isRecord = Integer.parseInt(args[1]);
+                    parquetInfo.sendInfo(args[2], args[3], isRecord);
+                    break;
+
+                case "write":
+                    int isThrt = Integer.parseInt(args[1]);
+                    int isRepl = Integer.parseInt(args[2]);
+
+                    parquetInfo.writeParquet(isThrt, isRepl, args[3]);
             }
-            else {
-                int fileNum = Integer.parseInt(args[0]);
-                int offNum = Integer.parseInt(args[1]);
-                parquetInfo.alphaTest(fileNum, offNum);
-            }
         }
-        else if (args.length == 1){
-            parquetInfo.writeParquet(args[0]);
-        }
+
         else {
             System.out.println("Require <file path, info path> or <location path>");
         }

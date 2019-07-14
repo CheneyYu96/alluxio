@@ -13,6 +13,7 @@ import alluxio.wire.FileBlockInfo;
 import alluxio.wire.WorkerNetAddress;
 import fr.client.file.FRFileWriter;
 import fr.client.utils.FRUtils;
+import fr.client.utils.OffLenPair;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -103,17 +104,11 @@ public class ParquetInfo {
 
     }
 
-    public void writeParquet(String locationFile) throws IOException {
-        boolean isThrottle = false;
-        if (locationFile.contains(",")){
-            String[] splits = locationFile.split(",");
-            isThrottle = splits[0].equals("1");
-            locationFile = splits[1];
-        }
+    public void writeParquet(int isThrt, int isRepl, String locationFile) throws IOException {
 
-        WriteType writeTpye = isThrottle ? WriteType.CACHE_THROUGH : WriteType.MUST_CACHE;
+        WriteType writeTpye = isThrt==1 ? WriteType.CACHE_THROUGH : WriteType.MUST_CACHE;
 
-        System.out.println("Throttle: " + isThrottle + ". Write Type: " + writeTpye);
+        System.out.println("Throttle: " + isThrt + ". Write Type: " + writeTpye);
 
         FileInputStream is = new FileInputStream(locationFile);
         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
@@ -123,17 +118,45 @@ public class ParquetInfo {
             String path = splitLine[0];
             String address = splitLine[1];
 
-            System.out.println("Write file: " + path + " on address: " + address);
-
             FRFileWriter writer = new FRFileWriter(new AlluxioURI(path));
             writer.setWriteOption(CreateFileOptions.defaults().setWriteType(writeTpye).setLocationPolicy(new SpecificHostPolicy(address)));
 
-            FileInputStream localFileStream = new FileInputStream(path);
-            File file = new File(path);
+            FileInputStream localFileStream;
+            byte[] tBuf;
 
-            int len = (int) file.length();
-            byte[] tBuf = new byte[len];
-            int tBytesRead = localFileStream.read(tBuf);
+            if (isRepl == 1){
+                System.out.println("Write replica: " + path + " on address: " + address);
+
+                String sourceFile = splitLine[2];
+                List<OffLenPair> pairs = new ArrayList<>();
+                for (int i = 3; i < splitLine.length; i++){
+                    String[] pairSpl = splitLine[i].split(":");
+                    pairs.add(new OffLenPair(Long.parseLong(pairSpl[0]), Long.parseLong(pairSpl[1])));
+                }
+
+                localFileStream = new FileInputStream(sourceFile);
+
+                long length = pairs
+                        .stream()
+                        .mapToLong( o -> o.length)
+                        .sum();
+
+                tBuf = new byte[(int) length];
+                int tBytesRead = localFileStream.read(tBuf);
+
+            }
+            else {
+                System.out.println("Write source file: " + path + " on address: " + address);
+
+                localFileStream = new FileInputStream(path);
+                File file = new File(path);
+
+                int len = (int) file.length();
+                tBuf = new byte[len];
+                int tBytesRead = localFileStream.read(tBuf);
+
+            }
+
             try {
                 writer.writeFile(tBuf);
             } catch (AlluxioException e) {

@@ -61,6 +61,8 @@ convert(){
 
 default_move_par=1
 USE_PATTERN=1
+THRT=0
+
 init_alluxio_status(){
 
     if [[ -f $DIR/alluxio/origin-locs.txt ]]; then
@@ -100,7 +102,7 @@ init_alluxio_status(){
         if [[ "${default_move_par}" -eq "1" ]]; then
             move_par_data
         else
-            java -jar ${DIR}/alluxio/writeparquet/target/writeparquet-2.0.0-SNAPSHOT.jar ${DIR}/alluxio/origin-locs.txt
+            java -jar ${DIR}/alluxio/writeparquet/target/writeparquet-2.0.0-SNAPSHOT.jar write ${THRT} 0 ${DIR}/alluxio/origin-locs.txt
         fi
 
         if [[ "${NEED_PAR_INFO}" -eq "1" ]]; then
@@ -135,7 +137,7 @@ send_par_info(){
                     extract_par_info ${DIR}/tpch_parquet/${f}/${sf} ${INFO_DIR}/${f}/tmp_${sf}.txt ${INFO_DIR}/${f}/${sf}.txt
                 fi
 
-                java -jar ${DIR}/alluxio/writeparquet/target/writeparquet-2.0.0-SNAPSHOT.jar ${default_move_par} ${DIR}/tpch_parquet/${f}/${sf} ${INFO_DIR}/${f}/${sf}.txt
+                java -jar ${DIR}/alluxio/writeparquet/target/writeparquet-2.0.0-SNAPSHOT.jar info ${default_move_par} ${DIR}/tpch_parquet/${f}/${sf} ${INFO_DIR}/${f}/${sf}.txt
             fi
 
         done
@@ -566,7 +568,7 @@ alpha_test(){
         default_env
         init_alluxio_status
 
-        java -jar ${DIR}/alluxio/writeparquet/target/writeparquet-2.0.0-SNAPSHOT.jar ${file_num} 10
+        java -jar ${DIR}/alluxio/writeparquet/target/writeparquet-2.0.0-SNAPSHOT.jar alpha ${file_num} 10
 
         mv $DIR/alluxio/logs/master.log ${log_dir_name}
         remove $DIR/alluxio_env
@@ -577,6 +579,8 @@ alpha_test(){
 
 
 thrt_env(){
+    THRT=1
+
     sed -i "/^fr.repl.throttle=/cfr.repl.throttle=true" ${DIR}/alluxio/conf/alluxio-site.properties
     sed -i "/^alluxio.user.file.writetype.default=/calluxio.user.file.writetype.default=CACHE_THROUGH" ${DIR}/alluxio/conf/alluxio-site.properties
     sed -i "/^alluxio.worker.memory.size=/calluxio.worker.memory.size=1GB" ${DIR}/alluxio/conf/alluxio-site.properties
@@ -588,6 +592,7 @@ throttle_test(){
     USE_PATTERN=0
 
     thrt_env
+
 
     sed -i "/^fr.repl.budget=/cfr.repl.budget=0.5" ${DIR}/alluxio/conf/alluxio-site.properties
     sed -i '/^fr.repl.interval=/cfr.repl.interval=300' $DIR/alluxio/conf/alluxio-site.properties
@@ -623,6 +628,12 @@ throttle_test(){
         --dist ${DIST}
 
     sleep 200
+
+    remove $DIR/alluxio_env
+    default_env
+    init_alluxio_status
+
+    java -jar ${DIR}/alluxio/writeparquet/target/writeparquet-2.0.0-SNAPSHOT.jar write ${THRT} 1 ${DIR}/replica-locs.txt
 
     plc_log_dir_name=$(get_dir_index thrt_rt${rate}_plc${PER_COL}_)
     python con_query_test.py \
