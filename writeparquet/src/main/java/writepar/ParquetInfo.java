@@ -12,7 +12,6 @@ import alluxio.client.file.policy.SpecificHostPolicy;
 import alluxio.exception.AlluxioException;
 import alluxio.util.CommonUtils;
 import alluxio.wire.BlockInfo;
-import alluxio.wire.BlockLocation;
 import alluxio.wire.FileBlockInfo;
 import alluxio.wire.WorkerNetAddress;
 import fr.client.file.FRFileWriter;
@@ -99,17 +98,10 @@ public class ParquetInfo {
             URIStatus orginStatus = mFileSystem.getStatus(new AlluxioURI(filePath));
 
             List<FileBlockInfo> fileBlockInfos = orginStatus.getFileBlockInfos();
-            BlockInfo info = fileBlockInfos.get(0).getBlockInfo();
+
             System.out.println("file block info sizes: " + fileBlockInfos.size());
 
-            List<BlockLocation> blockLocationList = info.getLocations();
-
-            if (blockLocationList.size() > 0){
-                System.out.println(blockLocationList.get(0).getWorkerAddress().getHost());
-            }
-            else {
-                System.out.println(fileBlockInfos.get(0).getUfsLocations());
-            }
+            System.out.println(fileBlockInfos);
 
         } catch (IOException | AlluxioException e) {
             e.printStackTrace();
