@@ -8,7 +8,7 @@ cd $DIR
 echo "Copy conf dir"
 
 ./alluxio copyDir ../conf
-#./alluxio copyDir ../../spark/conf
+./alluxio copyDir ../../hadoop/conf
 
 echo "Restart alluxio & hdfs"
 
