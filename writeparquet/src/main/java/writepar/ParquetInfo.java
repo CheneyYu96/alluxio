@@ -113,12 +113,13 @@ public class ParquetInfo {
         FileInputStream is = new FileInputStream(locationFile);
         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
         String line;
+        int idx = 0;
         while ((line = reader.readLine()) != null) {
             String[] splitLine = line.split(",");
             String path = splitLine[0];
             String address = splitLine[1];
 
-            path = "test";
+            path = "/test/" + idx++;
 
             FRFileWriter writer = new FRFileWriter(new AlluxioURI(path));
             writer.setWriteOption(CreateFileOptions.defaults().setWriteType(writeTpye).setLocationPolicy(new SpecificHostPolicy(address)));
