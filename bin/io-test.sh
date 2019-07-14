@@ -578,19 +578,57 @@ alpha_test(){
 
 throttle_test(){
     rate=$1
-    timeout=$2
-    PER_COL=3
+    PER_COL=$2
 
+    USE_PATTERN=0
 
     sed -i "/^fr.repl.throttle=/cfr.repl.throttle=true" ${DIR}/alluxio/conf/alluxio-site.properties
     sed -i "/^fr.repl.budget=/cfr.repl.budget=0.5" ${DIR}/alluxio/conf/alluxio-site.properties
 
-    run_default ${rate} ${timeout}
+    sed -i '/^fr.repl.interval=/cfr.repl.interval=360' $DIR/alluxio/conf/alluxio-site.properties
 
-    rm_env_except_pattern
-    remove $DIR/alluxio/origin-locs.txt
+    interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
+    start=$(date "+%s")
 
-    run_policy ${rate} ${timeout}
+    cd ${DIR}/alluxio
+
+    init_alluxio_status
+
+    now=$(date "+%s")
+    tm=$((now-start))
+
+    timeout=$((interval-tm))
+    timeout=$((timeout-30))
+    timeout=$((timeout/60))
+
+    if [[ ${timeout} -le 0 ]]; then
+        echo "non-positive timeout. bdgt ${bdgt}"
+        exit 1
+    fi
+
+    df_log_dir_name=$(get_dir_index thrt_rt${rate}_dft_)
+    python con_query_test.py \
+        20 \
+        ${timeout} \
+        0 \
+        ${df_log_dir_name} \
+        --policy 2 \
+        --fault ${FAULT} \
+        --gt False \
+        --dist ${DIST}
+
+    sleep 200
+
+    plc_log_dir_name=$(get_dir_index thrt_rt${rate}_plc${PER_COL}_)
+    python con_query_test.py \
+        ${rate} \
+        ${timeout} \
+        0 \
+        ${plc_log_dir_name} \
+        --policy ${PER_COL} \
+        --fault ${FAULT} \
+        --gt False \
+        --dist ${DIST}
 }
 
 if [[ "$#" -lt 3 ]]; then
