@@ -595,7 +595,7 @@ throttle_test(){
 
 
     sed -i "/^fr.repl.budget=/cfr.repl.budget=0.5" ${DIR}/alluxio/conf/alluxio-site.properties
-    sed -i '/^fr.repl.interval=/cfr.repl.interval=600' $DIR/alluxio/conf/alluxio-site.properties
+    sed -i '/^fr.repl.interval=/cfr.repl.interval=1200' $DIR/alluxio/conf/alluxio-site.properties
 
     interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
     start=$(date "+%s")
