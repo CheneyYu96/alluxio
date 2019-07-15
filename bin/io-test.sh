@@ -589,7 +589,7 @@ throttle_test(){
     rate=$1
     PER_COL=$2
 
-    timeout=20
+    timeout=18
 
 #    USE_PATTERN=0
 
