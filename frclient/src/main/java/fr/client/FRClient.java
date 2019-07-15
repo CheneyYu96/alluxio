@@ -135,6 +135,8 @@ public class FRClient {
                     "\n");
             fw.close();
 
+            CommonUtils.sleepMs(1);
+
             return destFilePath;
 
         } catch (IOException e) {
