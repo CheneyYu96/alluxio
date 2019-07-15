@@ -619,7 +619,7 @@ throttle_test(){
     limit_bandwidth ${limit}
     df_log_dir_name=$(get_dir_index thrt_rt${rate}_dft_)
     python con_query_test.py \
-        20 \
+        ${rate} \
         ${timeout} \
         0 \
         ${df_log_dir_name} \
