@@ -589,70 +589,29 @@ throttle_test(){
     rate=$1
     PER_COL=$2
 
+    timeout=20
+
 #    USE_PATTERN=0
 
     thrt_env
 
     sed -i "/^fr.repl.budget=/cfr.repl.budget=0.5" ${DIR}/alluxio/conf/alluxio-site.properties
-    sed -i '/^fr.repl.interval=/cfr.repl.interval=1200' $DIR/alluxio/conf/alluxio-site.properties
 
-    interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
-    start=$(date "+%s")
+    run_default 30 ${timeout}
 
-    cd ${DIR}/alluxio
+    rm_env_except_pattern
+    ${DIR}/alluxio/bin/alluxio fs rm -R '/home'
+    ${DIR}/alluxio/bin/alluxio fs rm -R '/fr_dir'
 
-    init_alluxio_status
-
-    now=$(date "+%s")
-    tm=$((now-start))
-
-    timeout=$((interval-tm))
-    timeout=$((timeout-30))
-    timeout=$((timeout/60))
-
-    if [[ ${timeout} -le 0 ]]; then
-        echo "non-positive timeout. bdgt ${bdgt}"
-        exit 1
-    fi
-
-    limit_bandwidth ${limit}
-    df_log_dir_name=$(get_dir_index thrt_rt${rate}_dft_)
-    python con_query_test.py \
-        ${rate} \
-        ${timeout} \
-        0 \
-        ${df_log_dir_name} \
-        --policy 2 \
-        --fault ${FAULT} \
-        --gt True \
-        --dist ${DIST}
-    free_limit
-
-    sleep 240
+    run_policy ${rate} ${timeout}
 
 #    remove $DIR/alluxio_env
-#    ${DIR}/alluxio/bin/alluxio fs rm -R '/home'
-#    ${DIR}/alluxio/bin/alluxio fs rm -R '/fr_dir'
+
 #    default_env
 #    init_alluxio_status
 
 #    java -jar ${DIR}/alluxio/writeparquet/target/writeparquet-2.0.0-SNAPSHOT.jar write ${THRT} 1 ${DIR}/replica-locs.txt
 #    sleep 30
-
-    limit_bandwidth ${limit}
-
-    plc_log_dir_name=$(get_dir_index thrt_rt${rate}_plc${PER_COL}_)
-    python con_query_test.py \
-        ${rate} \
-        ${timeout} \
-        0 \
-        ${plc_log_dir_name} \
-        --policy ${PER_COL} \
-        --fault ${FAULT} \
-        --gt False \
-        --dist ${DIST}
-
-    free_limit
 
 }
 
