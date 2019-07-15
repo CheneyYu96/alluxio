@@ -45,7 +45,9 @@ public class FRClient {
         mContext = FileSystemContext.get();
         FR_DIR = Configuration.get(PropertyKey.FR_REPL_DIR);
 
-        mWriteTpye = WriteType.MUST_CACHE;
+        boolean isThrottle = Configuration.getBoolean(PropertyKey.FR_REPL_THROTTHLE);
+
+        mWriteTpye = isThrottle ? WriteType.CACHE_THROUGH : WriteType.MUST_CACHE;
 
         replicaLocsFile = System.getProperty("user.dir") + "/replica-locs.txt";
     }
@@ -121,7 +123,14 @@ public class FRClient {
 
         AlluxioURI destFilePath = new AlluxioURI(String.format("%s/%s", replicaParent, replicaName));
 
+        FRFileReader reader = new FRFileReader(sourceFilePath, false);
+        FRFileWriter writer = new FRFileWriter(destFilePath);
+        writer.setWriteOption(CreateFileOptions.defaults().setWriteType(mWriteTpye).setLocationPolicy(new SpecificHostPolicy(address)));
+
         try {
+            int toRead = reader.readFile(pairs);
+            writer.writeFile(reader.getBuf());
+
             String pairStr = pairs
                     .stream()
                     .map(o -> o.offset + ":" + o.length)
@@ -139,11 +148,10 @@ public class FRClient {
 
             return destFilePath;
 
-        } catch (IOException e) {
+        } catch (IOException | AlluxioException e) {
             e.printStackTrace();
             return null;
         }
-
     }
 
     private AlluxioURI getOneReplica(AlluxioURI sourceFilePath, List<OffLenPair> pairs){

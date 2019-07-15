@@ -589,10 +589,9 @@ throttle_test(){
     rate=$1
     PER_COL=$2
 
-    USE_PATTERN=0
+#    USE_PATTERN=0
 
     thrt_env
-
 
     sed -i "/^fr.repl.budget=/cfr.repl.budget=0.5" ${DIR}/alluxio/conf/alluxio-site.properties
     sed -i '/^fr.repl.interval=/cfr.repl.interval=1200' $DIR/alluxio/conf/alluxio-site.properties
@@ -625,13 +624,11 @@ throttle_test(){
         ${df_log_dir_name} \
         --policy 2 \
         --fault ${FAULT} \
-        --gt False \
+        --gt True \
         --dist ${DIST}
     free_limit
 
-    sleep 180
-
-
+    sleep 240
 
 #    remove $DIR/alluxio_env
 #    ${DIR}/alluxio/bin/alluxio fs rm -R '/home'
@@ -639,9 +636,8 @@ throttle_test(){
 #    default_env
 #    init_alluxio_status
 
-    java -jar ${DIR}/alluxio/writeparquet/target/writeparquet-2.0.0-SNAPSHOT.jar write ${THRT} 1 ${DIR}/replica-locs.txt
-
-    sleep 60
+#    java -jar ${DIR}/alluxio/writeparquet/target/writeparquet-2.0.0-SNAPSHOT.jar write ${THRT} 1 ${DIR}/replica-locs.txt
+#    sleep 30
 
     limit_bandwidth ${limit}
 
