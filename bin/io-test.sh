@@ -597,13 +597,15 @@ throttle_test(){
 
     sed -i "/^fr.repl.budget=/cfr.repl.budget=0.5" ${DIR}/alluxio/conf/alluxio-site.properties
 
-    run_default 30 ${timeout}
+#    run_default ${rate} ${timeout}
 
-    rm_env_except_pattern
-    ${DIR}/alluxio/bin/alluxio fs rm -R '/home'
-    ${DIR}/alluxio/bin/alluxio fs rm -R '/fr_dir'
+    for PER_COL in 1 2 3; do
+        rm_env_except_pattern
+        ${DIR}/alluxio/bin/alluxio fs rm -R '/home'
+        ${DIR}/alluxio/bin/alluxio fs rm -R '/fr_dir'
 
-    run_policy ${rate} ${timeout}
+        run_policy ${rate} ${timeout}
+    done
 
 #    remove $DIR/alluxio_env
 
