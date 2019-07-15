@@ -616,6 +616,7 @@ throttle_test(){
         exit 1
     fi
 
+    limit_bandwidth ${limit}
     df_log_dir_name=$(get_dir_index thrt_rt${rate}_dft_)
     python con_query_test.py \
         20 \
@@ -626,8 +627,11 @@ throttle_test(){
         --fault ${FAULT} \
         --gt False \
         --dist ${DIST}
+    free_limit
 
     sleep 180
+
+
 
 #    remove $DIR/alluxio_env
 #    ${DIR}/alluxio/bin/alluxio fs rm -R '/home'
@@ -639,6 +643,8 @@ throttle_test(){
 
     sleep 60
 
+    limit_bandwidth ${limit}
+
     plc_log_dir_name=$(get_dir_index thrt_rt${rate}_plc${PER_COL}_)
     python con_query_test.py \
         ${rate} \
@@ -649,6 +655,9 @@ throttle_test(){
         --fault ${FAULT} \
         --gt False \
         --dist ${DIST}
+
+    free_limit
+
 }
 
 if [[ "$#" -lt 3 ]]; then
