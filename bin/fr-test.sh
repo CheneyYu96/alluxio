@@ -100,8 +100,10 @@ trace_test(){
     else
         if [[ "${PER_COL}" -eq "1" ]]; then
             per_col_env
-        else
-            bundle_env
+        elif [[ "${PER_COL}" -eq "2" ]]; then
+            table_repl_env
+        elif [[ "${PER_COL}" -eq "3" ]]; then
+            bundle_infer_env
         fi
 
         fr_env
@@ -394,6 +396,7 @@ con_test(){
 
     loc_wait=0
     CON_REQ=1
+    PER_COL=3
 #    for qry in 4 6 14 19; do
 #        compare_test ${qr} ${times}
 #    done
