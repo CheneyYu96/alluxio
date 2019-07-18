@@ -392,6 +392,7 @@ con_test(){
     core=$1
     times=$2
 
+    loc_wait=0
     CON_REQ=1
 #    for qry in 4 6 14 19; do
 #        compare_test ${qr} ${times}
