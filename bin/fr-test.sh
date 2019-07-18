@@ -180,14 +180,14 @@ trace_test(){
             done
             wait
 
-            for((c=1;c<=${concurrent};c++)); do
-                line=$(cat $DIR/logs/shuffle/scale${scl}_con${c}_query${q}.log | grep 'Got application ID')
-                appid=${line##*ID: }
-                echo "App ID: ${appid}"
-
-                mkdir -p $DIR/logs/shuffle/con${c}_query${q}/
-                collect_worker_logs shuffle/con${c}_query${q} ${appid}
-            done
+#            for((c=1;c<=${concurrent};c++)); do
+#                line=$(cat $DIR/logs/shuffle/scale${scl}_con${c}_query${q}.log | grep 'Got application ID')
+#                appid=${line##*ID: }
+#                echo "App ID: ${appid}"
+#
+#                mkdir -p $DIR/logs/shuffle/con${c}_query${q}/
+#                collect_worker_logs shuffle/con${c}_query${q} ${appid}
+#            done
         fi
     done
 
