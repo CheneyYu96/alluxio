@@ -421,7 +421,8 @@ con_test(){
 #    for qry in 4 6 14 19; do
 #        compare_test ${qr} ${times}
 #    done
-    for((qr=1;qr<=22;qr++)); do
+#    for((qr=1;qr<=22;qr++)); do
+    for((qr=5;qr<=22;qr++)); do
         policy_test 1000000 ${qr}
         remove $DIR/alluxio_env
     done
