@@ -428,6 +428,59 @@ con_test(){
     done
 }
 
+con_all_test(){
+    core=$1
+    start_qry=$2
+
+    loc_wait=0
+    CON_REQ=1
+    PER_COL=3
+
+    scl=`cat ${DATA_SCALE}`
+
+    up_dir_log_name=$(get_dir_index dft_)
+    mkdir -p ${up_dir_log_name}
+
+    start=$(date "+%s")
+
+    init_env
+
+    limit_bandwidth $limit
+
+    for((qr=${start_qry};qr<=22;qr++)); do
+        trace_test ${scl} ${qr}
+    done
+
+    free_limit
+    mv $DIR/logs/scale* ${up_dir_log_name}
+
+
+    now=$(date "+%s")
+    tm=$((now-start))
+    interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
+
+    sleep_time=$((interval+180-tm))
+
+    if [[ ${sleep_time} -le 30 ]]; then
+        echo "Warning: sleep time not enough"
+        exit 1
+    fi
+
+    sleep ${sleep_time}
+
+    up_dir_log_name=$(get_dir_index plc${PER_COL}_)
+    mkdir -p ${up_dir_log_name}
+
+    limit_bandwidth $limit
+
+    for((qr=${start_qry};qr<=22;qr++)); do
+        trace_test ${scl} ${qr}
+    done
+    free_limit
+    mv $DIR/logs/scale* ${up_dir_log_name}
+}
+
+
 if [[ "$#" -lt 3 ]]; then
     usage
     exit 1
@@ -464,6 +517,8 @@ else
         grain)                  grained_test $2 $3
                                 ;;
         con)                    con_test $2 $3
+                                ;;
+        con-all)                con_all_test $2 $3
                                 ;;
         * )                     usage
     esac
