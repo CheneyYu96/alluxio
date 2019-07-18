@@ -100,8 +100,8 @@ public class ReplPolicyUtils {
                 lowerAlpha = optAlpha;
             }
 
-            if (attemp % 10 == 0){
-                LOG.info("Attemps: {}. alpha: {}, cost; {}", attemp, optAlpha, optCost);
+            if (attemp % 100 == 0){
+                LOG.info("At attemps: {}. alpha: {}, cost; {}", attemp, optAlpha, optCost);
             }
             if (attemp > 3000){
                 break;
