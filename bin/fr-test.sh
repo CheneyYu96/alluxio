@@ -63,9 +63,20 @@ core=2
 # update
 all_core=4
 
+default_move_par=0
 init_env(){
 
     NEED_PAR_INFO=1
+
+    if [[ -f $DIR/alluxio/origin-locs.txt ]]; then
+        default_move_par=0
+    else
+        default_move_par=1
+    fi
+
+    if [[ ! -f ${ALLUXIO_ENV} ]]; then
+        touch ${ALLUXIO_ENV}
+    fi
 
     if [[ `cat ${ALLUXIO_ENV}` == "1" ]]; then
         echo 'Alluxio env already prepared'
@@ -81,13 +92,20 @@ init_env(){
         fr_env
 #        $DIR/alluxio/bin/alluxio logLevel --logName=alluxio.master.repl.ReplManager --target=master --level=DEBUG
 
-        move_par_data
+        if [[ "${default_move_par}" -eq "1" ]]; then
+            move_par_data
+        else
+            java -jar ${DIR}/alluxio/writeparquet/target/writeparquet-2.0.0-SNAPSHOT.jar write 0 0 ${DIR}/alluxio/origin-locs.txt
+        fi
+
         if [[ "${NEED_PAR_INFO}" -eq "1" ]]; then
              send_par_info
         fi
 
         echo '1' > ${ALLUXIO_ENV}
     fi
+
+    mkdir -p ${DIR}/logs
 }
 
 
@@ -218,7 +236,7 @@ send_par_info(){
                     extract_par_info ${DIR}/tpch_parquet/${f}/${sf} ${INFO_DIR}/${f}/tmp_${sf}.txt ${INFO_DIR}/${f}/${sf}.txt
                 fi
 
-                java -jar ${DIR}/alluxio/writeparquet/target/writeparquet-2.0.0-SNAPSHOT.jar ${DIR}/tpch_parquet/${f}/${sf} ${INFO_DIR}/${f}/${sf}.txt
+                java -jar ${DIR}/alluxio/writeparquet/target/writeparquet-2.0.0-SNAPSHOT.jar info ${default_move_par} ${DIR}/tpch_parquet/${f}/${sf} ${INFO_DIR}/${f}/${sf}.txt
             fi
 
         done
