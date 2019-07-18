@@ -434,7 +434,7 @@ con_all_test(){
 
     loc_wait=0
     CON_REQ=1
-    PER_COL=3
+    PER_COL=2
 
     scl=`cat ${DATA_SCALE}`
 
