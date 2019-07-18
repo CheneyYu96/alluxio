@@ -256,9 +256,15 @@ extract_par_info(){
 }
 
 clear(){
+    del_origin_loc=$1
+
     remove $DIR/logs
     remove $DIR/alluxio_env
     remove $DIR/alluxio/logs
+
+     if [[ "${del_origin_loc}" -eq "1" ]]; then
+         remove $DIR/alluxio/origin-locs.txt
+     fi
 }
 
 complie_job(){
@@ -429,7 +435,7 @@ else
                                 ;;
         all)                    all_test $2 $3
                                 ;;
-        clear)                  clear
+        clear)                  clear $2
                                 ;;
         cpjob)                   complie_job
                                 ;;
