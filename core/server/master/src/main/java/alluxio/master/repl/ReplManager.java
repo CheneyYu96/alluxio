@@ -130,7 +130,7 @@ public class ReplManager {
             }
         }
 
-        LOG.info("Record access for file {}. offset {} length {}", requestFile.getPath(), pair.offset, pair.length);
+        LOG.debug("Record access for file {}. offset {} length {}", requestFile.getPath(), pair.offset, pair.length);
 
         Map<AlluxioURI, OffLenPair> mappedOffsets = new ConcurrentHashMap<>(ImmutableMap.of(requestFile, pair));
 

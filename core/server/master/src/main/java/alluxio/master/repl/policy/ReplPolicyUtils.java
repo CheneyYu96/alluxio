@@ -100,9 +100,13 @@ public class ReplPolicyUtils {
                 lowerAlpha = optAlpha;
             }
 
+            if (attemp % 10 == 0){
+                LOG.info("Attemps: {}. alpha: {}, cost; {}", attemp, optAlpha, optCost);
+            }
             if (attemp > 3000){
                 break;
             }
+
         }
 
         long endMs = CommonUtils.getCurrentMs();
