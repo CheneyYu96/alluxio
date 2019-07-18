@@ -343,6 +343,11 @@ policy_test(){
 
     sleep_time=$((interval+180-tm))
 
+    if [[ ${sleep_time} -le 30 ]]; then
+        echo "Warning: sleep time not enough. query ${qry}"
+        exit 1
+    fi
+
     sleep ${sleep_time}
 
     bandwidth_test ${limit} ${qry}
