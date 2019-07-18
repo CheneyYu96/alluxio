@@ -139,7 +139,7 @@ public class ReplPolicyUtils {
             for(int i = 0; i < loadSize.size(); i++){
                 double coldLoad = loadSize.get(i).getFirst();
                 if (coldLoad > 1 / alpha){
-                    coldIndex = i - 1;
+                    coldIndex = Math.max(i - 1, 0);
                     break;
                 }
             }
