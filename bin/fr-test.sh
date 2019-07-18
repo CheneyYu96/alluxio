@@ -6,7 +6,7 @@ LOCAL_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )"  && pwd )"
 
 source ${LOCAL_DIR}/utils.sh
 
-USE_PARQUER=0
+USE_PARQUER=1
 FROM_HDFS=0
 NEED_PAR_INFO=0
 PER_COL=0
@@ -52,15 +52,6 @@ convert(){
             $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar \
                 --convert-table \
                 $(check_from_hdfs ${FROM_HDFS})
-
-#       test one row group per part file
-#        $DIR/spark/bin/spark-submit \
-#            --executor-memory 4g \
-#            --driver-memory 4g \
-#            --master local \
-#            $DIR/tpch-spark/target/scala-2.11/spark-tpc-h-queries_2.11-1.0.jar \
-#                --convert-table \
-#                $(check_from_hdfs ${FROM_HDFS})
         clean_data
 
         save_par_data
@@ -72,28 +63,9 @@ core=2
 # update
 all_core=4
 
-trace_test(){
-    scl=$1
-    query=$2
+init_env(){
 
-    dir_name=$(get_dir_index scale${scl}_query${query}_trace)
-    mkdir -p ${dir_name}
-
-    if [[ ! -d $DIR/tpch_parquet ]]; then
-        convert_test $scl
-    fi
-
-    USE_PARQUER=1
     NEED_PAR_INFO=1
-
-    from=$query
-    to=$query
-    if [[ "${query}" -eq "0" ]]; then
-        from=1
-        to=22
-    fi
-
-    mkdir -p  $DIR/logs/shuffle
 
     if [[ `cat ${ALLUXIO_ENV}` == "1" ]]; then
         echo 'Alluxio env already prepared'
@@ -116,10 +88,30 @@ trace_test(){
 
         echo '1' > ${ALLUXIO_ENV}
     fi
+}
 
-            #--conf spark.executor.extraJavaOptions="-Dlog4j.configuration=file://$DIR/tpch-spark/log4j.properties" \
-            #--conf spark.driver.extraJavaOptions="-Dlog4j.configuration=file://$DIR/tpch-spark/log4j.properties" \
-             #--log-trace \
+
+trace_test(){
+    scl=$1
+    query=$2
+
+    init_env
+
+    from=$query
+    to=$query
+    if [[ "${query}" -eq "0" ]]; then
+        from=1
+        to=22
+    fi
+
+    mkdir -p  $DIR/logs/shuffle
+
+    dir_name=$(get_dir_index scale${scl}_query${query}_trace)
+    mkdir -p ${dir_name}
+
+    #--conf spark.executor.extraJavaOptions="-Dlog4j.configuration=file://$DIR/tpch-spark/log4j.properties" \
+    #--conf spark.driver.extraJavaOptions="-Dlog4j.configuration=file://$DIR/tpch-spark/log4j.properties" \
+     #--log-trace \
 
     executor_num=(`cat /home/ec2-user/hadoop/conf/slaves | wc -l`)
     executor_num=$(($executor_num-1))
@@ -268,9 +260,9 @@ bandwidth_test(){
     upname=$(get_dir_index band${limit}_qry${qry}_)
     mkdir -p ${upname}
 
-    limit_bandwidth $limit
+    init_env
 
-    test_bandwidth $DIR/logs
+    limit_bandwidth $limit
 
     for((t=0;t<${times};t++)); do
         trace_test $scl $qry
