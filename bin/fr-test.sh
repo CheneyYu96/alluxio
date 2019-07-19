@@ -488,7 +488,7 @@ spec(){
 
     loc_wait=0
     CON_REQ=1
-    PER_COL=3
+    PER_COL=2
 
     up_dir_log_name=$(get_dir_index plc${PER_COL}_)
     mkdir -p ${up_dir_log_name}
@@ -541,6 +541,8 @@ else
         con)                    con_test $2 $3
                                 ;;
         con-all)                con_all_test $2 $3
+                                ;;
+        spec)                   spec $2 $3
                                 ;;
         * )                     usage
     esac
