@@ -436,6 +436,8 @@ con_all_test(){
     CON_REQ=1
     PER_COL=3
 
+    limit=1000000
+
     scl=`cat ${DATA_SCALE}`
 
     up_dir_log_name=$(get_dir_index dft_)
@@ -478,6 +480,26 @@ con_all_test(){
     done
     free_limit
     mv $DIR/logs/scale* ${up_dir_log_name}
+}
+
+spec(){
+    core=$1
+    start_qry=$2
+
+    loc_wait=0
+    CON_REQ=1
+    PER_COL=3
+
+    up_dir_log_name=$(get_dir_index plc${PER_COL}_)
+    mkdir -p ${up_dir_log_name}
+
+    limit_bandwidth 1000000
+
+    for((qr=${start_qry};qr<=22;qr++)); do
+        trace_test ${scl} ${qr}
+    done
+    free_limit
+    mv ${DIR}/logs/scale* ${up_dir_log_name}
 }
 
 
