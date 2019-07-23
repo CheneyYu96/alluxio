@@ -621,7 +621,7 @@ straggler_test(){
     timeout=$1
     PER_COL=3
 
-    run_default 30 ${timeout}
+#    run_default 30 ${timeout}
 
     rm_env_except_pattern
 
@@ -646,17 +646,17 @@ straggler_test(){
 
         plc_log_dir_name=$(get_dir_index strg_plc${PER_COL}_)
 
-            cd ${DIR}/alluxio
-            python con_query_test.py \
-                30
-                ${timeout} \
-                0 \
-                ${plc_log_dir_name} \
-                --policy ${PER_COL} \
-                --fault ${FAULT} \
-                --gt False \
-                --dist ${DIST} \
-                --strg True
+        cd ${DIR}/alluxio
+        python con_query_test.py \
+            30 \
+            ${timeout} \
+            0 \
+            ${plc_log_dir_name} \
+            --policy ${PER_COL} \
+            --fault ${FAULT} \
+            --gt False \
+            --dist ${DIST} \
+            --strg True
 
         free_limit
 
