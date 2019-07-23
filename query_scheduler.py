@@ -26,6 +26,11 @@ TPCH_T_NAME = {
     'ps': 'partsupp',
 }
 
+args = {
+   'strg': False,
+   'delay': 1, 
+}
+
 PAR_DIR = '/home/ec2-user/tpch_parquet'
 INFO_DIR = '/home/ec2-user/info'
 
@@ -176,6 +181,8 @@ def gen_exe_plan(addr, path, cols, alternatives, fault_tolerant):
 def exe_task(addr, path, cols, alternatives, fault_tolerant):
     try:
         (ssh, cmd_str, log_name) = gen_exe_plan(addr, path, cols, alternatives, fault_tolerant)
+        if args['strg'] and random.random() < 0.05:
+            time.sleep(args['delay'])
         send_cmd_to_worker(ssh, cmd_str, log_name)
         return True
     except:
@@ -193,7 +200,9 @@ gap_time = lambda past_time : int((now() - past_time) * 1000)
 @click.option('--fault', type=int, default=0)
 @click.option('--gt', type=bool, default=True)
 @click.option('--log', type=bool, default=True)
-def submit_query(query, logs_dir, policy, fault, gt, log):
+@click.option('--strg', type=bool, default=False)
+def submit_query(query, logs_dir, policy, fault, gt, log, strg):
+    args['strg'] = strg
     submit_query_internal(query, logs_dir, policy, fault, gt, log)
 
 def submit_query_internal(query, logs_dir, policy, fault, gt, log):

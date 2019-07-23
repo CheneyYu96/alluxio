@@ -48,7 +48,8 @@ class ZipFGenerator:
 @click.option('--gt', type=bool, default=True)
 @click.option('--dist', type=int, default=2)
 @click.option('--log', type=bool, default=True)
-def poisson_test(rate, timeout, query, logdir, policy, fault, gt, dist, log):
+@click.option('--strg', type=bool, default=False)
+def poisson_test(rate, timeout, query, logdir, policy, fault, gt, dist, log, strg):
 
     pop_files = {
         0: 'pop-uniform.txt',
@@ -94,7 +95,7 @@ def poisson_test(rate, timeout, query, logdir, policy, fault, gt, dist, log):
             logging.info('Generate query: {}, sleep: {}'.format(act_q, s))
 
             sub_dir = '{}/q{}/c{}'.format(logdir, act_q, metrics[act_q])
-            pool.submit(send_query, act_q, sub_dir, policy, fault, gt, log)
+            pool.submit(send_query, act_q, sub_dir, policy, fault, gt, log, strg)
             time.sleep(s)
 
     sorted_metrics = list(metrics.items())
@@ -102,10 +103,10 @@ def poisson_test(rate, timeout, query, logdir, policy, fault, gt, dist, log):
     for q, c in sorted_metrics:
         print('query={} , count={}'.format(q, c))
 
-def send_query(query, sub_dir, policy, fault, gt, log):
+def send_query(query, sub_dir, policy, fault, gt, log, strg):
     mkdir(sub_dir)
-    os.system('python query_scheduler.py {} {} --policy {} --fault {} --gt {} --log {} > {}/master.log 2>&1'
-        .format(query, sub_dir, policy, fault, gt, log, sub_dir))
+    os.system('python query_scheduler.py {} {} --policy {} --fault {} --gt {} --log {} --strg {} > {}/master.log 2>&1'
+        .format(query, sub_dir, policy, fault, gt, log, strg, sub_dir))
 
 def mkdir(newdir):
     if type(newdir) is not str:

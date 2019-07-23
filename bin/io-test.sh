@@ -617,6 +617,54 @@ throttle_test(){
 
 }
 
+straggler_test(){
+    timeout=$1
+    PER_COL=3
+
+    run_default 30 ${timeout}
+
+    rm_env_except_pattern
+
+    sed -i "/^fr.repl.budget=/cfr.repl.budget=0.5" ${DIR}/alluxio/conf/alluxio-site.properties
+
+    for PER_COL in 1 2 3; do
+        policy_env
+
+        interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
+        start=$(date "+%s")
+
+        init_alluxio_status
+
+        now=$(date "+%s")
+        tm=$((now-start))
+
+        sleep_time=$((interval+300-tm))
+
+        sleep ${sleep_time} # wait util replication finished
+
+        limit_bandwidth ${limit}
+
+        plc_log_dir_name=$(get_dir_index strg_plc${PER_COL}_)
+
+            cd ${DIR}/alluxio
+            python con_query_test.py \
+                30
+                ${timeout} \
+                0 \
+                ${plc_log_dir_name} \
+                --policy ${PER_COL} \
+                --fault ${FAULT} \
+                --gt False \
+                --dist ${DIST} \
+                --strg True
+
+        free_limit
+
+        rm_env_except_pattern
+    done
+}
+
+
 if [[ "$#" -lt 3 ]]; then
     usage
     exit 1
@@ -649,6 +697,8 @@ else
         alpha)                  alpha_test
                                 ;;
         thrt)                   throttle_test $2 $3
+                                ;;
+        strg)                   straggler_test $2
                                 ;;
         * )                     usage
     esac
