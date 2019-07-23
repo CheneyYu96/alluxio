@@ -618,10 +618,11 @@ throttle_test(){
 }
 
 straggler_test(){
-    timeout=$1
+    rate=$1
+    timeout=$2
     PER_COL=3
 
-    run_default 40 ${timeout}
+    run_default ${rate} ${timeout}
 
     rm_env_except_pattern
 
@@ -648,7 +649,7 @@ straggler_test(){
 
         cd ${DIR}/alluxio
         python con_query_test.py \
-            40 \
+            ${rate} \
             ${timeout} \
             0 \
             ${plc_log_dir_name} \
@@ -697,7 +698,7 @@ else
                                 ;;
         thrt)                   throttle_test $2 $3
                                 ;;
-        strg)                   straggler_test $2
+        strg)                   straggler_test $2 $3
                                 ;;
         * )                     usage
     esac
