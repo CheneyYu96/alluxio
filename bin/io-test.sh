@@ -638,7 +638,7 @@ straggler_test(){
         now=$(date "+%s")
         tm=$((now-start))
 
-        sleep_time=$((interval+300-tm))
+        sleep_time=$((interval+180-tm))
 
         sleep ${sleep_time} # wait util replication finished
 
