@@ -619,7 +619,7 @@ throttle_test(){
 
 straggler_test(){
     timeout=$1
-    PER_COL=3
+    PER_COL=2
 
 #    run_default 30 ${timeout}
 

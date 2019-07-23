@@ -28,7 +28,7 @@ TPCH_T_NAME = {
 
 args = {
    'strg': False,
-   'delay': 1, 
+   'delay': 2, 
 }
 
 PAR_DIR = '/home/ec2-user/tpch_parquet'
