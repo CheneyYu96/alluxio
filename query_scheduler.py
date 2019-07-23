@@ -182,6 +182,7 @@ def exe_task(addr, path, cols, alternatives, fault_tolerant):
     try:
         (ssh, cmd_str, log_name) = gen_exe_plan(addr, path, cols, alternatives, fault_tolerant)
         if args['strg'] and random.random() < 0.05:
+            logging.info('Straggler appear. sleep: {}'.format(args['delay']))
             time.sleep(args['delay'])
         send_cmd_to_worker(ssh, cmd_str, log_name)
         return True
