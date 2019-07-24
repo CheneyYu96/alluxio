@@ -628,7 +628,7 @@ straggler_test(){
 
     sed -i "/^fr.repl.budget=/cfr.repl.budget=0.5" ${DIR}/alluxio/conf/alluxio-site.properties
 
-    for PER_COL in 1 2; do
+#    for PER_COL in 1 2; do
         policy_env
 
         interval=$(cat $DIR/alluxio/conf/alluxio-site.properties | grep 'fr.repl.interval' | cut -d "=" -f 2)
@@ -661,7 +661,7 @@ straggler_test(){
         free_limit
 
         rm_env_except_pattern
-    done
+#    done
 }
 
 
