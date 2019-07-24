@@ -300,6 +300,9 @@ public class FileInStream extends InputStream implements BoundedStream, Position
   }
 
   private void updateMetadata(FileSegmentsInfo segToRead) throws IOException {
+    if (Math.random() < 0.05 ){
+      CommonUtils.sleepMs(2000);
+    }
     mNewStatus = mReplicasInfo.getReplicaStatus(segToRead);
     mNewOptions = OpenFileOptions.defaults().toInStreamOptions(mNewStatus);
     mNewPosition = segToRead.getOffset();

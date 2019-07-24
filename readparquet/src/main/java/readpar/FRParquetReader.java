@@ -4,14 +4,16 @@ import alluxio.AlluxioURI;
 import alluxio.Configuration;
 import alluxio.PropertyKey;
 import alluxio.exception.AlluxioException;
-import alluxio.util.CommonUtils;
 import fr.client.file.FRFileReader;
 import fr.client.utils.OffLenPair;
 import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -53,10 +55,6 @@ public class FRParquetReader {
     public void read(String filePath, List<OffLenPair> columnsToRead){
         LOG.info("Read file: {}; off: {}", filePath, columnsToRead);
         FRFileReader reader = new FRFileReader(new AlluxioURI(filePath), true);
-        // straggler
-        if (Math.random() < 0.05 ){
-            CommonUtils.sleepMs(2000);
-        }
         try {
             reader.readFile(columnsToRead);
         } catch (IOException | AlluxioException e) {
