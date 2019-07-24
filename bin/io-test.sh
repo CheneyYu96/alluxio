@@ -622,9 +622,9 @@ straggler_test(){
     timeout=$2
     PER_COL=2
 
-    run_default 30 ${timeout}
+#    run_default 30 ${timeout}
 
-    rm_env_except_pattern
+#    rm_env_except_pattern
 
     sed -i "/^fr.repl.budget=/cfr.repl.budget=0.5" ${DIR}/alluxio/conf/alluxio-site.properties
 
