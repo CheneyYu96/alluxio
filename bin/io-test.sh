@@ -620,9 +620,9 @@ throttle_test(){
 straggler_test(){
     rate=$1
     timeout=$2
-    PER_COL=3
+    PER_COL=2
 
-    run_default ${rate} ${timeout}
+    run_default 30 ${timeout}
 
     rm_env_except_pattern
 
